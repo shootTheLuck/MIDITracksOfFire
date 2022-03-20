@@ -1,4 +1,4 @@
 !/bin/bash
 
-java -jar build/MIDITracksOfFire.jar
+java -jar build/TracksOfFire.jar
 #ant
