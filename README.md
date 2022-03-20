@@ -7,7 +7,7 @@ Download or clone this repo. Run the start.sh script or open a terminal and exec
 To rebuild with your awesome mods run `ant jar`. You'll need ant to do this.
 
 ## Contribute:
-I would **love** any contributions, feedback, issues etc that anyone might have! Hit the dang issues button! I'm a total amateur here and not very good at java I don't think. There's all kinds of messed-up stuff here to work on!
+I would **love** any contributions, feedback, issues etc that anyone might have! Hit the dang issues button! I'm a total amateur here. There's all kinds of messed-up stuff to work on!
 
 TODO's:
 - undo/redo!
