@@ -28,6 +28,8 @@ class PageView extends JFrame {
 
     private JPanel mainPanel;
     private JScrollPane scrollPane;
+    private JScrollBar hScrollBar;
+    private JScrollBar vScrollBar;
     private JViewport viewport;
     private JPanel base;
     private JPanel numberBarContainer;
@@ -67,7 +69,6 @@ class PageView extends JFrame {
             public void componentResized(ComponentEvent e) {
                 int height = getHeight();
                 int width = getWidth();
-                //console.log("resize", width, height);
                 pageController.setPreference("window.width", width);
                 pageController.setPreference("window.height", height);
                 setPreferredSize(new Dimension(width, height));
@@ -126,18 +127,26 @@ class PageView extends JFrame {
         mainPanel.setMinimumSize(new Dimension(Page.width, 850));
         mainPanel.setPreferredSize(new Dimension(Page.width, 100));
 
-        scrollPane = new JScrollPane(mainPanel,
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-                JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(160);
-        scrollPane.getHorizontalScrollBar().setUnitIncrement(160);
-        scrollPane.getHorizontalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+        scrollPane = new JScrollPane(mainPanel);
+        hScrollBar = scrollPane.getHorizontalScrollBar();
+        vScrollBar = scrollPane.getVerticalScrollBar();
+
+        hScrollBar.setUnitIncrement(160);
+        vScrollBar.setUnitIncrement(160);
+        hScrollBar.addAdjustmentListener(new AdjustmentListener() {
             @Override
             public void adjustmentValueChanged(AdjustmentEvent evt) {
-                pageController.handleHorizontalScrollBar(evt.getValue());
+                if (hScrollBar.getValueIsAdjusting()) {
+                    /* send input to controller if manually adjusting scroll */
+                    pageController.handleHorizontalScrollBar(evt.getValue());
+                } else {
+                    /* get scoll position from controller on window resize */
+                    setHorizontalScroll(pageController.scrollValue);
+                }
             }
         });
-        scrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+
+        vScrollBar.addAdjustmentListener(new AdjustmentListener() {
             @Override
             public void adjustmentValueChanged(AdjustmentEvent evt) {
                 pageController.handleVerticalScrollBar(evt.getValue());
@@ -147,13 +156,11 @@ class PageView extends JFrame {
         class MyView extends JViewport {
             //@Override
             public void setViewPosition(Point p) {
-                //console.log("here");
                 //if (!changingMeasureSize) {
                     Component view = getView();
                     //if (p.x != 0) {
                         //pageController.handleScrollBar(p.x);
                     //} else {
-                        //console.log("here");
                         //if (view.getLocation().getX() != 0) {
                             //view.setLocation(200, -p.y);
                         //}
@@ -174,32 +181,31 @@ class PageView extends JFrame {
             }
 
             //@Override
-            public void componentResized(ComponentEvent ev) {
-            }
+            //public void componentResized(ComponentEvent ev) {
+            //}
 
 
-            @Override
-            public void scrollRectToVisible​(Rectangle contentRect) {
-            }
+            //@Override
+            //public void scrollRectToVisible​(Rectangle contentRect) {
+            //}
 
-            @Override
-            public void setExtentSize​(Dimension newExtent) {
-            }
+            //@Override
+            //public void setExtentSize​(Dimension newExtent) {
+            //}
 
-            @Override
-            public void setViewSize​(Dimension newSize) {
-            }
+            //@Override
+            //public void setViewSize​(Dimension newSize) {
+            //}
 
-            @Override
-            public void reshape​(int x, int y, int w, int h) {
-                //if (!changingMeasureSize) {
-                    boolean sizeChanged = (getWidth() != w) || (getHeight() != h);
-                    if (sizeChanged) {
-                        backingStoreImage = null;
-                    }
-                    super.reshape(x, y, w, h);
-                //}
-            }
+            //@Override
+            //public void reshape​(int x, int y, int w, int h) {
+                //console.log("reshape");
+                    //boolean sizeChanged = (getWidth() != w) || (getHeight() != h);
+                    //if (sizeChanged) {
+                        //backingStoreImage = null;
+                    //}
+                    //super.reshape(x, y, w, h);
+            //}
 
         }
 
@@ -214,7 +220,6 @@ class PageView extends JFrame {
                     //if (p.x != 0) {
                         //pageController.handleScrollBar(p.x);
                     //} else {
-                        //console.log("here");
                         //if (viewport.getLocation().getX() != 0) {
                             //viewport.setLocation(200, -p.y);
                         //}
@@ -267,6 +272,7 @@ class PageView extends JFrame {
 
     public void setHorizontalScroll(int value) {
         numberBar.setScrollPosition(value);
+        hScrollBar.setValue(value);
     }
 
     public void setVerticalScroll(int value) {

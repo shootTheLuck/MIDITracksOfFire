@@ -321,6 +321,7 @@ public class Page {
         progressTimer.stop();
         view.cancelProgress();
         selectedTrack.cancelProgress();
+        isPlaying = false;
     }
 
     public void shutDown() {
@@ -434,7 +435,6 @@ public class Page {
         //int currentWidth = view.getCurrentWidth();
         //Page.width = Math.max(Page.width, currentWidth);
 
-        //console.log(Page.width, Page.measureSize);
         for (TrackController track : tracks) {
             track.adjustMeasureSize();
         }
@@ -576,11 +576,14 @@ public class Page {
     }
 
     public void handleHorizontalScrollBar(int value) {
+        //new Exception().printStackTrace();
+//new Error().printStackTrace();
         scrollValue = Page.measureSize * (value/Page.measureSize);
         handleScrollChange();
     }
 
     public void handleVerticalScrollBar(int value) {
+        //console.log("here");
         if (view != null) {
             view.setVerticalScroll(value);
         }

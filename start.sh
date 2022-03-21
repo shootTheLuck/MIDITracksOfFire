@@ -1,4 +1,3 @@
-!/bin/bash
+#!/bin/bash
 
 java -jar build/TracksOfFire.jar
-#ant

@@ -128,17 +128,30 @@ public class TrackController {
         }
     }
 
+    //class MouseMoveLengthen implements MouseMoveStategy {
+        //@Override
+        //public void doIt(MouseEvent evt) {
+            //int x = evt.getX();
+            //mouseOffset.x = 0;
+            //view.drawRectangle(selectedNote);
+            //selectedNote.width =
+                    //Math.max(calcGridSize(), findNearestGrid(x) - selectedNote.x);
+            //selectedNote.duration = setNoteDuration(selectedNote.width);
+            //view.drawRectangle(selectedNote);
+        //}
+    //}
+
     class MouseMoveLengthen implements MouseMoveStategy {
         @Override
         public void doIt(MouseEvent evt) {
             int x = evt.getX();
-            //int y = evt.getY();
             mouseOffset.x = 0;
-            view.drawRectangle(selectedNote);
-            selectedNote.width =
-                    Math.max(calcGridSize(), findNearestGrid(x) - selectedNote.x);
-            selectedNote.duration = setNoteDuration(selectedNote.width);
-            view.drawRectangle(selectedNote);
+
+            int x2 = findNearestGrid(x);
+            int diffX = x2 - dragStartGrid.x;
+
+            dragStartGrid.x = x2;
+            lengthenSelectedNotes(diffX);
         }
     }
 
@@ -356,6 +369,24 @@ public class TrackController {
                 selectNote(clone);
             }
         }
+    }
+
+    private void lengthenSelectedNotes(int deltaX) {
+
+        for (Note note : selection) {
+
+
+            view.drawRectangle(note);
+            note.width += deltaX;
+                    //Math.max(calcGridSize(), findNearestGrid(x) - selectedNote.x);
+            note.duration = setNoteDuration(selectedNote.width);
+            view.drawRectangle(note);
+
+
+        }
+
+
+
     }
 
     private void moveSelectedNotes(int deltaX, int deltaY) {
