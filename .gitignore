@@ -1,0 +1,8 @@
+# Compiled class file
+*.class
+# jar file
+*.jar
+
+start.sh
+config/preferences.txt
+build/*
