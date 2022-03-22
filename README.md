@@ -4,7 +4,7 @@ Compose, edit, and play MIDI files with a tablature based ui.
 
 ## To use:
 Download or clone this repo. Run the start.sh script or open a terminal and execute `java -jar build/TracksOfFire.jar`. It's in Java so you'll need that.
-To rebuild with your awesome mods run `ant jar`. You'll need ant to do this.
+To rebuild with your awesome and needed improvements run `ant jar`. You'll need ant to do this.
 
 ## Contribute:
 I would **love** any contributions, feedback, issues etc that anyone might have! Hit the dang issues button! I'm a total amateur here. There's all kinds of messed-up stuff to work on!
