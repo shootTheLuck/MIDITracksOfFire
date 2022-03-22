@@ -289,6 +289,13 @@ public class Page {
         selectedTrack.pasteSelectedNotes(clipboard);
     }
 
+    private void addMeasures() {
+        Page.numOfMeasures += 1;
+        Page.width += Page.measureSize;
+        view.revalidate();
+        view.repaint();
+    }
+
     private void playAll() {
         int measureStart = view.playControls.getPlayStartField();
         long startTime = (measureStart - 1) * getResolution() * 4;
@@ -489,6 +496,9 @@ public class Page {
             case MENU_EDIT_PASTE:
                 pasteSelection();
                 break;
+            case MENU_EDIT_ADDBARS:
+                addMeasures();
+                break;
             default:
         }
     }
@@ -577,7 +587,7 @@ public class Page {
 
     public void handleHorizontalScrollBar(int value) {
         //new Exception().printStackTrace();
-//new Error().printStackTrace();
+        //new Error().printStackTrace();
         scrollValue = Page.measureSize * (value/Page.measureSize);
         handleScrollChange();
     }
