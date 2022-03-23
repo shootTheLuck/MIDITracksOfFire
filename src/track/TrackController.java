@@ -128,19 +128,6 @@ public class TrackController {
         }
     }
 
-    //class MouseMoveLengthen implements MouseMoveStategy {
-        //@Override
-        //public void doIt(MouseEvent evt) {
-            //int x = evt.getX();
-            //mouseOffset.x = 0;
-            //view.drawRectangle(selectedNote);
-            //selectedNote.width =
-                    //Math.max(calcGridSize(), findNearestGrid(x) - selectedNote.x);
-            //selectedNote.duration = setNoteDuration(selectedNote.width);
-            //view.drawRectangle(selectedNote);
-        //}
-    //}
-
     class MouseMoveLengthen implements MouseMoveStategy {
         @Override
         public void doIt(MouseEvent evt) {
@@ -374,19 +361,12 @@ public class TrackController {
     private void lengthenSelectedNotes(int deltaX) {
 
         for (Note note : selection) {
-
-
             view.drawRectangle(note);
             note.width += deltaX;
                     //Math.max(calcGridSize(), findNearestGrid(x) - selectedNote.x);
             note.duration = setNoteDuration(selectedNote.width);
             view.drawRectangle(note);
-
-
         }
-
-
-
     }
 
     private void moveSelectedNotes(int deltaX, int deltaY) {
@@ -501,7 +481,7 @@ public class TrackController {
     }
 
     public void setScrollPosition(int value) {
-        view.setScrollPosition();
+        view.setScrollPosition(value);
     }
 
     public void setChannel(int n) {
@@ -611,6 +591,9 @@ public class TrackController {
             if (!selection.contains(note) && !MouseMods.shift) {
                 clearSelection();
             }
+            //console.log("xy", x, y);
+            //console.log(note);
+            //console.log(Page.measureSize);
 
             selectNote(note);
             if (MouseMods.ctrl || MouseMods.rClick) {

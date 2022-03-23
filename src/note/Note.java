@@ -66,16 +66,16 @@ public class Note extends Rectangle {
     @Override
     public String toString() {
         return "Note" +
-                //"\n  #: " + serialNumber +
-                "\n  x: " + x +
-                "\n  y: " + y +
-                //"\n  width: " + width +
-                //"\n  start: " + start +
-                //"\n  duration: " + duration +
-                //"\n  instrument " + instrumentNum +
-                //"\n  pitch " + pitch +
-                //"\n  velocity " + velocity +
-                "\n";
+            //"\n  #: " + serialNumber +
+            "\n  x: " + x +
+            "\n  y: " + y +
+            //"\n  width: " + width +
+            //"\n  start: " + start +
+            //"\n  duration: " + duration +
+            //"\n  instrument " + instrumentNum +
+            //"\n  pitch " + pitch +
+            //"\n  velocity " + velocity +
+            "\n";
     }
 
 }

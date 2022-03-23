@@ -1,0 +1,6 @@
+#---Preferences File---
+#Wed Mar 23 13:38:04 PDT 2022
+window.width=1128
+theme=grizzly
+window.height=890
+soundFont=sf2/Windows.sf2

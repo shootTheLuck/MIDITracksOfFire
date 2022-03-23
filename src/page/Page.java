@@ -51,7 +51,6 @@ public class Page {
             preferences.load(fis);
         } catch (FileNotFoundException ex) {
             console.log("an error occured trying to load file", prefFile, ":", ex);
-            // FileNotFoundException catch is optional and can be collapsed
         } catch (IOException ex) {
             //
         }
@@ -255,7 +254,6 @@ public class Page {
         track.setChannel(tracks.size());
         track.setInstrument(0);
         track.setVolume(127);
-        track.setScrollPosition(scrollValue);
         addTrack(track);
         selectTrack(track);
     }
@@ -300,7 +298,7 @@ public class Page {
         int measureStart = view.playControls.getPlayStartField();
         long startTime = (measureStart - 1) * getResolution() * 4;
 
-        setScrollPositionToMeasure(measureStart);
+        view.setScrollPositionToMeasure(measureStart);
         midi.play(tracks, BPM, getResolution(), startTime);
         progressTimer.start();
     }
@@ -339,7 +337,6 @@ public class Page {
             out.close();
         } catch (FileNotFoundException ex) {
             console.log("an error occured trying to save to file", prefFile, ":", ex);
-            // FileNotFoundException catch is optional and can be collapsed
         } catch (IOException ex) {
             //
         }
@@ -434,6 +431,8 @@ public class Page {
     public void handleMeasureSizeSlider(int sliderValue) {
         //Math.min(Math.max(min, value), max);
         //Page.measureSize = Math.max(50, Math.min(sliderValue, 620));
+        view.showInfo(sliderValue);
+        //sliderValue -=
         double minimumMeasureSize = 50.0;
         double maximumMeasureSize = view.getCurrentWidth() * 0.8;
         Page.measureSize = (int) Math.min(Math.max(minimumMeasureSize, sliderValue), maximumMeasureSize);
@@ -536,7 +535,7 @@ public class Page {
 
             case FIELD_PLAYSTART:
                 int measureStart = view.playControls.getPlayStartField();
-                setScrollPositionToMeasure(measureStart);
+                view.setScrollPositionToMeasure(measureStart);
             case FIELD_LOOPSTART:
                 //TODO
             case FIELD_LOOPSTOP:
@@ -567,40 +566,12 @@ public class Page {
         int currentWidth = view.getCurrentWidth();
         if (currentPosition > currentWidth) {
             scrollValue += currentPosition;
-            handleScrollChange();
-        }
-    }
-
-    public void handleScrollChange() {
-        if (view != null) {
             view.setHorizontalScroll(scrollValue);
-        }
-        for (TrackController track : tracks) {
-            track.setScrollPosition(scrollValue);
-        }
-    }
-
-    public void setScrollPositionToMeasure(int number) {
-        scrollValue = Page.measureSize * (number - 1);
-        handleScrollChange();
-    }
-
-    public void handleHorizontalScrollBar(int value) {
-        //new Exception().printStackTrace();
-        //new Error().printStackTrace();
-        scrollValue = Page.measureSize * (value/Page.measureSize);
-        handleScrollChange();
-    }
-
-    public void handleVerticalScrollBar(int value) {
-        //console.log("here");
-        if (view != null) {
-            view.setVerticalScroll(value);
         }
     }
 
     public VelocitySlider showVelocitySlider(MouseEvent evt, Note selectedNote) {
-        return view.showVelocitySlider(scrollValue, evt, selectedNote);
+        return view.showVelocitySlider(evt, selectedNote);
     }
 
     public void hideVelocitySlider() {

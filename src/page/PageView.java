@@ -20,7 +20,7 @@ import widgets.*;
 import themes.*;
 import utils.*;
 
-class PageView extends JFrame {
+public class PageView extends JFrame {
 
     protected PagePlayControls playControls;
     protected PageKeyListener keyListener;
@@ -36,6 +36,7 @@ class PageView extends JFrame {
     private PageNumberBar numberBar;
     private VelocitySlider velocitySlider;
 
+    private int scrollPosition = 0;
     private int numberBarHeight = 30;
     private Dimension numberBarSize;
     private FileChooser fileChooser;
@@ -137,11 +138,11 @@ class PageView extends JFrame {
             @Override
             public void adjustmentValueChanged(AdjustmentEvent evt) {
                 if (hScrollBar.getValueIsAdjusting()) {
-                    /* send input to controller if manually adjusting scroll */
-                    pageController.handleHorizontalScrollBar(evt.getValue());
+                    /* manually adjusting scroll */
+                    handleHorizontalScrollBar(evt.getValue());
                 } else {
-                    /* get scoll position from controller on window resize */
-                    setHorizontalScroll(pageController.scrollValue);
+                    /* keep scoll position on window resize */
+                    setHorizontalScroll(scrollPosition);
                 }
             }
         });
@@ -149,85 +150,18 @@ class PageView extends JFrame {
         vScrollBar.addAdjustmentListener(new AdjustmentListener() {
             @Override
             public void adjustmentValueChanged(AdjustmentEvent evt) {
-                pageController.handleVerticalScrollBar(evt.getValue());
+                setVerticalScroll(evt.getValue());
             }
         });
 
         class MyView extends JViewport {
             //@Override
             public void setViewPosition(Point p) {
-                //if (!changingMeasureSize) {
-                    Component view = getView();
-                    //if (p.x != 0) {
-                        //pageController.handleScrollBar(p.x);
-                    //} else {
-                        //if (view.getLocation().getX() != 0) {
-                            //view.setLocation(200, -p.y);
-                        //}
-                    //}
-                //}
-                //pageController.handleScrollBar(200);
-                 //@Override
-                //public void setViewPosition(Point p) {
-                        //fireStateChanged();
-                    //Component view = getView();
-                    if (view != null && ! p.equals(getViewPosition())) {
-                        //scrollUnderway = true;
-                        //view.setLocation(-p.x, -p.y);
-                        //fireStateChanged();
-                        //pageController.handleScrollBar(p.x);
-                    }
-                //}
+
             }
-
-            //@Override
-            //public void componentResized(ComponentEvent ev) {
-            //}
-
-
-            //@Override
-            //public void scrollRectToVisible​(Rectangle contentRect) {
-            //}
-
-            //@Override
-            //public void setExtentSize​(Dimension newExtent) {
-            //}
-
-            //@Override
-            //public void setViewSize​(Dimension newSize) {
-            //}
-
-            //@Override
-            //public void reshape​(int x, int y, int w, int h) {
-                //console.log("reshape");
-                    //boolean sizeChanged = (getWidth() != w) || (getHeight() != h);
-                    //if (sizeChanged) {
-                        //backingStoreImage = null;
-                    //}
-                    //super.reshape(x, y, w, h);
-            //}
-
         }
 
         viewport = new MyView();
-
-        //viewport.addChangeListener(new ChangeListener() {
-            //public void stateChanged(ChangeEvent evt) {
-                //evt.consume();
-                //Point p = viewport.getViewPosition();
-                //if (!changingMeasureSize) {
-                    //Component view = getView();
-                    //if (p.x != 0) {
-                        //pageController.handleScrollBar(p.x);
-                    //} else {
-                        //if (viewport.getLocation().getX() != 0) {
-                            //viewport.setLocation(200, -p.y);
-                        //}
-                    //}
-                //}
-            //}
-        //});
-
         viewport.setView(mainPanel);
         scrollPane.setViewport(viewport);
         base.add(scrollPane);
@@ -237,8 +171,9 @@ class PageView extends JFrame {
         velocitySlider.setMaximum(127);
         velocitySlider.setBounds(0, 0, 31, 127);
 
+        velocitySlider.setVisible(false);
         //hack to hide velocitySlider because setVisible affects page scroll
-        velocitySlider.setLocation(-100, 0);
+        //velocitySlider.setLocation(-100, 0);
         velocitySlider.setBorder(BorderFactory.createLineBorder(Color.gray));
         JLayeredPane layers = getLayeredPane();
         layers.add(velocitySlider, 10);
@@ -259,7 +194,7 @@ class PageView extends JFrame {
     //}
 
     public void showInfo(Object o) {
-        //infoField.setText(o.toString());
+        playControls.infoField.setText(o.toString());
     }
 
     public void setProgress(long tick) {
@@ -270,9 +205,29 @@ class PageView extends JFrame {
         numberBar.cancelProgress();
     }
 
+    private void handleHorizontalScrollBar(int value) {
+        scrollPosition = Page.measureSize * (value/Page.measureSize);
+        numberBar.setScrollPosition(scrollPosition);
+        Component[] components = mainPanel.getComponents();
+        for (int i = 0; i < components.length; i++) {
+            if (components[i] instanceof TrackView) {
+                ((TrackView)components[i]).setScrollPosition(scrollPosition);
+            }
+        }
+    }
+
+    public void setScrollPositionToMeasure(int number) {
+        int scrollValue = Page.measureSize * (number - 1);
+        setHorizontalScroll(scrollValue);
+    }
+
     public void setHorizontalScroll(int value) {
-        numberBar.setScrollPosition(value);
-        hScrollBar.setValue(value);
+        handleHorizontalScrollBar(value);
+        hScrollBar.setValue(scrollPosition);
+    }
+
+    public int getScrollPostion() {
+        return scrollPosition;
     }
 
     public void setVerticalScroll(int value) {
@@ -323,6 +278,7 @@ class PageView extends JFrame {
         mainPanel.setMinimumSize(newSize);
         mainPanel.setPreferredSize(newSize);
         mainPanel.add(trackView);
+        trackView.setScrollPosition(scrollPosition);
         revalidate();
         pack();
     }
@@ -350,7 +306,7 @@ class PageView extends JFrame {
         return fileChooser.showSaveChooser(filter);
     }
 
-    public VelocitySlider showVelocitySlider(int scrollValue, MouseEvent evt, Note note) {
+    public VelocitySlider showVelocitySlider(MouseEvent evt, Note note) {
 
         Component c = (Component) evt.getSource();
         Point point = SwingUtilities.convertPoint(c, evt.getX(), evt.getY(), this);
@@ -367,14 +323,14 @@ class PageView extends JFrame {
         velocitySlider.setLocation(x, y);
         velocitySlider.setDisplay(note.velocity);
         velocitySlider.setValue(note.velocity);
-        //velocitySlider.setVisible(true);
+        velocitySlider.setVisible(true);
         return velocitySlider;
     }
 
     public void hideVelocitySlider() {
-        //velocitySlider.setVisible(false);
+        velocitySlider.setVisible(false);
         //hack to hide velocitySlider because setVisible affects page scroll
-        velocitySlider.setLocation(-100, 0);
+        //velocitySlider.setLocation(-100, 0);
     }
 
     public String showFileChooser(String filter) {

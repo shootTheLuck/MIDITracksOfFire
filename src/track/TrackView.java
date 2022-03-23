@@ -312,8 +312,8 @@ public class TrackView extends JPanel {
     }
 
     // page scrollbars only move drawArea
-    public void setScrollPosition() {
-        drawArea.setLocation(-Page.scrollValue + leftMargin, 0);
+    public void setScrollPosition(int value) {
+        drawArea.setLocation(-value + leftMargin, 0);
     }
 
     public void highliteBorder() {
@@ -360,7 +360,7 @@ public class TrackView extends JPanel {
 
         setComponentSize(side, leftMargin, Themes.getTrackHeight(trackType.numOfStrings));
         adjustMeasureSize();
-        setScrollPosition();
+        //setScrollPosition();
         //revalidate();
         //drawArea.repaint();
     }

@@ -10,7 +10,7 @@ class Main {
             public void run() {
                 console.log("starting up...");
                 Page page = new Page();
-                //page.loadFile("midi/RepoMan3Test.mid");
+                page.loadFile("midi/RepoMan3Test.mid");
             }
         });
     }
