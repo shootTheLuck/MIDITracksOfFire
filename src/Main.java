@@ -9,7 +9,7 @@ class Main {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 console.log("starting up...");
-                Page page = new Page();
+                Page page = Page.getInstance();
                 page.loadFile("midi/RepoMan3Test.mid");
             }
         });

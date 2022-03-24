@@ -70,8 +70,8 @@ public class Note extends Rectangle {
             "\n  x: " + x +
             "\n  y: " + y +
             //"\n  width: " + width +
-            //"\n  start: " + start +
-            //"\n  duration: " + duration +
+            "\n  start: " + start +
+            "\n  duration: " + duration +
             //"\n  instrument " + instrumentNum +
             //"\n  pitch " + pitch +
             //"\n  velocity " + velocity +

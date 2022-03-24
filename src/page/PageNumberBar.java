@@ -6,6 +6,7 @@ import javax.swing.*;
 
 import themes.Themes;
 import utils.*;
+import page.Page;
 
 class PageNumberBar extends JPanel {
 
@@ -18,22 +19,23 @@ class PageNumberBar extends JPanel {
     private int lMargin;
     private int height;
 
-    private Page page;
+    //private Page page;
 
     private Rectangle measureSizeDragger;
     private Rectangle playingMeasure;
     private Rectangle playingPosition;
 
-    public PageNumberBar(int height, int lMargin, Page page) {
+    public PageNumberBar(int height, int lMargin) {
 
         this.height = height;
         this.lMargin = lMargin;
-        this.page = page;
+        //this.page = page;
+        //this.pageView = pageView;
         measureSizeDragger = new Rectangle(new Dimension(20, 20));
-        measureSizeDragger.x = Page.measureSize - measureSizeDragger.width/2 + lMargin;
+        measureSizeDragger.x = PageView.measureSize - measureSizeDragger.width/2 + lMargin;
         indicatorHeight = height/10;
 
-        playingMeasure = new Rectangle(new Dimension(Page.measureSize, indicatorHeight));
+        playingMeasure = new Rectangle(new Dimension(PageView.measureSize, indicatorHeight));
         playingMeasure.setLocation(-1000, height - indicatorHeight);
 
         playingPosition = new Rectangle(new Dimension(2, indicatorHeight));
@@ -58,7 +60,7 @@ class PageNumberBar extends JPanel {
             public void mouseDragged(MouseEvent evt) {
                 if (dragging) {
                     int x = evt.getX();
-                    page.handleMeasureSizeSlider(x - lMargin);
+                    Page.getInstance().handleMeasureSizeSlider(x - lMargin);
                 }
             }
         });
@@ -69,18 +71,18 @@ class PageNumberBar extends JPanel {
         int tickMarkHeight = height/5;
 
         //TODO j < Page.numOfMeasures?
-        for (int j = 0; j < Page.width/Page.measureSize; j++) {
+        for (int j = 0; j < PageView.width/PageView.measureSize; j++) {
 
             // draw measure numbers (starting with 1) centered by they're width
             String string = String.valueOf(j + 1);
             int width = fontMetrics.stringWidth(string);
-            g2.drawString(string, lMargin + j * Page.measureSize - width/2, height * 2/3);
+            g2.drawString(string, lMargin + j * PageView.measureSize - width/2, height * 2/3);
 
             // draw vertical tick marks at each measure
             g2.drawLine(
-                lMargin + j * Page.measureSize,
+                lMargin + j * PageView.measureSize,
                 height - tickMarkHeight,
-                lMargin + j * Page.measureSize,
+                lMargin + j * PageView.measureSize,
                 height);
         }
 
@@ -88,7 +90,7 @@ class PageNumberBar extends JPanel {
         g2.drawLine(
             lMargin,
             height - indicatorHeight,
-            lMargin + Page.numOfMeasures * Page.measureSize,
+            lMargin + Page.numOfMeasures * PageView.measureSize,
             height - indicatorHeight);
 
         // draw dragger rectangle
@@ -119,24 +121,23 @@ class PageNumberBar extends JPanel {
     public void setScrollPosition(int value) {
         drawRectangle(measureSizeDragger);
         setLocation(-value, 0);
-        measureSizeDragger.x = value + Page.measureSize - measureSizeDragger.width/2 + lMargin;
+        measureSizeDragger.x = value + PageView.measureSize - measureSizeDragger.width/2 + lMargin;
         drawRectangle(measureSizeDragger);
     }
 
-    public void adjustMeasureSize() {
-        measureSizeDragger.x = Page.measureSize - measureSizeDragger.width/2 + lMargin;
-        playingMeasure.setSize(Page.measureSize, 3);
+    public void adjustMeasureSize(int measureSize) {
+        measureSizeDragger.x = measureSize - measureSizeDragger.width/2 + lMargin;
+        playingMeasure.setSize(measureSize, 3);
     }
 
-    public void setProgress(long tick) {
-        int ticksPerMeasure = page.getTicksPerMeasure();
+    public void setProgress(long tick, int ticksPerMeasure) {
 
         drawRectangle(playingMeasure);
-        playingMeasure.x = (int) (tick / ticksPerMeasure * Page.measureSize);
+        playingMeasure.x = (int) (tick / ticksPerMeasure * PageView.measureSize);
         drawRectangle(playingMeasure);
 
         drawRectangle(playingPosition);
-        playingPosition.x = (int) ((double) tick / ticksPerMeasure * Page.measureSize);
+        playingPosition.x = (int) ((double) tick / ticksPerMeasure * PageView.measureSize);
         drawRectangle(playingPosition);
     }
 

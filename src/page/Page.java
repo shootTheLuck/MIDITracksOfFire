@@ -21,9 +21,10 @@ import utils.*;
 
 public class Page {
 
+    private static volatile Page soleInstance;
     // global!!
-    public static int width = 3003;
-    public static int measureSize = 150;
+    //public static int width = 3003;
+    //public static int measureSize = 150;
     public static int scrollValue = 0;
     public static int numOfMeasures = 20;
     public static Properties preferences;
@@ -44,7 +45,7 @@ public class Page {
     private String name = "Untitled";
     private File file;
 
-    public Page() {
+    private Page() {
         preferences = new Properties();
 
         try (FileInputStream fis = new FileInputStream(prefFile)) {
@@ -72,6 +73,19 @@ public class Page {
 
     }
 
+    public static Page getInstance() {
+        //Double check locking pattern
+        if (soleInstance == null) { //Check for the first time
+
+            synchronized (Page.class) {   //Check for the second time.
+              //if there is no instance available... create new one
+              if (soleInstance == null) soleInstance = new Page();
+            }
+        }
+
+        return soleInstance;
+    }
+
     public String getPreference(String prefName) {
         return preferences.getProperty(prefName);
     }
@@ -94,7 +108,7 @@ public class Page {
             Sequence sequence = MidiSystem.getSequence(file);
             long l = sequence.getTickLength();
             numOfMeasures = (int) l/(sequence.getResolution() * 4);
-            width = Math.max(minWidth, numOfMeasures * measureSize + measureSize);
+            PageView.width = Math.max(minWidth, numOfMeasures * PageView.measureSize + PageView.measureSize);
             resolution = sequence.getResolution();
             view.reset();
             for (Track track : sequence.getTracks()) {
@@ -289,7 +303,7 @@ public class Page {
 
     private void addMeasures() {
         Page.numOfMeasures += 1;
-        Page.width += Page.measureSize;
+        PageView.width += PageView.measureSize;
         view.revalidate();
         view.repaint();
     }
@@ -410,41 +424,19 @@ public class Page {
         }
     }
 
-    public void handleNumberSliderOLD(int delta) {
-        Page.measureSize += delta;
-
-        if (Page.measureSize <= 50) {
-            Page.measureSize = 50;
-        }
-
-        Page.width = Page.numOfMeasures * Page.measureSize + Page.measureSize;
-        //int currentWidth = view.getCurrentWidth();
-        //Page.width = Math.max(Page.width, currentWidth);
-
-        view.showInfo(Page.measureSize);
-        view.adjustMeasureSize();
-        for (TrackController track : tracks) {
-            track.adjustMeasureSize();
-        }
-    }
-
     public void handleMeasureSizeSlider(int sliderValue) {
-        //Math.min(Math.max(min, value), max);
-        //Page.measureSize = Math.max(50, Math.min(sliderValue, 620));
-        view.showInfo(sliderValue);
-        //sliderValue -=
         double minimumMeasureSize = 50.0;
         double maximumMeasureSize = view.getCurrentWidth() * 0.8;
-        Page.measureSize = (int) Math.min(Math.max(minimumMeasureSize, sliderValue), maximumMeasureSize);
+        PageView.measureSize = (int) Math.min(Math.max(minimumMeasureSize, sliderValue), maximumMeasureSize);
 
-        Page.width = Page.numOfMeasures * Page.measureSize + Page.measureSize;
+        PageView.width = Page.numOfMeasures * PageView.measureSize + PageView.measureSize;
         //int currentWidth = view.getCurrentWidth();
         //Page.width = Math.max(Page.width, currentWidth);
 
+        view.adjustMeasureSize(PageView.measureSize);
         for (TrackController track : tracks) {
-            track.adjustMeasureSize();
+            track.adjustMeasureSize(PageView.measureSize);
         }
-        view.adjustMeasureSize();
         //handleScrollChange();
     }
 
@@ -559,10 +551,10 @@ public class Page {
     }
 
     public void handleSoundProgress(long tick) {
-        view.setProgress(tick);
-        selectedTrack.setProgress(tick);
+        view.setProgress(tick, getTicksPerMeasure());
+        selectedTrack.setProgress(tick, getTicksPerMeasure());
         int currentMeasure = (int) tick/getTicksPerMeasure();
-        int currentPosition = currentMeasure * Page.measureSize - scrollValue;
+        int currentPosition = currentMeasure * PageView.measureSize - scrollValue;
         int currentWidth = view.getCurrentWidth();
         if (currentPosition > currentWidth) {
             scrollValue += currentPosition;

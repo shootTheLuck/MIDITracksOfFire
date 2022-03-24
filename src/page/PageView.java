@@ -22,6 +22,8 @@ import utils.*;
 
 public class PageView extends JFrame {
 
+    public static int measureSize = 150;
+    public static int width = 3003;
     protected PagePlayControls playControls;
     protected PageKeyListener keyListener;
     protected PageMenu menuBar;
@@ -42,6 +44,7 @@ public class PageView extends JFrame {
     private FileChooser fileChooser;
     private int leftMargin = Themes.margin.get("left");
     private boolean changingMeasureSize = false;
+    //public int measureSize = 150;
 
     public PageView(Page pageController) {
 
@@ -103,17 +106,17 @@ public class PageView extends JFrame {
         playControls.setLayout(new BoxLayout(playControls, BoxLayout.LINE_AXIS));
         topBar.add(playControls);
 
-        topBar.setSize(new Dimension(Page.width, 40));
-        topBar.setPreferredSize(new Dimension(Page.width, 40));
-        topBar.setMaximumSize(new Dimension(Page.width, 40));
+        topBar.setSize(new Dimension(PageView.width, 40));
+        topBar.setPreferredSize(new Dimension(PageView.width, 40));
+        topBar.setMaximumSize(new Dimension(PageView.width, 40));
 
-        numberBar = new PageNumberBar(numberBarHeight, leftMargin, pageController);
+        numberBar = new PageNumberBar(numberBarHeight, leftMargin);
         numberBar.setLayout(null);
         numberBar.setBackground(Color.yellow);
         //numberBar.setBackground(Themes.colors.get("mainPanel"));
         numberBarContainer = new JPanel(null);
 
-        numberBarSize = new Dimension(Page.width, numberBarHeight);
+        numberBarSize = new Dimension(PageView.width, numberBarHeight);
         numberBarContainer.setSize(numberBarSize);
         numberBarContainer.setMinimumSize(numberBarSize);
         numberBarContainer.setMaximumSize(numberBarSize);
@@ -124,9 +127,9 @@ public class PageView extends JFrame {
         mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
         mainPanel.setBackground(Themes.colors.get("mainPanel"));
-        mainPanel.setSize(new Dimension(Page.width, 850));
-        mainPanel.setMinimumSize(new Dimension(Page.width, 850));
-        mainPanel.setPreferredSize(new Dimension(Page.width, 100));
+        mainPanel.setSize(new Dimension(PageView.width, 850));
+        mainPanel.setMinimumSize(new Dimension(PageView.width, 850));
+        mainPanel.setPreferredSize(new Dimension(PageView.width, 100));
 
         scrollPane = new JScrollPane(mainPanel);
         hScrollBar = scrollPane.getHorizontalScrollBar();
@@ -197,8 +200,8 @@ public class PageView extends JFrame {
         playControls.infoField.setText(o.toString());
     }
 
-    public void setProgress(long tick) {
-        numberBar.setProgress(tick);
+    public void setProgress(long tick, int ticksPerMeasure) {
+        numberBar.setProgress(tick, ticksPerMeasure);
     }
 
     public void cancelProgress() {
@@ -206,7 +209,7 @@ public class PageView extends JFrame {
     }
 
     private void handleHorizontalScrollBar(int value) {
-        scrollPosition = Page.measureSize * (value/Page.measureSize);
+        scrollPosition = PageView.measureSize * (value/PageView.measureSize);
         numberBar.setScrollPosition(scrollPosition);
         Component[] components = mainPanel.getComponents();
         for (int i = 0; i < components.length; i++) {
@@ -217,7 +220,7 @@ public class PageView extends JFrame {
     }
 
     public void setScrollPositionToMeasure(int number) {
-        int scrollValue = Page.measureSize * (number - 1);
+        int scrollValue = PageView.measureSize * (number - 1);
         setHorizontalScroll(scrollValue);
     }
 
@@ -239,19 +242,19 @@ public class PageView extends JFrame {
         return d.width - leftMargin * 2;
     }
 
-    public void adjustMeasureSize() {
-        numberBar.adjustMeasureSize();
+    public void adjustMeasureSize(int measureSize) {
+        numberBar.adjustMeasureSize(measureSize);
         reset();
     }
 
     public void reset() {
 
         int height = mainPanel.getSize().height;
-        mainPanel.setSize(new Dimension(Page.width, height));
-        mainPanel.setMinimumSize(new Dimension(Page.width, height));
-        mainPanel.setPreferredSize(new Dimension(Page.width, height));
+        mainPanel.setSize(new Dimension(PageView.width, height));
+        mainPanel.setMinimumSize(new Dimension(PageView.width, height));
+        mainPanel.setPreferredSize(new Dimension(PageView.width, height));
 
-        numberBarSize.width = Page.width + leftMargin;
+        numberBarSize.width = PageView.width + leftMargin;
 
         numberBar.setSize(numberBarSize);
         numberBar.setMinimumSize(numberBarSize);
@@ -267,6 +270,7 @@ public class PageView extends JFrame {
     }
 
     public void addTrackView(TrackView trackView, int totalNumOfTracks) {
+        trackView.setPageView(this);
         trackView.setAlignmentX(0.0f);
         int maxTrackHeight = Themes.getMaxTrackHeight();
         int newHeight = totalNumOfTracks * maxTrackHeight;

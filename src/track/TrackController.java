@@ -11,6 +11,7 @@ import java.util.List;
 import javax.swing.SwingUtilities;
 
 import page.Page;
+import page.PageView;
 import note.Note;
 import instruments.Instrument;
 import instruments.Instruments;
@@ -66,7 +67,7 @@ public class TrackController {
     }
 
     private int calcGridSize() {
-        return (int) (gridFraction * Page.measureSize);
+        return (int) (gridFraction * PageView.measureSize);
     }
 
     class MouseMoveSelectorRect implements MouseMoveStategy {
@@ -189,7 +190,7 @@ public class TrackController {
     }
 
     public int setNoteX(long start) {
-        return (int) ((double) start / pageController.getTicksPerMeasure() * Page.measureSize);
+        return (int) ((double) start / pageController.getTicksPerMeasure() * PageView.measureSize);
     }
 
     private int setNoteY(int stringNum) {
@@ -200,26 +201,26 @@ public class TrackController {
         if (trackType.name == "drums") {
             return trackType.noteDrawWidth;
         } else {
-            return (int) ((double) duration / pageController.getTicksPerMeasure() * Page.measureSize);
+            return (int) ((double) duration / pageController.getTicksPerMeasure() * PageView.measureSize);
         }
     }
 
     private long setNoteStart(int x) {
-        double measure = (double)x/Page.measureSize;
+        double measure = (double)x/PageView.measureSize;
         double corrected = Math.ceil(measure /gridFraction) * gridFraction;
         return (long) (corrected * pageController.getTicksPerMeasure());
     }
 
     private long setNoteDuration(int width) {
         long gridsIn = width/calcGridSize();
-        long gridsPerMeasure = Page.measureSize/calcGridSize();
+        long gridsPerMeasure = PageView.measureSize/calcGridSize();
         long ticksPerGrid = pageController.getTicksPerMeasure()/ gridsPerMeasure;
         return gridsIn * ticksPerGrid;
-        //return (long) ((double) width * pageController.getTicksPerMeasure() / Page.measureSize);
+        //return (long) ((double) width * pageController.getTicksPerMeasure() / PageView.measureSize);
     }
 
-    public void setProgress(long tick) {
-        int x = (int) ((double) tick / pageController.getTicksPerMeasure() * Page.measureSize);
+    public void setProgress(long tick, int ticksPerMeasure) {
+        int x = (int) ((double) tick / ticksPerMeasure * PageView.measureSize);
         view.drawProgressLine(x);
     }
 
@@ -389,7 +390,7 @@ public class TrackController {
             note.x += deltaX;
             //note.x = findNearestGrid(note.x + deltaX);
             //note.width = setNoteWidth(note.duration);
-            note.start += deltaX * pageController.getTicksPerMeasure() / Page.measureSize;
+            note.start += deltaX * pageController.getTicksPerMeasure() / PageView.measureSize;
 
             note.y += deltaY;
             note.stringNum = findNearestStringNum(note.y);
@@ -415,7 +416,7 @@ public class TrackController {
     }
 
     private int findNearestGrid(int x) {
-        double dist = x / (gridFraction * Page.measureSize);
+        double dist = x / (gridFraction * PageView.measureSize);
         double decimalPart = dist - Math.floor(dist);
         // snap to left side of cursor unless very close to next grid
         if (decimalPart > 0.7) {
@@ -423,7 +424,7 @@ public class TrackController {
         } else {
             dist = Math.floor(dist);
         }
-        return (int) (dist * (gridFraction * Page.measureSize));
+        return (int) (dist * (gridFraction * PageView.measureSize));
     }
 
     private int findNearestStringNum(int y) {
@@ -432,12 +433,12 @@ public class TrackController {
         return stringNum;
     };
 
-    public void adjustMeasureSize() {
+    public void adjustMeasureSize(int measureSize) {
         for (Note note : notes) {
             note.x = setNoteX(note.start);
             note.width = setNoteWidth(note.duration);
         }
-        view.adjustMeasureSize();
+        view.adjustMeasureSize(measureSize);
         lastX = findNearestGrid(lastX);
     }
 
@@ -568,7 +569,7 @@ public class TrackController {
         int x = evt.getX();
         int y = evt.getY();
 
-        //double dist = x / (gridFraction * Page.measureSize);
+        //double dist = x / (gridFraction * PageView.measureSize);
 
         dragStart.setLocation(x, y);
         dragStartGrid.setLocation(findNearestGrid(x), findNearestStringNum(y));
@@ -593,7 +594,7 @@ public class TrackController {
             }
             //console.log("xy", x, y);
             //console.log(note);
-            //console.log(Page.measureSize);
+            //console.log(PageView.measureSize);
 
             selectNote(note);
             if (MouseMods.ctrl || MouseMods.rClick) {

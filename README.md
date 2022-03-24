@@ -10,7 +10,8 @@ To rebuild with your awesome and needed improvements run `ant jar`. You'll need 
 I would **love** any contributions, feedback, issues etc that anyone might have! Hit the dang issues button! I'm a total amateur here. There's all kinds of messed-up stuff to work on!
 
 TODO's:
-- undo/redo!
+- learn to program better!
+- undo/redo
 - adding measures via edit menu
 - themes (skins) out of source and into plain text files
 - warn on close before save!

@@ -20,6 +20,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.text.MaskFormatter;
 
 import page.Page;
+import page.PageView;
 import note.Note;
 import themes.*;
 import utils.*;
@@ -80,12 +81,12 @@ class TrackDrawArea extends JLayeredPane {
     }
 
     private void drawDrumLines(Graphics2D g) {
-        int measureSize = Page.measureSize;
+        int measureSize = PageView.measureSize;
         int topMargin = Themes.margin.get("top");
         int lineSpacing = Themes.getLineSpacing();
 
         g.setColor(Color.gray);
-        g.fillRect(0, 10, Page.width, trackType.numOfStrings * lineSpacing * 2);
+        g.fillRect(0, 10, PageView.width, trackType.numOfStrings * lineSpacing * 2);
 
         g.setColor(Color.white);
         //g.setStroke(new BasicStroke(trackType.noteDrawHeight));
@@ -94,7 +95,7 @@ class TrackDrawArea extends JLayeredPane {
             g.drawLine(
                 0,
                 topMargin + i * lineSpacing,
-                Page.width,
+                PageView.width,
                 topMargin + i * lineSpacing);
         }
         g.setStroke(new BasicStroke(1));
@@ -102,7 +103,7 @@ class TrackDrawArea extends JLayeredPane {
     }
 
     private void drawLines(Graphics2D g) {
-        int measureSize = Page.measureSize;
+        int measureSize = PageView.measureSize;
         int topMargin = Themes.margin.get("top");
         int lineSpacing = Themes.getLineSpacing();
 
@@ -113,12 +114,12 @@ class TrackDrawArea extends JLayeredPane {
             g.drawLine(
                 0,
                 topMargin + i * lineSpacing,
-                Page.width,
+                PageView.width,
                 topMargin + i * lineSpacing);
         }
 
         g.setColor(Themes.colors.get("gridLines"));
-        for (int j = 0; j < 4 * Page.width/Page.measureSize; j++) {
+        for (int j = 0; j < 4 * PageView.width/measureSize; j++) {
             g.drawLine(
                 (int)(measureSize/4.0 * j),
                 topMargin,
@@ -127,7 +128,7 @@ class TrackDrawArea extends JLayeredPane {
         }
 
         g.setColor(Themes.colors.get("barLines"));
-        for (int i = 0; i < 1 + Page.width/Page.measureSize; i++) {
+        for (int i = 0; i < 1 + PageView.width/measureSize; i++) {
             g.drawLine(
                 measureSize * i,
                 topMargin,
@@ -152,6 +153,10 @@ class TrackDrawArea extends JLayeredPane {
         g2.setColor(Color.BLACK);
         g2.draw(path);
     }
+
+    //public int getNoteX(long start) {
+        //return (int) ((double) start / pageController.getTicksPerMeasure() * PageView.measureSize);
+    //}
 
     private void drawNote(Graphics2D g2, Note note, Color color) {
         int lineSpacing = Themes.getLineSpacing();
@@ -205,7 +210,7 @@ class TrackDrawArea extends JLayeredPane {
             //drawDrumLines(g2);
             drawLines(g2);
             for (Note note : controller.getNotes()) {
-                //if (note.x < Page.width) {
+                //if (note.x < PageView.width) {
                     if (note.isSelected) {
                         //drawNote(g2, note, Themes.colors.get("selectedNote"));
                         drawTriangle(g2, note, Themes.colors.get("selectedNote"));
@@ -219,7 +224,7 @@ class TrackDrawArea extends JLayeredPane {
         } else {
             drawLines(g2);
             for (Note note : controller.getNotes()) {
-                //if (note.x < Page.width) {
+                //if (note.x < PageView.width) {
                     if (note.isSelected) {
                         drawNote(g2, note, Themes.colors.get("selectedNote"));
                         //drawTriangle(g2, note, Themes.colors.get("selectedNote"));

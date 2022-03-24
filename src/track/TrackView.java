@@ -17,7 +17,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.text.*;
 import javax.swing.event.*;
 
-import page.Page;
+import page.PageView;
 import widgets.*;
 import themes.*;
 import note.Note;
@@ -35,6 +35,7 @@ public class TrackView extends JPanel {
     private TrackDrawArea drawAreaDrums;
     private TrackType trackType = TrackTypes.Guitar;
     private TrackController controller;
+    private PageView pageView;
 
     // topBar items:
     private Font topBarFont = new Font("Dialog", Font.PLAIN, 12);
@@ -259,6 +260,10 @@ public class TrackView extends JPanel {
 
     }
 
+    public void setPageView(PageView pageView) {
+        this.pageView = pageView;
+    }
+
     //https://stackoverflow.com/questions/10271116/iterate-through-all-objects-in-jframe
     private void listAllComponents(Container parent) {
         for (Component c : parent.getComponents()) {
@@ -359,27 +364,27 @@ public class TrackView extends JPanel {
         drawContainer.add(drawArea);
 
         setComponentSize(side, leftMargin, Themes.getTrackHeight(trackType.numOfStrings));
-        adjustMeasureSize();
+        adjustMeasureSize(PageView.measureSize);
         //setScrollPosition();
         //revalidate();
         //drawArea.repaint();
     }
 
-    public void adjustMeasureSize() {
-        setComponentSize(this, Page.width, Themes.getTrackHeight(trackType.numOfStrings));
-        setComponentSize(drawArea, Page.width, Themes.getTrackHeight(trackType.numOfStrings));
+    public void adjustMeasureSize(int measureSize) {
+        setComponentSize(this, PageView.width, Themes.getTrackHeight(trackType.numOfStrings));
+        setComponentSize(drawArea, PageView.width, Themes.getTrackHeight(trackType.numOfStrings));
         revalidate();
         repaint();
     }
 
     private void collapse() {
-        setComponentSize(this, Page.width, Themes.getTrackTopBarHeight() + 2);
+        setComponentSize(this, PageView.width, Themes.getTrackTopBarHeight() + 2);
         revalidate();
     }
 
     private void expand() {
-        setComponentSize(this, Page.width, Themes.getTrackHeight(trackType.numOfStrings));
-        setComponentSize(drawArea, Page.width, Themes.getTrackHeight(trackType.numOfStrings));
+        setComponentSize(this, PageView.width, Themes.getTrackHeight(trackType.numOfStrings));
+        setComponentSize(drawArea, PageView.width, Themes.getTrackHeight(trackType.numOfStrings));
         revalidate();
     }
 
