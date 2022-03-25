@@ -11,6 +11,7 @@ import java.awt.image.*;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.JOptionPane;
 
 import track.TrackView;
 import track.VelocitySlider;
@@ -25,8 +26,8 @@ public class PageView extends JFrame {
     public static int measureSize = 150;
     public static int width = 3003;
     protected PagePlayControls playControls;
-    protected PageKeyListener keyListener;
     protected PageMenu menuBar;
+    private PageKeyListener keyListener;
 
     private JPanel mainPanel;
     private JScrollPane scrollPane;
@@ -44,9 +45,8 @@ public class PageView extends JFrame {
     private FileChooser fileChooser;
     private int leftMargin = Themes.margin.get("left");
     private boolean changingMeasureSize = false;
-    //public int measureSize = 150;
 
-    public PageView(Page pageController) {
+    protected PageView(Page pageController) {
 
         setTitle("untitled");
 
@@ -187,24 +187,24 @@ public class PageView extends JFrame {
     }
 
     /* handle focus so that global keybindings will work */
-    public void setFocus() {
+    protected void setFocus() {
         keyListener.setFocus();
     }
 
     //@Override
-    //public Dimension getPreferredSize() {
+    //protected Dimension getPreferredSize() {
         //return new Dimension(1200, 900);
     //}
 
-    public void showInfo(Object o) {
+    protected void showInfo(Object o) {
         playControls.infoField.setText(o.toString());
     }
 
-    public void setProgress(long tick, int ticksPerMeasure) {
+    protected void setProgress(long tick, int ticksPerMeasure) {
         numberBar.setProgress(tick, ticksPerMeasure);
     }
 
-    public void cancelProgress() {
+    protected void cancelProgress() {
         numberBar.cancelProgress();
     }
 
@@ -219,35 +219,63 @@ public class PageView extends JFrame {
         }
     }
 
-    public void setScrollPositionToMeasure(int number) {
+    protected void setScrollPositionToMeasure(int number) {
         int scrollValue = PageView.measureSize * (number - 1);
         setHorizontalScroll(scrollValue);
     }
 
-    public void setHorizontalScroll(int value) {
+    protected void setHorizontalScroll(int value) {
         handleHorizontalScrollBar(value);
         hScrollBar.setValue(scrollPosition);
     }
 
-    public int getScrollPostion() {
+    protected int getScrollPostion() {
         return scrollPosition;
     }
 
-    public void setVerticalScroll(int value) {
+    protected void setVerticalScroll(int value) {
         mainPanel.setLocation(0, -value);
     }
 
-    public int getCurrentWidth() {
+    protected int getCurrentWidth() {
         Dimension d = this.getSize();
         return d.width - leftMargin * 2;
     }
 
-    public void adjustMeasureSize(int measureSize) {
+    protected void addMeasures(int howMany) {
+        PageView.width += PageView.measureSize * howMany;
+
+        Component[] components = mainPanel.getComponents();
+        for (int i = 0; i < components.length; i++) {
+            if (components[i] instanceof TrackView) {
+                ((TrackView)components[i]).adjustMeasureSize(PageView.measureSize);
+            }
+        }
+        //handleScrollChange();
+        numberBar.adjustMeasureSize(measureSize);
+        revalidate();
+        repaint();
+        reset();
+    }
+
+    protected void adjustMeasureSize(int sliderValue) {
+        double minimumMeasureSize = 50.0;
+        double maximumMeasureSize = getCurrentWidth() * 0.8;
+        PageView.measureSize = (int) Math.min(Math.max(minimumMeasureSize, sliderValue), maximumMeasureSize);
+        PageView.width = Page.numOfMeasures * PageView.measureSize + PageView.measureSize;
+
+        Component[] components = mainPanel.getComponents();
+        for (int i = 0; i < components.length; i++) {
+            if (components[i] instanceof TrackView) {
+                ((TrackView)components[i]).adjustMeasureSize(PageView.measureSize);
+            }
+        }
+        //handleScrollChange();
         numberBar.adjustMeasureSize(measureSize);
         reset();
     }
 
-    public void reset() {
+    protected void reset() {
 
         int height = mainPanel.getSize().height;
         mainPanel.setSize(new Dimension(PageView.width, height));
@@ -269,7 +297,7 @@ public class PageView extends JFrame {
         repaint();
     }
 
-    public void addTrackView(TrackView trackView, int totalNumOfTracks) {
+    protected void addTrackView(TrackView trackView, int totalNumOfTracks) {
         trackView.setPageView(this);
         trackView.setAlignmentX(0.0f);
         int maxTrackHeight = Themes.getMaxTrackHeight();
@@ -287,7 +315,7 @@ public class PageView extends JFrame {
         pack();
     }
 
-    public void removeTrackView(TrackView trackView) {
+    protected void removeTrackView(TrackView trackView) {
         if (mainPanel.isAncestorOf(trackView)) {
             mainPanel.remove(trackView);
             revalidate();
@@ -295,7 +323,7 @@ public class PageView extends JFrame {
         }
     }
 
-    public void removeAllTrackViews() {
+    protected void removeAllTrackViews() {
         Component[] components = mainPanel.getComponents();
         for (int i = 0; i < components.length; i++) {
             if (components[i] instanceof TrackView) {
@@ -306,11 +334,11 @@ public class PageView extends JFrame {
         repaint();
     }
 
-    public String showFileSaver(String filter) {
+    protected String showFileSaver(String filter) {
         return fileChooser.showSaveChooser(filter);
     }
 
-    public VelocitySlider showVelocitySlider(MouseEvent evt, Note note) {
+    protected VelocitySlider showVelocitySlider(MouseEvent evt, Note note) {
 
         Component c = (Component) evt.getSource();
         Point point = SwingUtilities.convertPoint(c, evt.getX(), evt.getY(), this);
@@ -331,17 +359,30 @@ public class PageView extends JFrame {
         return velocitySlider;
     }
 
-    public void hideVelocitySlider() {
+    protected void hideVelocitySlider() {
         velocitySlider.setVisible(false);
         //hack to hide velocitySlider because setVisible affects page scroll
         //velocitySlider.setLocation(-100, 0);
     }
 
-    public String showFileChooser(String filter) {
+    protected int showAddMeasuresDialog() {
+        int numberToAdd = 0;
+        String s = JOptionPane.showInputDialog(this, "Add Measures", 1);
+        if ((s != null) && (s.length() > 0)) {
+            try {
+                numberToAdd = Integer.parseInt(s);
+            } catch (NumberFormatException e) {
+                return numberToAdd;
+            }
+        }
+        return numberToAdd;
+    }
+
+    protected String showFileChooser(String filter) {
         return fileChooser.showOpenChooser(filter);
     }
 
-    public void disableMenuItem(Constants c) {
+    protected void disableMenuItem(Constants c) {
         menuBar.disableMenuItem(c);
     }
 

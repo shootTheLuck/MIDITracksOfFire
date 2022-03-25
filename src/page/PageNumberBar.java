@@ -1,6 +1,12 @@
 package page;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.*;
 import javax.swing.*;
 
@@ -18,8 +24,7 @@ class PageNumberBar extends JPanel {
     private int indicatorHeight;
     private int lMargin;
     private int height;
-
-    //private Page page;
+    private Page page;
 
     private Rectangle measureSizeDragger;
     private Rectangle playingMeasure;
@@ -108,6 +113,10 @@ class PageNumberBar extends JPanel {
         g2.fillRect(lMargin + playingPosition.x, playingPosition.y, playingPosition.width, playingMeasure.height);
     }
 
+    private void drawRectangle(Rectangle rect) {
+        repaint(lMargin + rect.x - 1, rect.y - 3, rect.width + 2, rect.height + 6);
+    }
+
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -151,8 +160,5 @@ class PageNumberBar extends JPanel {
         drawRectangle(playingPosition);
     }
 
-    private void drawRectangle(Rectangle rect) {
-        repaint(lMargin + rect.x - 1, rect.y - 3, rect.width + 2, rect.height + 6);
-    }
 
 }

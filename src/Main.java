@@ -11,6 +11,7 @@ class Main {
                 console.log("starting up...");
                 Page page = Page.getInstance();
                 page.loadFile("midi/RepoMan3Test.mid");
+                //page.loadFile("midi/2Instruments.mid");
             }
         });
     }

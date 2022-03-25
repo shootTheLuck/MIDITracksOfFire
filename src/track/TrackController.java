@@ -24,10 +24,9 @@ interface MouseMoveStategy {
 
 public class TrackController {
 
-    private Page pageController;
+    public Page pageController;
     private TrackView view;
     private Note selectedNote;
-    private Point mouseOffset = new Point();
     private Point dragStart = new Point();
     private Point dragStartGrid = new Point();
     private List<Note> selection;
@@ -105,7 +104,8 @@ public class TrackController {
             dragStartGrid.x = x2;
             dragStartGrid.y = y2;
 
-            moveSelectedNotes(diffX, diffY * Themes.getLineSpacing());
+            //moveSelectedNotes(diffX, diffY * Themes.getLineSpacing());
+            moveSelectedNotes(diffX, diffY);
         }
     }
 
@@ -119,13 +119,12 @@ public class TrackController {
                 mouseMoveStategy = moveSelectorRect;
                 notes.remove(selectedNote);
             } else {
-                mouseOffset.x = 0;
-                view.drawRectangle(selectedNote);
-                selectedNote.width =
-                        Math.max(calcGridSize(), findNearestGrid(x) - selectedNote.x);
-                selectedNote.duration = setNoteDuration(selectedNote.width);
+                view.drawNote(selectedNote);
+                selectedNote.rectangle.width =
+                        Math.max(calcGridSize(), findNearestGrid(x) - selectedNote.rectangle.x);
+                selectedNote.duration = setNoteDuration(selectedNote.rectangle.width);
             }
-            view.drawRectangle(selectedNote);
+            view.drawNote(selectedNote);
         }
     }
 
@@ -133,8 +132,6 @@ public class TrackController {
         @Override
         public void doIt(MouseEvent evt) {
             int x = evt.getX();
-            mouseOffset.x = 0;
-
             int x2 = findNearestGrid(x);
             int diffX = x2 - dragStartGrid.x;
 
@@ -189,22 +186,6 @@ public class TrackController {
         return name;
     }
 
-    public int setNoteX(long start) {
-        return (int) ((double) start / pageController.getTicksPerMeasure() * PageView.measureSize);
-    }
-
-    private int setNoteY(int stringNum) {
-        return Themes.margin.get("top") + stringNum * Themes.getLineSpacing() - Themes.getNoteHeight()/2;
-    }
-
-    public int setNoteWidth(long duration) {
-        if (trackType.name == "drums") {
-            return trackType.noteDrawWidth;
-        } else {
-            return (int) ((double) duration / pageController.getTicksPerMeasure() * PageView.measureSize);
-        }
-    }
-
     private long setNoteStart(int x) {
         double measure = (double)x/PageView.measureSize;
         double corrected = Math.ceil(measure /gridFraction) * gridFraction;
@@ -234,30 +215,16 @@ public class TrackController {
 
     public void loadNote(Note note) {
         trackType.assignStringAndFret(note);
-        note.x = setNoteX(note.start);
-        note.y = setNoteY(note.stringNum);
-        note.height = Themes.getNoteHeight();
-        note.width = setNoteWidth(note.duration);
-        if (trackType.noteDrawWidth > -1) {
-            note.width = trackType.noteDrawWidth;
-        }
         notes.add(note);
     }
 
-    public Note addNote(int x, int y) {
-        x = findNearestGrid(x);
-        y = setNoteY(findNearestStringNum(y));
-        Note note = new Note(x, y);
+    private Note addNote(int x, int y) {
+        Note note = new Note();
         note.stringNum = findNearestStringNum(y);
         note.pitch = trackType.findNotePitch(note.stringNum, note.fret);
-        if (trackType.noteDrawWidth > -1) {
-            note.width = trackType.noteDrawWidth;
-        } else {
-            note.width = 0;
-        }
         note.height = Themes.getNoteHeight();
-        note.start = setNoteStart(note.x);
-        note.duration = setNoteDuration(note.width);
+        x = findNearestGrid(x);
+        note.start = setNoteStart(x);
         notes.add(note);
         return note;
     }
@@ -290,7 +257,7 @@ public class TrackController {
         if (!selection.contains(selectedNote)) {
             selection.add(selectedNote);
         }
-        view.drawRectangle(selectedNote);
+        view.drawNote(selectedNote);
     }
 
     private void hideSelectorRect() {
@@ -299,11 +266,11 @@ public class TrackController {
 
         ///* loop backward through notes */
         for (int i = notes.size() - 1; i >= 0; i--) {
-            Note n = notes.get(i);
-            if (selectorRect.contains(n)) {
-                selectNote(n);
-                if (n.x == findNearestGrid(n.x)) {
-                    lastX = n.x;
+            Note note = notes.get(i);
+            if (selectorRect.contains(note.rectangle)) {
+                selectNote(note);
+                if (note.rectangle.x == findNearestGrid(note.rectangle.x)) {
+                    lastX = note.rectangle.x;
                 }
             }
         }
@@ -313,7 +280,7 @@ public class TrackController {
     private void clearSelection() {
         selection.forEach(note -> {
             note.isSelected = false;
-            view.drawRectangle(note);
+            view.drawRectangle(note.rectangle);
         });
         selectedNote = null;
         selection.clear();
@@ -322,7 +289,7 @@ public class TrackController {
     public void deleteSelectedNotes() {
         for (Note note : selection) {
             notes.remove(note);
-            view.drawRectangle(note);
+            view.drawNote(note);
         }
         selection.clear();
     }
@@ -331,7 +298,7 @@ public class TrackController {
         List<Note>temp = new ArrayList<>();
         for (Note note : selection) {
             notes.remove(note);
-            view.drawRectangle(note);
+            view.drawNote(note);
             temp.add(note);
         }
         selection.clear();
@@ -360,13 +327,10 @@ public class TrackController {
     }
 
     private void lengthenSelectedNotes(int deltaX) {
-
         for (Note note : selection) {
-            view.drawRectangle(note);
-            note.width += deltaX;
-                    //Math.max(calcGridSize(), findNearestGrid(x) - selectedNote.x);
-            note.duration = setNoteDuration(selectedNote.width);
-            view.drawRectangle(note);
+            view.drawNote(note);
+            note.duration += deltaX * pageController.getTicksPerMeasure() / PageView.measureSize;
+            view.drawNote(note);
         }
     }
 
@@ -375,7 +339,7 @@ public class TrackController {
         // do some checks on block as a whole before moving anything
         for (Note note : selection) {
             // don't move any notes to left if within 1 gridSize of 0
-            if (note.x < calcGridSize()) {
+            if (note.rectangle.x < calcGridSize()) {
                 deltaX = Math.max(deltaX, 0);
             }
             // don't move any notes to above or below number of strings
@@ -386,32 +350,28 @@ public class TrackController {
         }
 
         for (Note note : selection) {
-            view.drawRectangle(note);
-            note.x += deltaX;
-            //note.x = findNearestGrid(note.x + deltaX);
-            //note.width = setNoteWidth(note.duration);
+            view.drawNote(note);
             note.start += deltaX * pageController.getTicksPerMeasure() / PageView.measureSize;
-
-            note.y += deltaY;
-            note.stringNum = findNearestStringNum(note.y);
-
+            note.stringNum += deltaY;
             note.pitch = trackType.findNotePitch(note.stringNum, note.fret);
-            view.drawRectangle(note);
+            view.drawNote(note);
         }
     }
 
     public void moveSelectionArrowKeys(int dirX, int dirY) {
         for (Note note : selection) {
-            if (note.x == findNearestGrid(note.x)) {
-                lastX = note.x;
+            //if (note.rectangle.x == findNearestGrid(note.rectangle.x)) {
+                //lastX = note.rectangle.x;
+                lastX = findNearestGrid(note.rectangle.x);
                 break;
-            }
+            //}
         }
         int x2 = lastX + calcGridSize() * dirX;
         x2 = findNearestGrid(x2);
         int deltaX = x2 - lastX;
-        int deltaY = dirY * Themes.getLineSpacing();
-        moveSelectedNotes(deltaX, deltaY);
+        //int deltaY = dirY * Themes.getLineSpacing();
+        //moveSelectedNotes(deltaX, deltaY);
+        moveSelectedNotes(deltaX, dirY);
         lastX += deltaX;
     }
 
@@ -433,14 +393,10 @@ public class TrackController {
         return stringNum;
     };
 
-    public void adjustMeasureSize(int measureSize) {
-        for (Note note : notes) {
-            note.x = setNoteX(note.start);
-            note.width = setNoteWidth(note.duration);
-        }
-        view.adjustMeasureSize(measureSize);
-        lastX = findNearestGrid(lastX);
-    }
+    //public void adjustMeasureSize(int measureSize) {
+        //view.adjustMeasureSize(measureSize);
+        //lastX = findNearestGrid(lastX);
+    //}
 
     public Instrument getInstrument() {
         return instrument;
@@ -470,13 +426,13 @@ public class TrackController {
         trackType = type;
         for (Note note : notes) {
             trackType.assignStringAndFret(note);
-            note.y = setNoteY(note.stringNum);
+            //note.y = setNoteY(note.stringNum);
             //note.y = trackType.findNoteY(note.stringNum);
-            if (trackType.noteDrawWidth > -1) {
-                note.width = trackType.noteDrawWidth;
-            } else {
-                setNoteWidth(note.duration);
-            }
+            //if (trackType.noteDrawWidth > -1) {
+                //note.width = trackType.noteDrawWidth;
+            //} else {
+                //setNoteWidth(note.duration);
+            //}
         }
         view.setTrackType(type);
     }
@@ -582,7 +538,7 @@ public class TrackController {
         /* loop backward through notes */
         for (int i = notes.size() - 1; i >= 0; i--) {
             Note n = notes.get(i);
-            if (n.contains(x, y)) {
+            if (n.rectangle.contains(x, y)) {
                 note = n;
                 break;
             }
@@ -592,9 +548,6 @@ public class TrackController {
             if (!selection.contains(note) && !MouseMods.shift) {
                 clearSelection();
             }
-            //console.log("xy", x, y);
-            //console.log(note);
-            //console.log(PageView.measureSize);
 
             selectNote(note);
             if (MouseMods.ctrl || MouseMods.rClick) {
@@ -602,7 +555,7 @@ public class TrackController {
                 mouseMoveStategy = setNoteVelocity;
                 lastY = y;
 
-            } else if (x > selectedNote.x + selectedNote.width - 5) {
+            } else if (x > selectedNote.rectangle.x + selectedNote.rectangle.width - 5) {
                 //view.changeCursor(new Cursor(Cursor.W_RESIZE_CURSOR));
                 mouseMoveStategy = lengthenNote;
 
@@ -610,12 +563,10 @@ public class TrackController {
                 pageController.copySelection();
                 pageController.pasteSelection();
                 mouseMoveStategy = mouseMoveNote;
-                mouseOffset.x = x - selectedNote.x;
 
             } else {
                 //view.changeCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));
                 mouseMoveStategy = mouseMoveNote;
-                mouseOffset.x = x - selectedNote.x;
             }
 
         } else if (MouseMods.lClick) {
@@ -628,7 +579,7 @@ public class TrackController {
     }
 
     public void handleMouseUpDrawArea(MouseEvent evt) {
-        if (selectedNote != null && selectedNote.width <= 0) {
+        if (selectedNote != null && selectedNote.duration <= 0) {
             notes.remove(selectedNote);
             clearSelection();
         }
@@ -648,6 +599,7 @@ public class TrackController {
 
     public void handleInstrumentPicker(Instrument instrument) {
         if (Instruments.isDrumSet(instrument)) {
+            console.log("drum");
             setChannel(9);
         } else {
             //don't do this --but need to get from drum to other inst

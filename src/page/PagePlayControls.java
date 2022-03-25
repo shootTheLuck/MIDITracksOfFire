@@ -110,7 +110,7 @@ class PagePlayControls extends JPanel {
         add(infoField);
     }
 
-    public void togglePlayButton(Constants c) {
+    protected void togglePlayButton(Constants c) {
         if (c == Constants.BUTTON_STOP) {
             playButton.setIcon(stopIcon);
         } else {
@@ -118,19 +118,19 @@ class PagePlayControls extends JPanel {
         }
     }
 
-    public int getPlayStartField() {
+    protected int getPlayStartField() {
         return playStartField.getValue();
     }
 
-    public void setPlayStartField(int value) {
+    protected void setPlayStartField(int value) {
         playStartField.setValue(value);
     }
 
-    public int getBPMField() {
+    protected int getBPMField() {
         return BPMField.getValue();
     }
 
-    public void setBPMField(int bpm) {
+    protected void setBPMField(int bpm) {
         BPMField.setValue(bpm);
     }
 

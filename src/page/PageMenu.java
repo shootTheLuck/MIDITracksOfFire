@@ -171,7 +171,7 @@ class PageMenu extends JMenuBar {
             editSelectAll.setActionConstant(Constants.MENU_EDIT_SELECTALL);
             add(editSelectAll);
 
-            MenuItem editAddBars = new MenuItem("Add Bars");
+            MenuItem editAddBars = new MenuItem("Add Bars...");
             editAddBars.setAccessible("Add Chosen Number of Measures to All Tracks");
             //editAddBars.setCommandKey("A");
             editAddBars.setActionConstant(Constants.MENU_EDIT_ADDBARS);

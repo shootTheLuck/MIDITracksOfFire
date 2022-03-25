@@ -302,18 +302,17 @@ public class Page {
     }
 
     private void addMeasures() {
-        Page.numOfMeasures += 1;
-        PageView.width += PageView.measureSize;
-        view.revalidate();
-        view.repaint();
+        int numberToAdd = view.showAddMeasuresDialog();
+        Page.numOfMeasures += numberToAdd;
+        view.addMeasures(numberToAdd);
     }
 
     private void playAll() {
         int measureStart = view.playControls.getPlayStartField();
-        long startTime = (measureStart - 1) * getResolution() * 4;
+        long startTime = (measureStart - 1) * getTicksPerMeasure();
 
         view.setScrollPositionToMeasure(measureStart);
-        midi.play(tracks, BPM, getResolution(), startTime);
+        midi.play(tracks, BPM, resolution, startTime);
         progressTimer.start();
     }
 
@@ -323,12 +322,8 @@ public class Page {
             ////need to provide nested arraylist
             List<List<Note>> allNotes = new ArrayList<>();
             allNotes.add(selection);
-            midi.playSelection(allNotes, track, BPM, getResolution());
+            midi.playSelection(allNotes, track, BPM, resolution);
         }
-    }
-
-    public int getResolution() {
-        return resolution;
     }
 
     public int getTicksPerMeasure() {
@@ -366,7 +361,7 @@ public class Page {
 
     private void saveFile() {
         if (file != null) {
-            midi.writeToFile(file, tracks, BPM, getResolution());
+            midi.writeToFile(file, tracks, BPM, resolution);
         } else {
             saveFileAs();
         }
@@ -376,7 +371,7 @@ public class Page {
         String filename = view.showFileSaver("mid");
         if (!"".equals(filename)) {
             file = new File(filename);
-            midi.writeToFile(file, tracks, BPM, getResolution());
+            midi.writeToFile(file, tracks, BPM, resolution);
             view.setTitle(file.getName());
         }
     }
@@ -425,19 +420,7 @@ public class Page {
     }
 
     public void handleMeasureSizeSlider(int sliderValue) {
-        double minimumMeasureSize = 50.0;
-        double maximumMeasureSize = view.getCurrentWidth() * 0.8;
-        PageView.measureSize = (int) Math.min(Math.max(minimumMeasureSize, sliderValue), maximumMeasureSize);
-
-        PageView.width = Page.numOfMeasures * PageView.measureSize + PageView.measureSize;
-        //int currentWidth = view.getCurrentWidth();
-        //Page.width = Math.max(Page.width, currentWidth);
-
-        view.adjustMeasureSize(PageView.measureSize);
-        for (TrackController track : tracks) {
-            track.adjustMeasureSize(PageView.measureSize);
-        }
-        //handleScrollChange();
+        view.adjustMeasureSize(sliderValue);
     }
 
     public void handleMenuItem(Constants evt) {

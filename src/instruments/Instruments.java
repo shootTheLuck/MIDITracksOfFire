@@ -188,15 +188,14 @@ public class Instruments {
         return list.toArray(new Instrument[list.size()]);
     }
 
-    //TODO remove spaces?
     public static boolean isDrumSet(Instrument inst) {
-        if (inst.name == "   Standard Drum Kit" ||
-            inst.name == "   Room Kit"          ||
-            inst.name == "   Power Kit"         ||
-            inst.name == "   Electric Kit"      ||
-            inst.name == "   Rap TR808"         ||
-            inst.name == "   Jazz Kit"          ||
-            inst.name == "   Brush Kit") {
+        if (inst.name == "Standard Drum Kit" ||
+            inst.name == "Room Kit"          ||
+            inst.name == "Power Kit"         ||
+            inst.name == "Electric Kit"      ||
+            inst.name == "Rap TR808"         ||
+            inst.name == "Jazz Kit"          ||
+            inst.name == "Brush Kit") {
             return true;
         }
         return false;

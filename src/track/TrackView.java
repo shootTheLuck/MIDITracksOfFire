@@ -19,6 +19,7 @@ import javax.swing.event.*;
 
 import page.PageView;
 import widgets.*;
+import utils.*;
 import themes.*;
 import note.Note;
 import instruments.Instrument;
@@ -54,21 +55,16 @@ public class TrackView extends JPanel {
     private int leftMargin = Themes.margin.get("left");
     private Icon muteOnIcon = new ImageIcon("assets/audio-volume-muted.png");
     private Icon muteOffIcon = new ImageIcon("assets/audio-volume-high.png");
-    //private Icon collapseIcon = new ImageIcon("assets/DisclosureArrow_Opened_Over.png");
-    //private Icon expandIcon = new ImageIcon("assets/DisclosureArrow_Closed_Over.png");
     private Icon collapseIcon = new ImageIcon("assets/pan-down-symbolic.symbolic.png");
     private Icon expandIcon = new ImageIcon("assets/pan-end-symbolic.symbolic.png");
 
     private JFormattedTextField fretField;
-    //private NumberInputField fretField;
     private Font fretFont = new Font("Dialog", Font.PLAIN, 11);
     private FontMetrics fMetrics = getFontMetrics(fretFont);
     private int fHeight = fMetrics.getAscent();
 
-    //public TrackView(TrackController controller, TrackType type, String name) {
     public TrackView(TrackController controller, String name) {
         this.controller = controller;
-        //this.trackType = type;
 
         drawAreaGuitar = new TrackDrawArea(controller, TrackTypes.Guitar);
         drawAreaBass = new TrackDrawArea(controller, TrackTypes.Bass);
@@ -80,8 +76,8 @@ public class TrackView extends JPanel {
 
         topBar = new JPanel();
         topBar.setLayout(new BoxLayout(topBar, BoxLayout.LINE_AXIS));
-        topBar.setMinimumSize(new Dimension(520, Themes.getTrackTopBarHeight()));
-        topBar.setPreferredSize(new Dimension(520, Themes.getTrackTopBarHeight()));
+        //topBar.setMinimumSize(new Dimension(520, Themes.getTrackTopBarHeight()));
+        //topBar.setPreferredSize(new Dimension(520, Themes.getTrackTopBarHeight()));
         add(topBar, BorderLayout.PAGE_START);
 
         int topElementHeight = Themes.getTrackTopBarHeight() - 5;
@@ -359,6 +355,7 @@ public class TrackView extends JPanel {
         } else if (s.equals("drums")) {
             drawArea = drawAreaDrums;
         }
+
         trackTypePicker.setSelectedItem(trackType);
         addNotifier(drawArea);
         drawContainer.add(drawArea);
@@ -455,8 +452,12 @@ public class TrackView extends JPanel {
     }
 
     public void drawRectangle(Rectangle rect) {
-        // additions/subtractions paint slightly more than needed to erase outdated pixels
+         ///additions/subtractions paint slightly more than needed to erase outdated pixels
         drawArea.repaint(rect.x - 8, rect.y - 4, rect.width + 16, rect.height + 8);
+    }
+
+    public void drawNote(Note note) {
+        drawArea.overwriteNote(note);
     }
 
     public void drawProgressLine(int x) {
