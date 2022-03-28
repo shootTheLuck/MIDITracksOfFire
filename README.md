@@ -1,6 +1,6 @@
 # TracksOfFire
 
-Compose, edit, and play MIDI files with a tablature based ui. This is not the greatest midi editor in the world. This is just a tribute. TracksOfFire is totally inspired by Easy Beat the musical authoring program designed and produced by Günther Blaschek and distributed by Macility/Ergonis Software.
+Compose, edit, and play MIDI files with a tablature based ui. This is not the greatest midi editor in the world. This is just a tribute. TracksOfFire is totally inspired by Easy Beat! Easy Beat was a musical authoring program designed and produced by Günther Blaschek and distributed by Macility/Ergonis Software. If this project can recreate 1/10th of Easy Beat's features I'd be happy!
 
 
 ## To use:
