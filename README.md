@@ -1,6 +1,6 @@
 # TracksOfFire
 
-Compose, edit, and play MIDI files with a tablature based ui. This is not the greatest midi editor in the world. This is just a tribute. TracksOfFire is totally inspired by the musical authoring program designed and produced by Günther Blaschek, (c) and distributed by Macility/Ergonis Software.
+Compose, edit, and play MIDI files with a tablature based ui. This is not the greatest midi editor in the world. This is just a tribute. TracksOfFire is totally inspired by Easy Beat the musical authoring program designed and produced by Günther Blaschek and distributed by Macility/Ergonis Software.
 
 
 ## To use:
@@ -17,7 +17,7 @@ TODO's:
 - warn on close before save!
 
 ## Credits:
-- Easy Beat by Macility/Ergonis Software.
+- Easy Beat (c) Macility/Ergonis Software.
 - RepoMan.mid is a midi rendition of Repo Man by Iggy Pop from the "Repo-Man" soundtrack. Midified by me and included here for demonstration purposes only
 - Artwork and soundfonts are the work of others and licensed separately by their respective authors
 - Tribute is a song by Tenacious D
