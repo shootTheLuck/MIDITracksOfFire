@@ -20,7 +20,7 @@ import javax.swing.event.*;
 import page.PageView;
 import widgets.*;
 import utils.*;
-import themes.*;
+import themes.ThemeReader;
 import note.Note;
 import instruments.Instrument;
 
@@ -51,8 +51,7 @@ public class TrackView extends JPanel {
     private JComboBox<TrackType>trackTypePicker;
     private NumberInputField volumeField;
     private int borderWidth = 1;
-    //private int topBarHeight = 30;
-    private int leftMargin = Themes.margin.get("left");
+    private int leftMargin = ThemeReader.getMeasure("track.strings.margin.left");
     private Icon muteOnIcon = new ImageIcon("assets/audio-volume-muted.png");
     private Icon muteOffIcon = new ImageIcon("assets/audio-volume-high.png");
     private Icon collapseIcon = new ImageIcon("assets/pan-down-symbolic.symbolic.png");
@@ -80,7 +79,7 @@ public class TrackView extends JPanel {
         //topBar.setPreferredSize(new Dimension(520, Themes.getTrackTopBarHeight()));
         add(topBar, BorderLayout.PAGE_START);
 
-        int topElementHeight = Themes.getTrackTopBarHeight() - 5;
+        int topElementHeight = ThemeReader.getMeasure("track.topPanel.height") - 5;
 
         UIManager.put("Label.font", topBarFont);
         UIManager.put("Button.font", topBarFont);
@@ -209,12 +208,6 @@ public class TrackView extends JPanel {
 
         deHighliteBorder();
 
-        //fretField = new NumberInputField(2);
-            //fretField.setFont(fretFont);
-            //hideComponent(fretField);
-            //setComponentSize(fretField, 20, 20);
-            //drawArea.add(fretField, 2);
-
         try {
             MaskFormatter maskFormatter = new MaskFormatter("##");
             fretField = new JFormattedTextField(maskFormatter);
@@ -258,6 +251,10 @@ public class TrackView extends JPanel {
 
     public void setPageView(PageView pageView) {
         this.pageView = pageView;
+    }
+
+    public void setTheme() {
+
     }
 
     //https://stackoverflow.com/questions/10271116/iterate-through-all-objects-in-jframe
@@ -318,17 +315,17 @@ public class TrackView extends JPanel {
     }
 
     public void highliteBorder() {
-        topBar.setBackground(Themes.colors.get("selectedTrack"));
-        trackNameField.setBackground(Color.white);
+        topBar.setBackground(ThemeReader.getColor("track.topPanel.selected.background"));
+        trackNameField.setBackground(ThemeReader.getColor("track.nameField.selected.background"));
         if (!trackNameField.isFocused) {
             trackNameField.setBorder(trackNameBorder);
         }
     }
 
     public void deHighliteBorder() {
-        topBar.setBackground(Themes.colors.get("unSelectedTrack"));
-        trackNameField.setBackground(Themes.colors.get("unSelectedTrack"));
-        trackNameField.setBorder(new LineBorder(Themes.colors.get("unSelectedTrack"), 2));
+        topBar.setBackground(ThemeReader.getColor("track.topPanel.unselected.background"));
+        trackNameField.setBackground(ThemeReader.getColor("track.topPanel.unselected.background"));
+        trackNameField.setBorder(new LineBorder(ThemeReader.getColor("track.topPanel.unselected.background"), 2));
         hideProgressLine();
     }
 
@@ -360,7 +357,10 @@ public class TrackView extends JPanel {
         addNotifier(drawArea);
         drawContainer.add(drawArea);
 
-        setComponentSize(side, leftMargin, Themes.getTrackHeight(trackType.numOfStrings));
+        int height = ThemeReader.getMeasure("track.strings.spacing") * trackType.numOfStrings;
+        height += ThemeReader.getMeasure("track.strings.margin.top");
+        height += ThemeReader.getMeasure("track.strings.margin.bottom");
+        setComponentSize(side, leftMargin, height);
         adjustMeasureSize(PageView.measureSize);
         //setScrollPosition();
         //revalidate();
@@ -368,20 +368,26 @@ public class TrackView extends JPanel {
     }
 
     public void adjustMeasureSize(int measureSize) {
-        setComponentSize(this, PageView.width, Themes.getTrackHeight(trackType.numOfStrings));
-        setComponentSize(drawArea, PageView.width, Themes.getTrackHeight(trackType.numOfStrings));
+        int height = ThemeReader.getMeasure("track.strings.spacing") * trackType.numOfStrings;
+        height += ThemeReader.getMeasure("track.strings.margin.top");
+        height += ThemeReader.getMeasure("track.strings.margin.bottom");
+        setComponentSize(this, PageView.width, height);
+        setComponentSize(drawArea, PageView.width, height);
         revalidate();
         repaint();
     }
 
     private void collapse() {
-        setComponentSize(this, PageView.width, Themes.getTrackTopBarHeight() + 2);
+        setComponentSize(this, PageView.width, ThemeReader.getMeasure("track.topPanel.height") + 2);
         revalidate();
     }
 
     private void expand() {
-        setComponentSize(this, PageView.width, Themes.getTrackHeight(trackType.numOfStrings));
-        setComponentSize(drawArea, PageView.width, Themes.getTrackHeight(trackType.numOfStrings));
+        int height = ThemeReader.getMeasure("track.strings.spacing") * trackType.numOfStrings;
+        height += ThemeReader.getMeasure("track.strings.margin.top");
+        height += ThemeReader.getMeasure("track.strings.margin.bottom");
+        setComponentSize(this, PageView.width, height);
+        setComponentSize(drawArea, PageView.width, height);
         revalidate();
     }
 
@@ -436,7 +442,7 @@ public class TrackView extends JPanel {
     }
 
     public void showFretField(Note note, int fretNum) {
-        fretField.setLocation(note.x - 2, note.y - 5);
+        fretField.setLocation(note.rectangle.x - 2, note.rectangle.y - 5);
         //fretField.requestFocusInWindow();
         fretField.grabFocus();
         fretField.setText(String.valueOf(fretNum));

@@ -162,4 +162,9 @@ public class NumberInputField extends InputField {
         check();
     }
 
+    @Override
+    public String toString() {
+        return "NumberInputField " + getValue();
+    }
+
 }

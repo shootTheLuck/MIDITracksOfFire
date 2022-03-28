@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import note.Note;
-import themes.Themes;
 
 
 public class TrackType {
@@ -21,14 +20,6 @@ public class TrackType {
         if (stringNum == 5) return 40 + fret;
         return 0;
     }
-
-    //public int findNoteY(int stringNum) {
-        //return Themes.margin.get("top") + Themes.getLineSpacing() * stringNum - noteDrawHeight/2;
-    //}
-
-    //public int assignNoteHeight(Note note) {
-
-    //}
 
     public void assignStringAndFret(Note note) {
         int stringNum = 0;

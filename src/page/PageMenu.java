@@ -16,6 +16,7 @@ class PageMenu extends JMenuBar {
         add(new FileMenu());
         add(new EditMenu());
         add(new TrackMenu());
+        add(new ViewMenu());
         add(new MusicMenu());
     }
 
@@ -171,11 +172,11 @@ class PageMenu extends JMenuBar {
             editSelectAll.setActionConstant(Constants.MENU_EDIT_SELECTALL);
             add(editSelectAll);
 
-            MenuItem editAddBars = new MenuItem("Add Bars...");
-            editAddBars.setAccessible("Add Chosen Number of Measures to All Tracks");
+            MenuItem editInsertBars = new MenuItem("Insert Bars...");
+            editInsertBars.setAccessible("Add Chosen Number of Measures to All Tracks");
             //editAddBars.setCommandKey("A");
-            editAddBars.setActionConstant(Constants.MENU_EDIT_ADDBARS);
-            add(editAddBars);
+            editInsertBars.setActionConstant(Constants.MENU_EDIT_INSERTBARS);
+            add(editInsertBars);
         }
     }
 
@@ -194,6 +195,27 @@ class PageMenu extends JMenuBar {
             removeTrack.setAccessible("Remove Selected Track");
             removeTrack.setActionConstant(Constants.MENU_TRACK_REMOVE);
             add(removeTrack);
+        }
+    }
+
+    class ViewMenu extends JMenu {
+
+        public JMenu subMenu;
+
+        public ViewMenu() {
+            setText("View");
+            setAccessibleText(this, "View Menu");
+
+            MenuItem setTheme = new MenuItem("Set Theme");
+            setTheme.setAccessible("Set Application Theme");
+            setTheme.setActionConstant(Constants.MENU_VIEW_SETTHEME);
+
+            //subMenu = new JMenu("sub");
+            //setTheme.add(subMenu);
+            //MenuItem menuItem = new MenuItem("An item in the submenu");
+            //setTheme.add(menuItem);
+            add(setTheme);
+
         }
     }
 

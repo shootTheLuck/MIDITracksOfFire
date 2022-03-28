@@ -177,6 +177,7 @@ public class Midi {
                     new ShortMessage(ShortMessage.NOTE_ON, channel, note.pitch, note.velocity);
             ShortMessage noteOff =
                     new ShortMessage(ShortMessage.NOTE_ON, channel, note.pitch, 0);
+                    //new ShortMessage(ShortMessage.NOTE_OFF, channel, note.pitch, 0);
 
             long noteStart = note.start - startTime; // 0 if just one note
             long noteEnd = noteStart + note.duration;
@@ -195,7 +196,6 @@ public class Midi {
             Sequence sequence = new Sequence(Sequence.PPQ, resolution);
             for (List<Note> trackNotes : tracks) {
                 Track track = makeMidiTrack(tController, BPM, sequence);
-
                 Collections.sort(trackNotes, new SortbyStart());
                 int channel = tController.getChannel();
                 for (Note note : trackNotes) {
@@ -217,7 +217,6 @@ public class Midi {
             playSequence = new Sequence(Sequence.PPQ, resolution);
             for (TrackController tController : trackControllers) {
                 Track track = makeMidiTrack(tController, BPM, playSequence);
-
                 List<Note>trackNotes = tController.getNotes();
                 Collections.sort(trackNotes, new SortbyStart());
                 int channel = tController.getChannel();
@@ -241,6 +240,7 @@ public class Midi {
             for (TrackController tController : trackControllers) {
                 Track track = makeMidiTrack(tController, BPM, sequence);
                 List<Note>trackNotes = tController.getNotes();
+                Collections.sort(trackNotes, new SortbyStart());
                 int channel = tController.getChannel();
                 for (Note note : trackNotes) {
                     loadMidiNote(note, channel, track);

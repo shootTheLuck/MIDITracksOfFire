@@ -10,7 +10,7 @@ import java.awt.Rectangle;
 import java.awt.event.*;
 import javax.swing.*;
 
-import themes.Themes;
+import themes.ThemeReader;
 import utils.*;
 import page.Page;
 
@@ -107,7 +107,7 @@ class PageNumberBar extends JPanel {
     }
 
     private void drawPlayingIndicators(Graphics2D g2) {
-        g2.setColor(Themes.colors.get("playingMeasure"));
+        g2.setColor(ThemeReader.getColor("page.numberBar.playingMeasure"));
         g2.fillRect(lMargin + playingMeasure.x, playingMeasure.y, playingMeasure.width, playingMeasure.height);
         g2.setColor(Color.white);
         g2.fillRect(lMargin + playingPosition.x, playingPosition.y, playingPosition.width, playingMeasure.height);

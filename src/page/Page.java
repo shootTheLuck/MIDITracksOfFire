@@ -17,6 +17,7 @@ import track.VelocitySlider;
 import midi.Midi;
 import note.Note;
 import utils.*;
+import themes.*;
 
 
 public class Page {
@@ -47,11 +48,17 @@ public class Page {
 
     private Page() {
         preferences = new Properties();
+        boolean themed = false;
 
         try (FileInputStream fis = new FileInputStream(prefFile)) {
             preferences.load(fis);
+            String themeFile = preferences.getProperty("theme");
+            if (themeFile != null && !themeFile.isEmpty()) {
+                ThemeReader.loadTheme("themes/" + themeFile);
+                themed = true;
+            }
         } catch (FileNotFoundException ex) {
-            console.log("an error occured trying to load file", prefFile, ":", ex);
+            console.log("an error occured trying to load preferences file", prefFile, ":", ex);
         } catch (IOException ex) {
             //
         }
@@ -69,6 +76,9 @@ public class Page {
         addNewTrack();
         //view.pack();
         view.reset();
+        if (themed) {
+            view.setTheme();
+        }
         view.setVisible(true);
 
     }
@@ -301,10 +311,18 @@ public class Page {
         selectedTrack.pasteSelectedNotes(clipboard);
     }
 
-    private void addMeasures() {
-        int numberToAdd = view.showAddMeasuresDialog();
-        Page.numOfMeasures += numberToAdd;
-        view.addMeasures(numberToAdd);
+    private void insertBars() {
+        int[] instructions = view.showAddBarsDialog();
+        int numberToAdd = instructions[0];
+        if (numberToAdd > 0) {
+
+            Page.numOfMeasures += numberToAdd;
+            view.addMeasures(numberToAdd);
+            int addBefore = instructions[1];
+            for (TrackController track : tracks) {
+                track.insertBars(numberToAdd, addBefore);
+            }
+        }
     }
 
     private void playAll() {
@@ -340,7 +358,10 @@ public class Page {
 
     public void shutDown() {
         console.log("shutting down...");
-
+        String settingsFileName = ThemeReader.getSettingsName();
+        if (settingsFileName != null) {
+            setPreference("theme", settingsFileName);
+        }
         try (FileOutputStream out = new FileOutputStream(prefFile)) {
             preferences.store(out, "---Preferences File---");
             out.close();
@@ -380,6 +401,14 @@ public class Page {
         String sf2 = view.showFileChooser("sf2");
         if (!"".equals(sf2)) {
             midi.setSoundfont(sf2);
+        }
+    }
+
+    private void chooseTheme() {
+        String fileName = view.showFileChooser("theme");
+        if (!"".equals(fileName)) {
+            ThemeReader.loadTheme(fileName);
+            view.setTheme();
         }
     }
 
@@ -446,6 +475,9 @@ public class Page {
             case MENU_TRACK_REMOVE:
                 removeSelectedTrack();
                 break;
+            case MENU_VIEW_SETTHEME:
+                chooseTheme();
+                break;
             case MENU_MUSIC_PLAY:
                 handlePlayControls(Constants.BUTTON_PLAY);
                 break;
@@ -470,8 +502,8 @@ public class Page {
             case MENU_EDIT_PASTE:
                 pasteSelection();
                 break;
-            case MENU_EDIT_ADDBARS:
-                addMeasures();
+            case MENU_EDIT_INSERTBARS:
+                insertBars();
                 break;
             default:
         }

@@ -18,7 +18,7 @@ import track.VelocitySlider;
 import track.VelocitySliderUI;
 import note.Note;
 import widgets.*;
-import themes.*;
+import themes.ThemeReader;
 import utils.*;
 
 public class PageView extends JFrame {
@@ -30,11 +30,9 @@ public class PageView extends JFrame {
     private PageKeyListener keyListener;
 
     private JPanel mainPanel;
-    private JScrollPane scrollPane;
     private JScrollBar hScrollBar;
     private JScrollBar vScrollBar;
-    private JViewport viewport;
-    private JPanel base;
+    private JPanel topBar;
     private JPanel numberBarContainer;
     private PageNumberBar numberBar;
     private VelocitySlider velocitySlider;
@@ -43,8 +41,9 @@ public class PageView extends JFrame {
     private int numberBarHeight = 30;
     private Dimension numberBarSize;
     private FileChooser fileChooser;
-    private int leftMargin = Themes.margin.get("left");
+    private int leftMargin = ThemeReader.getMeasure("track.strings.margin.left");
     private boolean changingMeasureSize = false;
+
 
     protected PageView(Page pageController) {
 
@@ -92,13 +91,12 @@ public class PageView extends JFrame {
         menuBar = new PageMenu(pageController);
         setJMenuBar(menuBar);
 
-        base = new JPanel();
+        JPanel base = new JPanel();
         base.setBackground(Color.black);
         base.setLayout(new BoxLayout(base, BoxLayout.Y_AXIS));
         add(base);
 
-        JPanel topBar = new JPanel();
-        topBar.setBackground(Themes.colors.get("unSelectedTrack"));
+        topBar = new JPanel();
         topBar.setLayout(new BoxLayout(topBar, BoxLayout.LINE_AXIS));
         base.add(topBar);
 
@@ -112,8 +110,6 @@ public class PageView extends JFrame {
 
         numberBar = new PageNumberBar(numberBarHeight, leftMargin);
         numberBar.setLayout(null);
-        numberBar.setBackground(Color.yellow);
-        //numberBar.setBackground(Themes.colors.get("mainPanel"));
         numberBarContainer = new JPanel(null);
 
         numberBarSize = new Dimension(PageView.width, numberBarHeight);
@@ -126,12 +122,11 @@ public class PageView extends JFrame {
 
         mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
-        mainPanel.setBackground(Themes.colors.get("mainPanel"));
         mainPanel.setSize(new Dimension(PageView.width, 850));
         mainPanel.setMinimumSize(new Dimension(PageView.width, 850));
         mainPanel.setPreferredSize(new Dimension(PageView.width, 100));
 
-        scrollPane = new JScrollPane(mainPanel);
+        JScrollPane scrollPane = new JScrollPane(mainPanel);
         hScrollBar = scrollPane.getHorizontalScrollBar();
         vScrollBar = scrollPane.getVerticalScrollBar();
 
@@ -164,7 +159,7 @@ public class PageView extends JFrame {
             }
         }
 
-        viewport = new MyView();
+        JViewport viewport = new MyView();
         viewport.setView(mainPanel);
         scrollPane.setViewport(viewport);
         base.add(scrollPane);
@@ -195,6 +190,19 @@ public class PageView extends JFrame {
     //protected Dimension getPreferredSize() {
         //return new Dimension(1200, 900);
     //}
+
+    protected void setTheme() {
+        topBar.setBackground(ThemeReader.getColor("page.topPanel.background"));
+        numberBar.setBackground(ThemeReader.getColor("page.numberBar.background"));
+        mainPanel.setBackground(ThemeReader.getColor("page.mainPanel.background"));
+        Component[] components = mainPanel.getComponents();
+        for (int i = 0; i < components.length; i++) {
+            if (components[i] instanceof TrackView) {
+                ((TrackView)components[i]).setTheme();
+            }
+        }
+        repaint();
+    }
 
     protected void showInfo(Object o) {
         playControls.infoField.setText(o.toString());
@@ -300,16 +308,21 @@ public class PageView extends JFrame {
     protected void addTrackView(TrackView trackView, int totalNumOfTracks) {
         trackView.setPageView(this);
         trackView.setAlignmentX(0.0f);
-        int maxTrackHeight = Themes.getMaxTrackHeight();
-        int newHeight = totalNumOfTracks * maxTrackHeight;
+        mainPanel.add(trackView);
 
+        int newHeight = 0;
+        Component[] components = mainPanel.getComponents();
+        for (int i = 0; i < components.length; i++) {
+            if (components[i] instanceof TrackView) {
+                newHeight += components[i].getSize().height;
+            }
+        }
         Dimension size = mainPanel.getSize();
         Dimension newSize = new Dimension((int) size.getWidth(), Math.max((int) size.getHeight(), newHeight));
 
         mainPanel.setSize(newSize);
         mainPanel.setMinimumSize(newSize);
         mainPanel.setPreferredSize(newSize);
-        mainPanel.add(trackView);
         trackView.setScrollPosition(scrollPosition);
         revalidate();
         pack();
@@ -365,17 +378,17 @@ public class PageView extends JFrame {
         //velocitySlider.setLocation(-100, 0);
     }
 
-    protected int showAddMeasuresDialog() {
-        int numberToAdd = 0;
-        String s = JOptionPane.showInputDialog(this, "Add Measures", 1);
-        if ((s != null) && (s.length() > 0)) {
-            try {
-                numberToAdd = Integer.parseInt(s);
-            } catch (NumberFormatException e) {
-                return numberToAdd;
-            }
+    protected int[] showAddBarsDialog() {
+
+        AddBarsDialog addBarsDialog = new AddBarsDialog((JFrame) this);
+
+        int[] result = addBarsDialog.getValue();
+        if (result[0] > 0) {
+            return result;
+        } else {
+            int[] nothingToAdd = {0, 0};
+            return nothingToAdd;
         }
-        return numberToAdd;
     }
 
     protected String showFileChooser(String filter) {

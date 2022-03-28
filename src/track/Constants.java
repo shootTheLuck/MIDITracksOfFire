@@ -1,4 +1,4 @@
-package page;
+package track;
 
 enum Constants {
 
@@ -30,12 +30,9 @@ enum Constants {
     MENU_EDIT_PASTE,
     MENU_EDIT_CLEAR,
     MENU_EDIT_SELECTALL,
-    MENU_EDIT_INSERTBARS,
 
     MENU_TRACK_ADD,
     MENU_TRACK_REMOVE,
-
-    MENU_VIEW_SETTHEME,
 
     MENU_MUSIC_PLAY,
     MENU_MUSIC_PLAYSELECTION,

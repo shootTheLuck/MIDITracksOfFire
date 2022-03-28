@@ -1,9 +1,10 @@
 package note;
 
 import java.awt.Rectangle;
+import utils.*;
 
 class Serial {
-    static long number = 0;
+    static int number = 0;
 }
 
 public class Note {
@@ -17,23 +18,12 @@ public class Note {
     public boolean isSelected = false;
     public boolean fromClipboard = false;
     public Rectangle rectangle = new Rectangle();
-    private final long serialNumber;
-    public int x;
-    public int y;
-    public int width;
-    public int height;
+    public final int serialNumber;
 
     public Note() {
         serialNumber = Serial.number;
         Serial.number += 1;
     }
-
-    //public Note(int x, int y) {
-        //this.x = x;
-        //this.y = y;
-        //serialNumber = Serial.number;
-        //Serial.number += 1;
-    //}
 
     public Note clone() {
         Note clone = new Note();
@@ -72,15 +62,17 @@ public class Note {
     @Override
     public String toString() {
         return "Note" +
-            //"\n  #: " + serialNumber +
-            "\n  x: " + x +
-            "\n  y: " + y +
-            "\n  width: " + width +
+            "\n  #: " + serialNumber +
             "\n  start: " + start +
             "\n  duration: " + duration +
             //"\n  instrument " + instrumentNum +
-            "\n  pitch " + pitch +
-            "\n  velocity " + velocity +
+            "\n  end: " + (start + duration) +
+            //"\n  pitch " + pitch +
+            //"\n  velocity " + velocity +
+            "\n  rectangle x: " +
+                rectangle.x + ", y: " +
+                rectangle.y + ", width: " +
+                rectangle.width + ", height: " + rectangle.height +
             "\n";
     }
 
