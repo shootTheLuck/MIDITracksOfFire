@@ -6,7 +6,8 @@ import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
-import widgets.*;
+import widgets.InputField;
+import widgets.NumberInputField;
 
 
 class PagePlayControls extends JPanel {

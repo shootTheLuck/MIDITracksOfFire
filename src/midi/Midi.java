@@ -23,10 +23,10 @@ import javax.sound.midi.Transmitter;
 import page.Page;
 import track.TrackController;
 import note.Note;
-import utils.*;
+import utils.console;
 
 class SortbyStart implements Comparator<Note> {
-    // sorting in ascending order
+    /* sort in ascending order */
     public int compare(Note a, Note b) {
         return (int) (a.start - b.start);
     }
@@ -45,9 +45,7 @@ public class Midi {
     public Midi(Page page) {
 
         pageController = page;
-        //File file = new File("sf2/Scc1t2.sf2");
-        File file = new File(pageController.getPreference("soundFont"));
-        //File file = new File("sf2/TimGM6mb.sf2");
+        File sf2File = new File(pageController.getPreference("soundFont"));
 
         try {
 
@@ -59,7 +57,7 @@ public class Midi {
 
             try {
                 midiSynth.open();
-                soundBank = MidiSystem.getSoundbank(file);
+                soundBank = MidiSystem.getSoundbank(sf2File);
                 midiSynth.loadAllInstruments(soundBank);
 
                 sequencer = MidiSystem.getSequencer();
@@ -81,7 +79,7 @@ public class Midi {
 
                 mChannels = midiSynth.getChannels();
 
-                /*set reverb to 0 on all channels */
+                /* set reverb to 0 on all channels */
                 for (MidiChannel channel : mChannels) {
                     channel.controlChange(91, 0);
                 }
@@ -96,23 +94,20 @@ public class Midi {
     }
 
     public void setSoundfont(String url) {
-        File file = new File(url);
+        File sf2File = new File(url);
         try {
             midiSynth.unloadAllInstruments(soundBank);
-            soundBank = MidiSystem.getSoundbank(file);
+            soundBank = MidiSystem.getSoundbank(sf2File);
             midiSynth.loadAllInstruments(soundBank);
         } catch(Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    private long getStartTime(List<List<Note>> tracks) {
+    private long getStartTime(List<Note> notes) {
         long startTime = 99999999999L;
-
-        for (List<Note> nTrack : tracks) {
-            for (Note note : nTrack) {
-                startTime = Math.min(note.start, startTime);
-            }
+        for (Note note : notes) {
+            startTime = Math.min(note.start, startTime);
         }
         return startTime;
     }
@@ -191,18 +186,17 @@ public class Midi {
         }
     }
 
-    public void playSelection(List<List<Note>> tracks, TrackController tController, int BPM, int resolution) {
+    public void playSelection(TrackController tController, int BPM, int resolution) {
         try {
             Sequence sequence = new Sequence(Sequence.PPQ, resolution);
-            for (List<Note> trackNotes : tracks) {
-                Track track = makeMidiTrack(tController, BPM, sequence);
-                Collections.sort(trackNotes, new SortbyStart());
-                int channel = tController.getChannel();
-                for (Note note : trackNotes) {
-                    loadMidiNote(note, channel, track);
-                }
+            Track track = makeMidiTrack(tController, BPM, sequence);
+            List<Note>trackNotes = tController.getSelection();
+            //Collections.sort(trackNotes, new SortbyStart());
+            int channel = tController.getChannel();
+            for (Note note : trackNotes) {
+                loadMidiNote(note, channel, track);
             }
-            long startTime = getStartTime(tracks);
+            long startTime = getStartTime(trackNotes);
             sequencer.setSequence(sequence);
             sequencer.setTickPosition(startTime);
             sequencer.start();
@@ -218,7 +212,7 @@ public class Midi {
             for (TrackController tController : trackControllers) {
                 Track track = makeMidiTrack(tController, BPM, playSequence);
                 List<Note>trackNotes = tController.getNotes();
-                Collections.sort(trackNotes, new SortbyStart());
+                //Collections.sort(trackNotes, new SortbyStart());
                 int channel = tController.getChannel();
                 for (Note note : trackNotes) {
                     loadMidiNote(note, channel, track);
@@ -240,7 +234,7 @@ public class Midi {
             for (TrackController tController : trackControllers) {
                 Track track = makeMidiTrack(tController, BPM, sequence);
                 List<Note>trackNotes = tController.getNotes();
-                Collections.sort(trackNotes, new SortbyStart());
+                //Collections.sort(trackNotes, new SortbyStart());
                 int channel = tController.getChannel();
                 for (Note note : trackNotes) {
                     loadMidiNote(note, channel, track);
@@ -285,11 +279,31 @@ public class Midi {
     }
 
     public void unMuteAllTracks() {
-        Sequence s = sequencer.getSequence();
-        if (s != null) {
-            Track[] tracks = s.getTracks();
+        Sequence sequence = sequencer.getSequence();
+        if (sequence != null) {
+            Track[] tracks = sequence.getTracks();
             for (int i = 0; i < tracks.length; i++) {
                 sequencer.setTrackMute(i, false);
+            }
+        }
+    }
+
+    public void setVolume() {
+        // TODO
+    }
+
+    public void setTrackVolume(int channel, int value) {
+        Sequence sequence = sequencer.getSequence();
+        if (sequence != null) {
+            Track[] tracks = sequence.getTracks();
+            for (int i = 0; i < tracks.length; i++) {
+                Track track = tracks[i];
+                try {
+                    ShortMessage msg = new ShortMessage(ShortMessage.CONTROL_CHANGE, channel, 7, value);
+                    track.add(new MidiEvent(msg, sequencer.getTickPosition()));
+                } catch (Exception ex) {
+                    console.log("Midi: an error happened trying to set track volume", ex);
+                }
             }
         }
     }
@@ -302,5 +316,9 @@ public class Midi {
         sequencer.stop();
     }
 
+    public void close() {
+        sequencer.close();
+        midiSynth.close();
+    }
 
 }

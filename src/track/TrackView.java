@@ -9,20 +9,36 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Rectangle;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
-import javax.swing.text.*;
-import javax.swing.event.*;
 
-import page.PageView;
-import widgets.*;
-import utils.*;
-import themes.ThemeReader;
-import note.Note;
 import instruments.Instrument;
+import note.Note;
+import page.PageView;
+import page.Constants;
+import themes.ThemeReader;
+import widgets.InputField;
+import widgets.NumberInputField;
+import widgets.ObjectMenuItem;
 
 
 public class TrackView extends JPanel {
@@ -57,7 +73,7 @@ public class TrackView extends JPanel {
     private Icon collapseIcon = new ImageIcon("assets/pan-down-symbolic.symbolic.png");
     private Icon expandIcon = new ImageIcon("assets/pan-end-symbolic.symbolic.png");
 
-    private JFormattedTextField fretField;
+    //private JFormattedTextField fretField;
     private Font fretFont = new Font("Dialog", Font.PLAIN, 11);
     private FontMetrics fMetrics = getFontMetrics(fretFont);
     private int fHeight = fMetrics.getAscent();
@@ -145,6 +161,7 @@ public class TrackView extends JPanel {
         topBar.add(new JLabel("TrackType "));
         trackTypePicker = new JComboBox<>(TrackTypes.getArray());
         trackTypePicker.setSelectedItem(trackType);
+        trackTypePicker.setFocusable(false);
         trackTypePicker.addActionListener((ActionEvent ae) -> {
             controller.handleTrackTypePicker(trackTypePicker.getSelectedItem());
         });
@@ -155,6 +172,7 @@ public class TrackView extends JPanel {
         String sizes[] = {"1/1", "1/2", "1/4", "1/8", "1/16" , "1/32" , "1/64"};
         gridSizePicker = new JComboBox<>(sizes);
         gridSizePicker.setSelectedIndex(3);
+        gridSizePicker.setFocusable(false);
         gridSizePicker.addActionListener((ActionEvent ae) -> {
             String fraction = (String) gridSizePicker.getSelectedItem();
 
@@ -205,48 +223,10 @@ public class TrackView extends JPanel {
         drawContainer.add(side);
 
         //setTrackType(trackType);
+        gridSizePicker.setFocusTraversalKeysEnabled(false);
 
         deHighliteBorder();
-
-        try {
-            MaskFormatter maskFormatter = new MaskFormatter("##");
-            fretField = new JFormattedTextField(maskFormatter);
-            fretField.setColumns(2);
-            fretField.setFont(fretFont);
-            hideComponent(fretField);
-
-            Runnable sendUpdate = new Runnable() {
-                @Override
-                public void run() {
-                    controller.handleFretField(false);
-                }
-            };
-
-            fretField.addKeyListener(new KeyAdapter() {
-                public void keyPressed(KeyEvent evt) {
-                    int keyCode = evt.getKeyCode();
-
-                    if (keyCode >= 96 && keyCode <= 105) {
-                        SwingUtilities.invokeLater(sendUpdate);
-                    }
-                    if (evt.getKeyChar() == KeyEvent.VK_BACK_SPACE) {
-                        SwingUtilities.invokeLater(sendUpdate);
-                    }
-                    if (evt.getKeyChar() == KeyEvent.VK_ENTER) {
-                        controller.handleFretField(true);
-                    }
-                }
-            });
-
-            setComponentSize(fretField, 20, 20);
-            drawArea.add(fretField, 2);
-
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
-
-        listAllComponents(this);
-
+        addNotifierToAllComponents(this);
     }
 
     public void setPageView(PageView pageView) {
@@ -258,12 +238,12 @@ public class TrackView extends JPanel {
     }
 
     //https://stackoverflow.com/questions/10271116/iterate-through-all-objects-in-jframe
-    private void listAllComponents(Container parent) {
+    private void addNotifierToAllComponents(Container parent) {
         for (Component c : parent.getComponents()) {
             addNotifier(c);
 
             if (c instanceof Container) {
-                listAllComponents((Container) c);
+                addNotifierToAllComponents((Container) c);
             }
         }
     }
@@ -302,11 +282,6 @@ public class TrackView extends JPanel {
         component.setMinimumSize(d);
         component.setMaximumSize(d);
         component.setPreferredSize(d);
-    }
-
-    // utility
-    private void hideComponent(Component c) {
-        c.setLocation(-10000, 0);
     }
 
     // page scrollbars only move drawArea
@@ -442,19 +417,15 @@ public class TrackView extends JPanel {
     }
 
     public void showFretField(Note note, int fretNum) {
-        fretField.setLocation(note.rectangle.x - 2, note.rectangle.y - 5);
-        //fretField.requestFocusInWindow();
-        fretField.grabFocus();
-        fretField.setText(String.valueOf(fretNum));
+        drawArea.showFretField(note, fretNum);
     }
 
     public void hideFretField() {
-        fretField.setText("");
-        hideComponent(fretField);
+        drawArea.hideFretField();
     }
 
     public String getFretField() {
-        return fretField.getText().trim();
+        return drawArea.fretField.getText().trim();
     }
 
     public void drawRectangle(Rectangle rect) {
@@ -478,6 +449,5 @@ public class TrackView extends JPanel {
     public String toString() {
         return "TrackView";
     }
-
 
 }

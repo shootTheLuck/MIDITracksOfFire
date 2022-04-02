@@ -15,13 +15,13 @@ public class MouseMods {
 
         shift = (modifier & MouseEvent.SHIFT_DOWN_MASK) > 0 ?
             true: false;
-        alt = (modifier & MouseEvent.ALT_DOWN_MASK ) > 0 ?
+        alt = (modifier & MouseEvent.ALT_DOWN_MASK) > 0 ?
             true: false;
-        ctrl = (modifier & MouseEvent.CTRL_DOWN_MASK ) > 0 ?
+        ctrl = (modifier & MouseEvent.CTRL_DOWN_MASK) > 0 ?
             true: false;
-        lClick = (modifier & MouseEvent.BUTTON1_DOWN_MASK ) > 0 ?
+        lClick = (modifier & MouseEvent.BUTTON1_DOWN_MASK) > 0 ?
             true: false;
-        rClick = (modifier & MouseEvent.BUTTON3_DOWN_MASK ) > 0 ?
+        rClick = (modifier & MouseEvent.BUTTON3_DOWN_MASK) > 0 ?
             true: false;
     }
 }

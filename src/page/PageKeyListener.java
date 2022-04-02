@@ -1,10 +1,14 @@
 package page;
 
-import java.awt.Component;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
-import javax.swing.*;
-import java.awt.Dimension;
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 
 class PageKeyListener {
 
@@ -22,6 +26,7 @@ class PageKeyListener {
         globalInputMap  = panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
 
         KeyActionGlobal enterAction = new KeyActionGlobal("enter", KeyEvent.VK_ENTER);
+        //KeyActionGlobal tabAction = new KeyActionGlobal("tab", KeyEvent.VK_TAB);
 
         KeyAction leftAction = new KeyAction("left", KeyEvent.VK_LEFT);
         KeyAction rightAction = new KeyAction("right", KeyEvent.VK_RIGHT);
@@ -30,6 +35,7 @@ class PageKeyListener {
         KeyAction deleteAction = new KeyAction("delete", KeyEvent.VK_DELETE);
         KeyAction deleteAction2 = new KeyAction("delete2", KeyEvent.VK_BACK_SPACE);
         KeyAction enterAction2 = new KeyAction("enter", KeyEvent.VK_ENTER);
+        KeyAction tabAction2 = new KeyAction("tab", KeyEvent.VK_TAB);
 
         for (int i = 0; i < 10; i++) {
             String text = String.valueOf(i);
@@ -53,8 +59,10 @@ class PageKeyListener {
 
     class KeyActionGlobal extends AbstractAction {
         private int keyCode;
+        private String name;
 
         public KeyActionGlobal(String name, int keyCode) {
+            this.name = name;
             this.keyCode = keyCode;
 
             globalInputMap.put(KeyStroke.getKeyStroke(keyCode, 0), name);
@@ -69,8 +77,10 @@ class PageKeyListener {
 
     class KeyAction extends AbstractAction {
         private int keyCode;
+        private String name;
 
         public KeyAction(String name, int keyCode) {
+            this.name = name;
             this.keyCode = keyCode;
 
             inputMap.put(KeyStroke.getKeyStroke(keyCode, 0), name);

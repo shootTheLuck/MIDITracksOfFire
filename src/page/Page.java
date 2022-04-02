@@ -1,53 +1,65 @@
 package page;
 
-import java.awt.event.*;
-import java.awt.AWTEvent;
-import java.awt.Toolkit;
-import java.io.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import javax.sound.midi.*;
-import javax.swing.*;
 
-import track.TrackController;
-import track.TrackTypes;
-import track.TrackType;
-import track.VelocitySlider;
+import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MetaMessage;
+import javax.sound.midi.MidiEvent;
+import javax.sound.midi.MidiMessage;
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Sequence;
+import javax.sound.midi.ShortMessage;
+import javax.sound.midi.Track;
+import javax.swing.Timer;
+
 import midi.Midi;
 import note.Note;
-import utils.*;
-import themes.*;
+import themes.ThemeReader;
+import track.TrackController;
+import track.TrackType;
+import track.TrackTypes;
+import track.VelocitySlider;
+import utils.console;
 
 
 public class Page {
 
     private static volatile Page soleInstance;
     // global!!
-    //public static int width = 3003;
-    //public static int measureSize = 150;
     public static int scrollValue = 0;
-    public static int numOfMeasures = 20;
-    public static Properties preferences;
+    public static int numOfMeasures = 50;
+    private int minNumOfMeasures = 50;
 
-    private final String prefFile = "config/preferences.txt";
-    private final int minWidth = 3003;
+    private String prefFile = "config/preferences.txt";
+    private Properties preferences;
+    private int minWidth = 3003;
     private PageView view;
     private Midi midi;
-    private TrackController selectedTrack;
     private List<Note> clipboard;
     private int BPM = 120;
+    private int resolution;
     private Timer progressTimer;
 
     private boolean isPlaying = false;
 
+    private TrackController selectedTrack;
     private List<TrackController> tracks;
-    private int resolution;
-    private String name = "Untitled";
     private File file;
 
     private Page() {
         preferences = new Properties();
+        setDefaultPreferences();
         boolean themed = false;
 
         try (FileInputStream fis = new FileInputStream(prefFile)) {
@@ -87,9 +99,9 @@ public class Page {
         //Double check locking pattern
         if (soleInstance == null) { //Check for the first time
 
-            synchronized (Page.class) {   //Check for the second time.
-              //if there is no instance available... create new one
-              if (soleInstance == null) soleInstance = new Page();
+            synchronized (Page.class) { //Check for the second time.
+                //if there is no instance available... create new one
+                if (soleInstance == null) soleInstance = new Page();
             }
         }
 
@@ -108,16 +120,28 @@ public class Page {
         preferences.setProperty(prefName, String.valueOf(prefValue));
     }
 
+    public void setDefaultPreferences() {
+        preferences.setProperty("theme", "default.theme");
+        preferences.setProperty("window.width", "1000");
+        preferences.setProperty("window.height", "800");
+        preferences.setProperty("midiDirectory", "midi");
+        preferences.setProperty("soundFont", "sf2/Windows.sf2");
+    }
+
     public void loadFile(String filename) {
         removeAllTracks();
         midi.unMuteAllTracks();
         try {
             file = new File(filename);
+            Sequence sequence = MidiSystem.getSequence(file);
             view.setTitle(file.getName());
 
-            Sequence sequence = MidiSystem.getSequence(file);
+            String pathWithoutFileName = file.getParent();
+            setPreference("midiDirectory", pathWithoutFileName);
+
             long l = sequence.getTickLength();
             numOfMeasures = (int) l/(sequence.getResolution() * 4);
+            numOfMeasures = Math.max(numOfMeasures, minNumOfMeasures);
             PageView.width = Math.max(minWidth, numOfMeasures * PageView.measureSize + PageView.measureSize);
             resolution = sequence.getResolution();
             view.reset();
@@ -141,7 +165,6 @@ public class Page {
     private void loadTrack(Track track) {
         TrackController trackController = new TrackController(this);
         TrackType trackType = null;
-        String trackName = null;
         ArrayList<Note> notes = new ArrayList<Note>();
 
         for (int i = 0; i < track.size(); i++) {
@@ -337,10 +360,7 @@ public class Page {
     public void playSelection(TrackController track) {
         List<Note> selection = track.getSelection();
         if (selection.size() > 0) {
-            ////need to provide nested arraylist
-            List<List<Note>> allNotes = new ArrayList<>();
-            allNotes.add(selection);
-            midi.playSelection(allNotes, track, BPM, resolution);
+            midi.playSelection(track, BPM, resolution);
         }
     }
 
@@ -358,15 +378,15 @@ public class Page {
 
     public void shutDown() {
         console.log("shutting down...");
+        midi.close();
         String settingsFileName = ThemeReader.getSettingsName();
         if (settingsFileName != null) {
             setPreference("theme", settingsFileName);
         }
         try (FileOutputStream out = new FileOutputStream(prefFile)) {
             preferences.store(out, "---Preferences File---");
-            out.close();
         } catch (FileNotFoundException ex) {
-            console.log("an error occured trying to save to file", prefFile, ":", ex);
+            console.log("an error occured trying to save preferences to file", prefFile, ":", ex);
         } catch (IOException ex) {
             //
         }
@@ -374,9 +394,42 @@ public class Page {
     }
 
     private void openFile() {
-        String fileName = view.showFileChooser("mid");
+        String path;
+        String midiDirectory = preferences.getProperty("midiDirectory");
+        if (midiDirectory != null && !midiDirectory.isEmpty()) {
+            if (midiDirectory == "midi") {
+                path = System.getProperty("user.dir") + "/" + midiDirectory;
+            } else {
+                path = midiDirectory;
+            }
+        } else {
+            path = System.getProperty("user.dir");
+        }
+
+        String fileName = view.showFileChooser("mid", path);
         if (!"".equals(fileName)) {
             loadFile(fileName);
+        }
+    }
+
+    private void saveFileAs() {
+        String path;
+        String midiDirectory = preferences.getProperty("midiDirectory");
+        if (midiDirectory != null && !midiDirectory.isEmpty()) {
+            if (midiDirectory == "midi") {
+                path = System.getProperty("user.dir") + "/" + midiDirectory;
+            } else {
+                path = midiDirectory;
+            }
+        } else {
+            path = System.getProperty("user.dir");
+        }
+
+        String fileName = view.showFileChooser("mid", path);
+        if (!"".equals(fileName)) {
+            file = new File(fileName);
+            midi.writeToFile(file, tracks, BPM, resolution);
+            view.setTitle(file.getName());
         }
     }
 
@@ -388,17 +441,8 @@ public class Page {
         }
     }
 
-    private void saveFileAs() {
-        String filename = view.showFileSaver("mid");
-        if (!"".equals(filename)) {
-            file = new File(filename);
-            midi.writeToFile(file, tracks, BPM, resolution);
-            view.setTitle(file.getName());
-        }
-    }
-
     private void openSoundFont() {
-        String sf2 = view.showFileChooser("sf2");
+        String sf2 = view.showFileChooser("sf2", "sf2");
         if (!"".equals(sf2)) {
             midi.setSoundfont(sf2);
         }
@@ -443,6 +487,9 @@ public class Page {
                     break;
                 case KeyEvent.VK_ENTER:
                     handlePlayControls(Constants.BUTTON_PLAY);
+                    break;
+                case KeyEvent.VK_TAB:
+                    selectedTrack.tabThroughNotes();
                     break;
             }
         }
@@ -554,9 +601,13 @@ public class Page {
         view.setFocus();
     }
 
-    public void handleMuteButton(TrackController t, boolean muted) {
-        int index = tracks.indexOf(t);
+    public void handleMuteButton(TrackController track, boolean muted) {
+        int index = tracks.indexOf(track);
         midi.muteTrack(index, muted);
+    }
+
+    public void handleTrackVolumeField(TrackController track, int value) {
+        midi.setTrackVolume(track.getChannel(), value);
     }
 
     public void handleSoundComplete() {

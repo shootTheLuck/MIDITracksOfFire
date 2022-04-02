@@ -3,6 +3,8 @@ package widgets;
 import java.awt.event.*;
 import javax.swing.JTextField;
 
+import utils.console;
+
 
 public class InputField extends JTextField {
 
@@ -52,6 +54,14 @@ public class InputField extends JTextField {
         super(text, columns);
         addFocusListener(focusListener);
         //addKeyListener(loseFocusOnEnter);
+    }
+
+    public void setAutoFocus(boolean val) {
+        if (val == true) {
+            addFocusListener(focusListener);
+        } else {
+            removeFocusListener(focusListener);
+        }
     }
 
 

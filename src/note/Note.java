@@ -1,7 +1,7 @@
 package note;
 
 import java.awt.Rectangle;
-import utils.*;
+import utils.console;
 
 class Serial {
     static int number = 0;

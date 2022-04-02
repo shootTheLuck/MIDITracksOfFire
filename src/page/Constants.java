@@ -1,6 +1,6 @@
 package page;
 
-enum Constants {
+public enum Constants {
 
     BUTTON_PLAY,
     BUTTON_PLAYSELECTION,

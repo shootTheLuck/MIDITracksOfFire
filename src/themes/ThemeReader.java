@@ -2,15 +2,13 @@
 package themes;
 
 import java.awt.Color;
-import java.awt.Toolkit;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
-import utils.*;
+import utils.console;
 
 //import org.w3c.dom.Document;
 //import org.w3c.dom.Element;
@@ -33,11 +31,10 @@ public class ThemeReader {
     static {
         try (FileInputStream fis = new FileInputStream("src/themes/default.theme")) {
                 defaults.load(fis);
-            } catch (FileNotFoundException ex) {
-                console.log("an error occured trying to load default theme file:", ex);
-            } catch (IOException ex) {
-                console.log("down here");
-                //
+        } catch (FileNotFoundException ex) {
+            console.log("an error occured trying to load default theme file:", ex);
+        } catch (IOException ex) {
+            //
         }
     }
 

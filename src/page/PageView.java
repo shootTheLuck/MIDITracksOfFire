@@ -4,22 +4,34 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.*;
-import java.awt.image.*;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.JOptionPane;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLayeredPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JViewport;
+import javax.swing.SwingUtilities;
 
+import note.Note;
+import themes.ThemeReader;
 import track.TrackView;
 import track.VelocitySlider;
 import track.VelocitySliderUI;
-import note.Note;
-import widgets.*;
-import themes.ThemeReader;
-import utils.*;
+import utils.console;
+import widgets.AddBarsDialog;
+import widgets.FileChooser;
 
 public class PageView extends JFrame {
 
@@ -38,12 +50,12 @@ public class PageView extends JFrame {
     private VelocitySlider velocitySlider;
 
     private int scrollPosition = 0;
+    private int scrollIncrement = 160;
+    private boolean scrollButtonPressed = false;
     private int numberBarHeight = 30;
     private Dimension numberBarSize;
     private FileChooser fileChooser;
     private int leftMargin = ThemeReader.getMeasure("track.strings.margin.left");
-    private boolean changingMeasureSize = false;
-
 
     protected PageView(Page pageController) {
 
@@ -57,8 +69,7 @@ public class PageView extends JFrame {
         try {
             width = Integer.parseInt(widthString);
             height = Integer.parseInt(heightString);
-        }
-        catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
             width = 1000;
             height = 900;
         }
@@ -130,15 +141,32 @@ public class PageView extends JFrame {
         hScrollBar = scrollPane.getHorizontalScrollBar();
         vScrollBar = scrollPane.getVerticalScrollBar();
 
-        hScrollBar.setUnitIncrement(160);
-        vScrollBar.setUnitIncrement(160);
+        hScrollBar.setUnitIncrement(scrollIncrement);
+        vScrollBar.setUnitIncrement(scrollIncrement);
+
+        Component lButton = hScrollBar.getComponent(1);
+        Component rButton = hScrollBar.getComponent(0);
+
+        lButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                setHorizontalScroll(Math.max(0, scrollPosition - scrollIncrement));
+            }
+        });
+        rButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                setHorizontalScroll(scrollPosition + scrollIncrement);
+            }
+        });
+
         hScrollBar.addAdjustmentListener(new AdjustmentListener() {
             @Override
             public void adjustmentValueChanged(AdjustmentEvent evt) {
                 if (hScrollBar.getValueIsAdjusting()) {
                     /* manually adjusting scroll */
                     handleHorizontalScrollBar(evt.getValue());
-                } else {
+                } else  {
                     /* keep scoll position on window resize */
                     setHorizontalScroll(scrollPosition);
                 }
@@ -170,8 +198,6 @@ public class PageView extends JFrame {
         velocitySlider.setBounds(0, 0, 31, 127);
 
         velocitySlider.setVisible(false);
-        //hack to hide velocitySlider because setVisible affects page scroll
-        //velocitySlider.setLocation(-100, 0);
         velocitySlider.setBorder(BorderFactory.createLineBorder(Color.gray));
         JLayeredPane layers = getLayeredPane();
         layers.add(velocitySlider, 10);
@@ -179,6 +205,8 @@ public class PageView extends JFrame {
         fileChooser = new FileChooser();
 
         keyListener = new PageKeyListener(base, pageController);
+        base.setFocusTraversalKeysEnabled(false);
+        topBar.setFocusTraversalKeysEnabled(false);
     }
 
     /* handle focus so that global keybindings will work */
@@ -347,9 +375,6 @@ public class PageView extends JFrame {
         repaint();
     }
 
-    protected String showFileSaver(String filter) {
-        return fileChooser.showSaveChooser(filter);
-    }
 
     protected VelocitySlider showVelocitySlider(MouseEvent evt, Note note) {
 
@@ -374,8 +399,6 @@ public class PageView extends JFrame {
 
     protected void hideVelocitySlider() {
         velocitySlider.setVisible(false);
-        //hack to hide velocitySlider because setVisible affects page scroll
-        //velocitySlider.setLocation(-100, 0);
     }
 
     protected int[] showAddBarsDialog() {
@@ -393,6 +416,18 @@ public class PageView extends JFrame {
 
     protected String showFileChooser(String filter) {
         return fileChooser.showOpenChooser(filter);
+    }
+
+    protected String showFileChooser(String filter, String path) {
+        return fileChooser.showOpenChooser(filter, path);
+    }
+
+    protected String showFileSaver(String filter) {
+        return fileChooser.showSaveChooser(filter);
+    }
+
+    protected String showFileSaver(String filter, String path) {
+        return fileChooser.showSaveChooser(filter, path);
     }
 
     protected void disableMenuItem(Constants c) {

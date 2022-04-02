@@ -142,9 +142,7 @@ public class NumberInputField extends InputField {
 
         try {
             setValue(Integer.parseInt(getText()));
-        }
-
-        catch(NumberFormatException err) {
+        } catch(NumberFormatException err) {
             setValue(getValue());
         }
 

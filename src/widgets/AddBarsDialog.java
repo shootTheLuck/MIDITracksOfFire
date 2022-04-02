@@ -1,31 +1,19 @@
 package widgets;
 
 import java.awt.BorderLayout;
-import java.awt.event.*;
-import java.awt.*;
-import javax.swing.*;
-import javax.swing.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
 import javax.swing.Box;
+import javax.swing.InputMap;
 import javax.swing.JButton;
-import javax.swing.JTextField;
-import javax.swing.JOptionPane;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JLabel;
-import javax.swing.Timer;
-
-import utils.*;
-
-
-class BoldLabel extends JLabel {
-
-    public BoldLabel(String text) {
-        super(text);
-        setFont(new Font("Courier New", Font.BOLD, 12));
-    }
-
-}
+import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 
 
 public class AddBarsDialog extends JDialog {
@@ -38,7 +26,6 @@ public class AddBarsDialog extends JDialog {
     public AddBarsDialog(JFrame owner) {
         super(owner, true);
         xField = new NumberInputField(1, 3);
-
 
         //xField.addKeyListener(new KeyAdapter() {
             //public void keyReleased(KeyEvent evt) {

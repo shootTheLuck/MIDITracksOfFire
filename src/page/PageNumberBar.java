@@ -11,8 +11,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import themes.ThemeReader;
-import utils.*;
-import page.Page;
+import utils.console;
 
 class PageNumberBar extends JPanel {
 
@@ -24,7 +23,6 @@ class PageNumberBar extends JPanel {
     private int indicatorHeight;
     private int lMargin;
     private int height;
-    private Page page;
 
     private Rectangle measureSizeDragger;
     private Rectangle playingMeasure;

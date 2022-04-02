@@ -2,28 +2,30 @@ package track;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.event.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 
-import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.LineBorder;
-import javax.swing.text.MaskFormatter;
+import javax.swing.BorderFactory;
+import javax.swing.JLayeredPane;
+import javax.swing.SwingUtilities;
 
-import page.Page;
-import page.PageView;
 import note.Note;
-import themes.*;
-import utils.*;
+import page.PageView;
+import themes.ThemeReader;
+import utils.console;
+import widgets.NumberInputField;
 
 
 class TrackDrawArea extends JLayeredPane {
@@ -44,6 +46,9 @@ class TrackDrawArea extends JLayeredPane {
     private Font fretFont = new Font("Dialog", Font.PLAIN, 11);
     private FontMetrics fontMetrics = getFontMetrics(fretFont);
     private int fontHeight = fontMetrics.getAscent();
+
+    protected NumberInputField fretField;
+    private Runnable sendFretField;
 
     public TrackDrawArea(TrackController controller, TrackType trackType) {
 
@@ -69,6 +74,39 @@ class TrackDrawArea extends JLayeredPane {
                 controller.handleMouseMoveDrawArea(evt);
             }
         });
+
+        fretField = new NumberInputField(0, 3);
+        fretField.setAutoFocus(false);
+        sendFretField = new Runnable() {
+            @Override
+            public void run() {
+                controller.handleFretFieldChange();
+            }
+        };
+        fretField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent evt) {
+                if (evt.getKeyChar() == KeyEvent.VK_ENTER) {
+                    // don't start playing music on first enter after fret change
+                    evt.consume();
+                    controller.handleFretFieldEnter();
+                } else
+                if (evt.getKeyChar() == KeyEvent.VK_TAB) {
+                    controller.handleFretFieldTab();
+                } else {
+                    SwingUtilities.invokeLater(sendFretField);
+                }
+            }
+        });
+
+        Dimension d = new Dimension(20, 20);
+        fretField.setSize(d);
+        fretField.setMinimumSize(d);
+        fretField.setMaximumSize(d);
+        fretField.setPreferredSize(d);
+        fretField.setFocusTraversalKeysEnabled(false);
+        add(fretField, 2);
+        fretField.setVisible(false);
 
     }
 
@@ -131,6 +169,13 @@ class TrackDrawArea extends JLayeredPane {
 
     }
 
+    private void setNoteRectangle(Note note) {
+        note.rectangle.x = getNoteX(note.start) + 1;
+        note.rectangle.y = getNoteY(note.stringNum);
+        note.rectangle.width = getNoteWidth(note.duration);
+        note.rectangle.height = getNoteHeight();
+    }
+
     private int getNoteX(long start) {
         return (int) ((double) start / controller.pageController.getTicksPerMeasure() * PageView.measureSize);
     }
@@ -147,6 +192,10 @@ class TrackDrawArea extends JLayeredPane {
 
     private int getNoteWidth(long duration) {
         return (int) ((double) duration / controller.pageController.getTicksPerMeasure() * PageView.measureSize);
+    }
+
+    private int getNoteHeight() {
+        return ThemeReader.getMeasure("note.height");
     }
 
     private void drawTriangle(Graphics2D g2, Note note, Color color) {
@@ -173,15 +222,11 @@ class TrackDrawArea extends JLayeredPane {
     }
 
     private void drawNote(Graphics2D g2, Note note, Color color) {
+        setNoteRectangle(note);
 
-        int drawHeight = ThemeReader.getMeasure("note.height");
         String fretNum = "" + note.fret;
         int fretNumWidth = fontMetrics.stringWidth(fretNum);
-
-        note.rectangle.x = getNoteX(note.start) + 1;
-        note.rectangle.y = getNoteY(note.stringNum);
-        note.rectangle.width = getNoteWidth(note.duration);
-        note.rectangle.height = drawHeight;
+        int drawHeight = note.rectangle.height;
 
         //draw note color
         g2.setColor(color);
@@ -189,7 +234,7 @@ class TrackDrawArea extends JLayeredPane {
             note.rectangle.x,
             note.rectangle.y,
             note.rectangle.width,
-            note.rectangle.height);
+            drawHeight);
 
         //draw note outline
         g2.setColor(Color.BLACK);
@@ -197,7 +242,7 @@ class TrackDrawArea extends JLayeredPane {
             note.rectangle.x,
             note.rectangle.y,
             note.rectangle.width,
-            note.rectangle.height);
+            drawHeight);
 
         //draw box for fret number
         g2.setColor(color);
@@ -233,16 +278,32 @@ class TrackDrawArea extends JLayeredPane {
     }
 
     protected void overwriteNote(Note note) {
+
+        setNoteRectangle(note);
         // additions/subtractions: paint slightly more than needed to erase outdated pixels
-        int minBuffer = ThemeReader.getMeasure("track.strings.spacing");
-        int xBuffer = Math.max(note.rectangle.width, minBuffer);
-        int yBuffer = Math.max(note.rectangle.height * 4, minBuffer);
+        int xBuffer = PageView.measureSize + 20;
+        int yBuffer = ThemeReader.getMeasure("track.strings.spacing") * 2;
 
         repaint(
             note.rectangle.x - xBuffer,
             note.rectangle.y - yBuffer,
-            note.rectangle.width + xBuffer * 2,
-            note.rectangle.height + yBuffer * 2);
+            Math.abs(note.rectangle.width) + xBuffer * 2,
+            Math.abs(note.rectangle.height) + yBuffer * 2);
+    }
+
+    protected void showFretField(Note note, int fretNum) {
+        fretField.setVisible(true);
+        fretField.setLocation(note.rectangle.x - 5, note.rectangle.y - 5);
+        fretField.setText(String.valueOf(fretNum));
+        fretField.setCaretPosition(fretField.getDocument().getLength());
+        fretField.requestFocusInWindow();
+        //fretField.grabFocus();
+        SwingUtilities.invokeLater(sendFretField);
+    }
+
+    protected void hideFretField() {
+        fretField.setText("");
+        fretField.setVisible(false);
     }
 
     @Override
@@ -251,13 +312,13 @@ class TrackDrawArea extends JLayeredPane {
         Graphics2D g2 = (Graphics2D) g;
         g2.setFont(fretFont);
 
-        if (zoomer) {
-            AffineTransform at = new AffineTransform();
-            at.scale(zoomFactor, zoomFactor);
-            prevZoomFactor = zoomFactor;
-            g2.transform(at);
-            zoomer = false;
-        }
+        //if (zoomer) {
+            //AffineTransform at = new AffineTransform();
+            //at.scale(zoomFactor, zoomFactor);
+            //prevZoomFactor = zoomFactor;
+            //g2.transform(at);
+            //zoomer = false;
+        //}
 
         Color selectedColor = ThemeReader.getColor("note.selected.background");
         Color unselectedColor = ThemeReader.getColor("note.unselected.background");
@@ -265,7 +326,7 @@ class TrackDrawArea extends JLayeredPane {
         if (trackType.name == "drums") {
             //drawDrumLines(g2);
             drawLines(g2);
-            for (Note note : controller.getNotes()) {
+            for (Note note : controller.notes) {
                 //if (note.x < PageView.width) {
                     if (note.isSelected) {
                         drawTriangle(g2, note, selectedColor);
@@ -276,7 +337,7 @@ class TrackDrawArea extends JLayeredPane {
             }
         } else {
             drawLines(g2);
-            for (Note note : controller.getNotes()) {
+            for (Note note : controller.notes) {
                 //if (note.x < PageView.width) {
                     if (note.isSelected) {
                         drawNote(g2, note, selectedColor);
