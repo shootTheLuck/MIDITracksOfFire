@@ -334,16 +334,23 @@ public class Page {
         selectedTrack.pasteSelectedNotes(clipboard);
     }
 
-    private void insertBars() {
-        int[] instructions = view.showAddBarsDialog();
-        int numberToAdd = instructions[0];
+    protected void handleInsertBarsDialog(int numberToAdd, int addBefore) {
         if (numberToAdd > 0) {
-
             Page.numOfMeasures += numberToAdd;
             view.addMeasures(numberToAdd);
-            int addBefore = instructions[1];
             for (TrackController track : tracks) {
                 track.insertBars(numberToAdd, addBefore);
+            }
+        }
+    }
+
+    protected void handleRemoveBarsDialog(int start, int end) {
+        int numberToRemove = end - start + 1;
+        if (start > 0 && end > 0) {
+            Page.numOfMeasures -= numberToRemove;
+            view.addMeasures(-numberToRemove);
+            for (TrackController track : tracks) {
+                track.removeBars(start, end);
             }
         }
     }
@@ -379,6 +386,7 @@ public class Page {
     public void shutDown() {
         console.log("shutting down...");
         midi.close();
+        view.close();
         String settingsFileName = ThemeReader.getSettingsName();
         if (settingsFileName != null) {
             setPreference("theme", settingsFileName);
@@ -550,7 +558,10 @@ public class Page {
                 pasteSelection();
                 break;
             case MENU_EDIT_INSERTBARS:
-                insertBars();
+                view.showInsertBarsDialog(1, 1);
+                break;
+            case MENU_EDIT_REMOVEBARS:
+                view.showRemoveBarsDialog(0, 0);
                 break;
             default:
         }

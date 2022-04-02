@@ -408,6 +408,11 @@ public class TrackController {
         selection.clear();
     }
 
+    private void deleteNotes(Notes notes) {
+
+
+    }
+
     public void deleteSelectedNotes() {
         for (Note note : selection) {
             notes.remove(note);
@@ -564,6 +569,25 @@ public class TrackController {
                 note.start += deltaStart;
             }
         }
+    }
+
+    public void removeBars(int measureStart, int measureEnd) {
+
+        int afterRange = measureEnd + 1;
+        int ticksPerMeasure = pageController.getTicksPerMeasure();
+        long deltaStart = -1 * (afterRange - measureStart) * ticksPerMeasure;
+console.log("d", deltaStart);
+        for (int i = notes.size() - 1; i >= 0; i--) {
+            Note note = notes.get(i);
+            long measure = 1 + (note.start / ticksPerMeasure);
+            if (measure >= measureStart && measure < afterRange) {
+                notes.remove(note);
+                view.drawNote(note);
+            } else if (measure >= afterRange) {
+                note.start += deltaStart;
+            }
+        }
+
     }
 
     public void setScrollPosition(int value) {

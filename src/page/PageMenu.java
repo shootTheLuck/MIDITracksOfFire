@@ -177,6 +177,12 @@ class PageMenu extends JMenuBar {
             //editAddBars.setCommandKey("A");
             editInsertBars.setActionConstant(Constants.MENU_EDIT_INSERTBARS);
             add(editInsertBars);
+
+            MenuItem editRemoveBars = new MenuItem("Remove Bars...");
+            editRemoveBars.setAccessible("Remove Chosen Number of Measures from All Tracks");
+            //editAddBars.setCommandKey("A");
+            editRemoveBars.setActionConstant(Constants.MENU_EDIT_REMOVEBARS);
+            add(editRemoveBars);
         }
     }
 

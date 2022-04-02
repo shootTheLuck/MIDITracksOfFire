@@ -16,6 +16,7 @@ import java.awt.event.WindowEvent;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
@@ -30,7 +31,8 @@ import track.TrackView;
 import track.VelocitySlider;
 import track.VelocitySliderUI;
 import utils.console;
-import widgets.AddBarsDialog;
+import widgets.InsertBarsDialog;
+import widgets.RemoveBarsDialog;
 import widgets.FileChooser;
 
 public class PageView extends JFrame {
@@ -41,6 +43,7 @@ public class PageView extends JFrame {
     protected PageMenu menuBar;
     private PageKeyListener keyListener;
 
+    private Page page;
     private JPanel mainPanel;
     private JScrollBar hScrollBar;
     private JScrollBar vScrollBar;
@@ -48,6 +51,7 @@ public class PageView extends JFrame {
     private JPanel numberBarContainer;
     private PageNumberBar numberBar;
     private VelocitySlider velocitySlider;
+    private JDialog openDialog;
 
     private int scrollPosition = 0;
     private int scrollIncrement = 160;
@@ -60,6 +64,7 @@ public class PageView extends JFrame {
     protected PageView(Page pageController) {
 
         setTitle("untitled");
+        this.page = pageController;
 
         String widthString = pageController.getPreference("window.width");
         String heightString = pageController.getPreference("window.height");
@@ -401,17 +406,39 @@ public class PageView extends JFrame {
         velocitySlider.setVisible(false);
     }
 
-    protected int[] showAddBarsDialog() {
+    //protected int[] showAddBarsDialog() {
 
-        AddBarsDialog addBarsDialog = new AddBarsDialog((JFrame) this);
+        //AddBarsDialog addBarsDialog = new AddBarsDialog((JFrame) this);
 
-        int[] result = addBarsDialog.getValue();
-        if (result[0] > 0) {
-            return result;
-        } else {
-            int[] nothingToAdd = {0, 0};
-            return nothingToAdd;
-        }
+        //int[] result = addBarsDialog.getValue();
+        //if (result[0] > 0) {
+            //return result;
+        //} else {
+            //int[] nothingToAdd = {0, 0};
+            //return nothingToAdd;
+        //}
+    //}
+
+    protected void showRemoveBarsDialog(int x, int y) {
+        RemoveBarsDialog removeBarsDialog = new RemoveBarsDialog((JFrame) this, x, y);
+        removeBarsDialog.addWindowListener(new WindowAdapter() {
+            @Override public void windowClosed(WindowEvent e) {
+                int[] value = removeBarsDialog.getValue();
+                page.handleRemoveBarsDialog(value[0], value[1]);
+            }
+        });
+        removeBarsDialog.setVisible(true);
+    }
+
+    protected void showInsertBarsDialog(int x, int y) {
+        InsertBarsDialog insertBarsDialog = new InsertBarsDialog((JFrame) this, x, y);
+        insertBarsDialog.addWindowListener(new WindowAdapter() {
+            @Override public void windowClosed(WindowEvent e) {
+                int[] value = insertBarsDialog.getValue();
+                page.handleInsertBarsDialog(value[0], value[1]);
+            }
+        });
+        insertBarsDialog.setVisible(true);
     }
 
     protected String showFileChooser(String filter) {
@@ -432,6 +459,12 @@ public class PageView extends JFrame {
 
     protected void disableMenuItem(Constants c) {
         menuBar.disableMenuItem(c);
+    }
+
+    public void close() {
+        if (openDialog != null) {
+            openDialog.dispose();
+        }
     }
 
     @Override
