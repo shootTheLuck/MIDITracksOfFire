@@ -3,7 +3,9 @@
 Compose, edit, and play MIDI files with a tablature based ui. This is not the greatest midi editor in the world. This is just a tribute. TracksOfFire is totally inspired by Easy Beat! Easy Beat was an awesome musical authoring program designed and produced by Günther Blaschek and distributed by Macility/Ergonis Software.
 
 ## To use:
-Download or clone this repo. Run the `start.sh` script or open a terminal and or execute `java -jar build/TracksOfFire.jar`. TracksOfFire is written in Java so you'll need that.
+Download or clone this repo. Run the `start.sh` script or open a terminal and execute
+`java -jar build/TracksOfFire.jar`.
+TracksOfFire is written in Java so you'll need that.
 
 To rebuild and run with your awesome and needed improvements run the `startDev.sh` script. Rebuilding with this script is done with ant so you'll want that.
 
