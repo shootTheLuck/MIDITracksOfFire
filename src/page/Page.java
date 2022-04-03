@@ -29,7 +29,7 @@ import themes.ThemeReader;
 import track.TrackController;
 import track.TrackType;
 import track.TrackTypes;
-import track.VelocitySlider;
+import widgets.VelocitySlider;
 import utils.console;
 
 
@@ -334,23 +334,31 @@ public class Page {
         selectedTrack.pasteSelectedNotes(clipboard);
     }
 
-    protected void handleInsertBarsDialog(int numberToAdd, int addBefore) {
+    protected void handleInsertBarsDialog(int numberToAdd, int addBefore, boolean allTracks) {
         if (numberToAdd > 0) {
             Page.numOfMeasures += numberToAdd;
             view.addMeasures(numberToAdd);
-            for (TrackController track : tracks) {
-                track.insertBars(numberToAdd, addBefore);
+            if (allTracks) {
+                for (TrackController track : tracks) {
+                    track.insertBars(numberToAdd, addBefore);
+                }
+            } else {
+                selectedTrack.insertBars(numberToAdd, addBefore);
             }
         }
     }
 
-    protected void handleRemoveBarsDialog(int start, int end) {
+    protected void handleRemoveBarsDialog(int start, int end, boolean allTracks) {
         int numberToRemove = end - start + 1;
         if (start > 0 && end > 0) {
-            Page.numOfMeasures -= numberToRemove;
-            view.addMeasures(-numberToRemove);
-            for (TrackController track : tracks) {
-                track.removeBars(start, end);
+            if (allTracks) {
+                Page.numOfMeasures -= numberToRemove;
+                view.addMeasures(-numberToRemove);
+                for (TrackController track : tracks) {
+                    track.removeBars(start, end);
+                }
+            } else {
+                selectedTrack.removeBars(start, end);
             }
         }
     }
@@ -639,8 +647,8 @@ public class Page {
         }
     }
 
-    public VelocitySlider showVelocitySlider(MouseEvent evt, Note selectedNote) {
-        return view.showVelocitySlider(evt, selectedNote);
+    public VelocitySlider showVelocitySlider(MouseEvent evt, int velocity) {
+        return view.showVelocitySlider(evt, velocity);
     }
 
     public void hideVelocitySlider() {

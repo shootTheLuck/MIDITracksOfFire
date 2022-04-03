@@ -21,6 +21,7 @@ import instruments.Instruments;
 import themes.ThemeReader;
 import utils.console;
 import utils.MouseMods;
+import widgets.VelocitySlider;
 
 interface MouseStrategy {
     public void doIt(MouseEvent evt);
@@ -66,7 +67,6 @@ public class TrackController {
     private TrackView view;
     private Point dragStart = new Point();
     private Point dragStartGrid = new Point();
-    private Rectangle selectorRect;
     private TrackType trackType;
 
     private MouseStrategy moveSelectorRect = new DragSelectorRect();
@@ -89,6 +89,7 @@ public class TrackController {
     private int channel;
     private int volume;
     private Instrument instrument;
+    protected Rectangle selectorRect;
 
     public TrackController(Page page) {
         pageController = page;
@@ -198,8 +199,6 @@ public class TrackController {
         int x = evt.getX();
         int y = evt.getY();
 
-        //double dist = x / (gridFraction * PageView.measureSize);
-
         dragStart.setLocation(x, y);
         dragStartGrid.setLocation(findNearestGrid(x), findNearestStringNum(y));
         selectorRect.setLocation(x, y);
@@ -226,7 +225,7 @@ public class TrackController {
 
             selectNote(note);
             if (MouseMods.ctrl || MouseMods.rClick) {
-                vSlider = pageController.showVelocitySlider(evt, selectedNote);
+                vSlider = pageController.showVelocitySlider(evt, selectedNote.velocity);
                 mouseStrategy = setNoteVelocity;
                 lastY = y;
 
@@ -273,7 +272,6 @@ public class TrackController {
         mouseStrategy.doIt(evt);
     }
 
-
     public TrackView getView() {
         return view;
     }
@@ -285,10 +283,6 @@ public class TrackController {
 
     public int getVolume() {
         return volume;
-    }
-
-    public Rectangle getSelectorRect() {
-        return selectorRect;
     }
 
     public void setName(String n) {
@@ -406,11 +400,6 @@ public class TrackController {
         });
         selectedNote = null;
         selection.clear();
-    }
-
-    private void deleteNotes(Notes notes) {
-
-
     }
 
     public void deleteSelectedNotes() {
@@ -561,12 +550,11 @@ public class TrackController {
 
     public void insertBars(int numberToAdd, int addBefore) {
         int ticksPerMeasure = pageController.getTicksPerMeasure();
-        long deltaStart = numberToAdd * ticksPerMeasure;
-        for (int i = 0; i < notes.size(); i++) {
-            Note note = notes.get(i);
-            long measure = 1 + (note.start / ticksPerMeasure);
-            if (measure >= addBefore) {
-                note.start += deltaStart;
+        long noteStartDelta = numberToAdd * ticksPerMeasure;
+        for (Note note : notes) {
+            long noteMeasure = 1 + (note.start / ticksPerMeasure);
+            if (noteMeasure >= addBefore) {
+                note.start += noteStartDelta;
             }
         }
     }
@@ -575,16 +563,17 @@ public class TrackController {
 
         int afterRange = measureEnd + 1;
         int ticksPerMeasure = pageController.getTicksPerMeasure();
-        long deltaStart = -1 * (afterRange - measureStart) * ticksPerMeasure;
-console.log("d", deltaStart);
+        long noteStartDelta = (afterRange - measureStart) * ticksPerMeasure;
+
+        /* loop backward through notes */
         for (int i = notes.size() - 1; i >= 0; i--) {
             Note note = notes.get(i);
-            long measure = 1 + (note.start / ticksPerMeasure);
-            if (measure >= measureStart && measure < afterRange) {
+            long noteMeasure = 1 + (note.start / ticksPerMeasure);
+            if (noteMeasure >= measureStart && noteMeasure < afterRange) {
                 notes.remove(note);
                 view.drawNote(note);
-            } else if (measure >= afterRange) {
-                note.start += deltaStart;
+            } else if (noteMeasure >= afterRange) {
+                note.start -= noteStartDelta;
             }
         }
 
@@ -695,7 +684,6 @@ console.log("d", deltaStart);
     protected void handleGridSizePicker(double value) {
         gridFraction = value;
     }
-
 
     protected void handleTrackTypePicker(Object i) {
         TrackType type = (TrackType) i;

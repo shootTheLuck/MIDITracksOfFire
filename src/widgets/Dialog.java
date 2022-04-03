@@ -1,6 +1,7 @@
 package widgets;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -20,6 +21,7 @@ class Dialog extends JDialog {
     public Dialog(JFrame owner) {
         super(owner);
 
+        setLayout(new BorderLayout());
         contents = new JPanel();
 
         JPanel buttons = new JPanel();
@@ -42,12 +44,12 @@ class Dialog extends JDialog {
         });
         buttons.add(cancelButton);
 
-        contents.add(buttons, BorderLayout.PAGE_END);
+        add(Box.createRigidArea(new Dimension(1, 15)), BorderLayout.PAGE_START);
         add(contents, BorderLayout.CENTER);
         add(buttons, BorderLayout.PAGE_END);
 
         pack();
-        setSize(400, 150);
+        setSize(480, 150);
         setLocationRelativeTo(owner);
         getRootPane().setDefaultButton(enterButton);
     }

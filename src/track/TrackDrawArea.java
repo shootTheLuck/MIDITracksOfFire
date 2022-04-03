@@ -30,8 +30,6 @@ import widgets.NumberInputField;
 
 class TrackDrawArea extends JLayeredPane {
 
-    //private String fretNum;
-
     private TrackType trackType;
     private TrackController controller;
     private float[] dash1 = { 2F, 2F };
@@ -350,8 +348,7 @@ class TrackDrawArea extends JLayeredPane {
 
         g2.draw(progressLine);
 
-        Rectangle rect = controller.getSelectorRect();
-
+        Rectangle rect = controller.selectorRect;
         if (rect.width + rect.height > 0) {
             drawSelectorRect(g2, rect);
         }

@@ -1,4 +1,9 @@
-package track;
+package widgets;
+
+import javax.swing.JSlider;
+import javax.swing.SwingConstants;
+import javax.swing.plaf.SliderUI;
+import javax.swing.plaf.basic.BasicSliderUI;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -8,9 +13,25 @@ import java.awt.Rectangle;
 
 import javax.swing.JComponent;
 import javax.swing.JSlider;
-import javax.swing.plaf.basic.BasicSliderUI;
+//import javax.swing.plaf.basic.BasicSliderUI;
 
-public class VelocitySliderUI extends BasicSliderUI {
+public class VelocitySlider extends JSlider {
+
+    public VelocitySlider() {
+        super(SwingConstants.VERTICAL);
+        setUI(new VelocitySliderUI(this, Color.red));
+    }
+
+    public void setDisplay(int v) {
+        SliderUI ui = getUI();
+        BasicSliderUI bui = (BasicSliderUI) ui;
+        VelocitySliderUI vui = (VelocitySliderUI) bui;
+        vui.setDisplay(v);
+    }
+
+}
+
+class VelocitySliderUI extends BasicSliderUI {
 
     Color thumbColor;
     int displayValue = 0;
@@ -25,34 +46,44 @@ public class VelocitySliderUI extends BasicSliderUI {
         displayValue = v;
     }
 
+    // override paint to inject our paint-thumb-with-number method:
+    // https://coderanch.com/t/338457/java/JSlider-knob-color
+
     @Override
     public void paint( Graphics g, JComponent c )   {
-        //recalculateIfInsetsChanged();
-        //recalculateIfOrientationChanged();
+
+        // recalculateIfInsetsChanged();
+        // recalculateIfOrientationChanged();
+
         Rectangle clip = g.getClipBounds();
 
-        if ( !clip.intersects(trackRect) && slider.getPaintTrack())
+        if (!clip.intersects(trackRect) && slider.getPaintTrack()) {
             calculateGeometry();
+        }
 
-        if ( slider.getPaintTrack() && clip.intersects( trackRect ) ) {
-            paintTrack( g );
+        if (slider.getPaintTrack() && clip.intersects(trackRect)) {
+            paintTrack(g); // this one used
         }
-        if ( slider.getPaintTicks() && clip.intersects( tickRect ) ) {
-            paintTicks( g );
+
+        if (slider.getPaintTicks() && clip.intersects(tickRect)) {
+            paintTicks(g);
         }
-        if ( slider.getPaintLabels() && clip.intersects( labelRect ) ) {
-            paintLabels( g );
+
+        if (slider.getPaintLabels() && clip.intersects(labelRect)) {
+            paintLabels(g);
         }
-        if ( slider.hasFocus() && clip.intersects( focusRect ) ) {
-            paintFocus( g );
+
+        if (slider.hasFocus() && clip.intersects(focusRect)) {
+            paintFocus(g);
         }
-        if ( clip.intersects( thumbRect ) ) {
-            paintThumb( g, slider.getValue() );
+
+        if (clip.intersects(thumbRect)) {
+            paintThumb(g, slider.getValue()); // this one used
         }
     }
 
     /**
-    * Paints the thumb.
+    * Paints the thumb with number
     * @param g the graphics
     */
     //@Override

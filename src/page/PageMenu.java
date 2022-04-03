@@ -143,6 +143,8 @@ class PageMenu extends JMenuBar {
             editRedo.setActionConstant(Constants.MENU_EDIT_REDO);
             add(editRedo);
 
+            addSeparator();
+
             MenuItem editCut = new MenuItem("Cut");
             editCut.setAccessible("Cut Selected Notes");
             editCut.setCommandKey("X");
@@ -161,16 +163,18 @@ class PageMenu extends JMenuBar {
             editPaste.setActionConstant(Constants.MENU_EDIT_PASTE);
             add(editPaste);
 
-            MenuItem editClear = new MenuItem("Clear");
-            editClear.setAccessible("Clear Selected Notes");
-            editClear.setActionConstant(Constants.MENU_EDIT_CLEAR);
-            add(editClear);
+            //MenuItem editClear = new MenuItem("Clear");
+            //editClear.setAccessible("Clear Selected Notes");
+            //editClear.setActionConstant(Constants.MENU_EDIT_CLEAR);
+            //add(editClear);
 
             MenuItem editSelectAll = new MenuItem("Select All");
             editSelectAll.setAccessible("Select All Notes In Track");
             editSelectAll.setCommandKey("A");
             editSelectAll.setActionConstant(Constants.MENU_EDIT_SELECTALL);
             add(editSelectAll);
+
+            addSeparator();
 
             MenuItem editInsertBars = new MenuItem("Insert Bars...");
             editInsertBars.setAccessible("Add Chosen Number of Measures to All Tracks");
@@ -251,6 +255,8 @@ class PageMenu extends JMenuBar {
             musicStop.setAccelerator(enter);
             musicStop.setEnabled(false);
             add(musicStop);
+
+            addSeparator();
 
             MenuItem musicFind = new MenuItem("Find Play Position");
             musicFind.setAccessible("Find Play Position");

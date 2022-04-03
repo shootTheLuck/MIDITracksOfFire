@@ -25,15 +25,14 @@ import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
 
-import note.Note;
 import themes.ThemeReader;
 import track.TrackView;
-import track.VelocitySlider;
-import track.VelocitySliderUI;
-import utils.console;
+import widgets.FileChooser;
 import widgets.InsertBarsDialog;
 import widgets.RemoveBarsDialog;
-import widgets.FileChooser;
+import widgets.VelocitySlider;
+
+import utils.console;
 
 public class PageView extends JFrame {
 
@@ -198,7 +197,7 @@ public class PageView extends JFrame {
         base.add(scrollPane);
 
         velocitySlider = new VelocitySlider();
-        velocitySlider.setUI(new VelocitySliderUI(velocitySlider, Color.red));
+        //velocitySlider.setUI(new VelocitySliderUI(velocitySlider, Color.red));
         velocitySlider.setMaximum(127);
         velocitySlider.setBounds(0, 0, 31, 127);
 
@@ -381,7 +380,7 @@ public class PageView extends JFrame {
     }
 
 
-    protected VelocitySlider showVelocitySlider(MouseEvent evt, Note note) {
+    protected VelocitySlider showVelocitySlider(MouseEvent evt, int velocity) {
 
         Component c = (Component) evt.getSource();
         Point point = SwingUtilities.convertPoint(c, evt.getX(), evt.getY(), this);
@@ -392,12 +391,12 @@ public class PageView extends JFrame {
         x -= 15;
         //sub track topbar height
         y -= 26;
-        //center slider on note value
-        y -= 127 - note.velocity;
+        //center slider on velocity
+        y -= 127 - velocity;
 
         velocitySlider.setLocation(x, y);
-        velocitySlider.setDisplay(note.velocity);
-        velocitySlider.setValue(note.velocity);
+        velocitySlider.setDisplay(velocity);
+        velocitySlider.setValue(velocity);
         velocitySlider.setVisible(true);
         return velocitySlider;
     }
@@ -423,8 +422,11 @@ public class PageView extends JFrame {
         RemoveBarsDialog removeBarsDialog = new RemoveBarsDialog((JFrame) this, x, y);
         removeBarsDialog.addWindowListener(new WindowAdapter() {
             @Override public void windowClosed(WindowEvent e) {
-                int[] value = removeBarsDialog.getValue();
-                page.handleRemoveBarsDialog(value[0], value[1]);
+                //int[] value = removeBarsDialog.getValue();
+                page.handleRemoveBarsDialog(
+                    removeBarsDialog.from,
+                    removeBarsDialog.to,
+                    removeBarsDialog.allTracks);
             }
         });
         removeBarsDialog.setVisible(true);
@@ -434,8 +436,12 @@ public class PageView extends JFrame {
         InsertBarsDialog insertBarsDialog = new InsertBarsDialog((JFrame) this, x, y);
         insertBarsDialog.addWindowListener(new WindowAdapter() {
             @Override public void windowClosed(WindowEvent e) {
-                int[] value = insertBarsDialog.getValue();
-                page.handleInsertBarsDialog(value[0], value[1]);
+                //int[] value = insertBarsDialog.getValue();
+                //page.handleInsertBarsDialog(value[0], value[1]);
+                page.handleInsertBarsDialog(
+                    insertBarsDialog.numberToAdd,
+                    insertBarsDialog.addBefore,
+                    insertBarsDialog.allTracks);
             }
         });
         insertBarsDialog.setVisible(true);
