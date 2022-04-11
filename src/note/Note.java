@@ -65,14 +65,13 @@ public class Note {
             "\n  #: " + serialNumber +
             "\n  start: " + start +
             "\n  duration: " + duration +
-            //"\n  instrument " + instrumentNum +
             "\n  end: " + (start + duration) +
-            //"\n  pitch " + pitch +
-            //"\n  velocity " + velocity +
-            "\n  rectangle x: " +
-                rectangle.x + ", y: " +
-                rectangle.y + ", width: " +
-                rectangle.width + ", height: " + rectangle.height +
+            "\n  pitch " + pitch +
+            "\n  velocity " + velocity +
+            //"\n  rectangle x: " +
+                //rectangle.x + ", y: " +
+                //rectangle.y + ", width: " +
+                //rectangle.width + ", height: " + rectangle.height +
             "\n";
     }
 

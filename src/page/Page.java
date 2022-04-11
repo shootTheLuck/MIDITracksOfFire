@@ -23,6 +23,8 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 import javax.swing.Timer;
 
+import commands.ActionsStack;
+//import commands.Command;
 import midi.Midi;
 import note.Note;
 import themes.ThemeReader;
@@ -57,6 +59,8 @@ public class Page {
     private List<TrackController> tracks;
     private File file;
 
+    //private ActionsStack actions;
+
     private Page() {
         preferences = new Properties();
         setDefaultPreferences();
@@ -77,6 +81,7 @@ public class Page {
 
         view = new PageView(this);
         midi = new Midi(this);
+        //actions = new ActionsStack();
         resolution = 960;
         tracks = new ArrayList<>();
         clipboard = new ArrayList<>();
@@ -299,6 +304,8 @@ public class Page {
         TrackController track = new TrackController(this);
         track.setTrackType(TrackTypes.Guitar);
         track.setChannel(tracks.size());
+
+        //TODO template pattern?
         track.setInstrument(0);
         track.setVolume(127);
         addTrack(track);
@@ -389,6 +396,10 @@ public class Page {
         view.cancelProgress();
         selectedTrack.cancelProgress();
         isPlaying = false;
+    }
+
+    public void addAction(ActionsStack.Command action) {
+        ActionsStack.add(action);
     }
 
     public void shutDown() {
@@ -565,6 +576,12 @@ public class Page {
             case MENU_EDIT_PASTE:
                 pasteSelection();
                 break;
+            case MENU_EDIT_UNDO:
+                ActionsStack.undo();
+                break;
+            case MENU_EDIT_REDO:
+                ActionsStack.redo();
+                break;
             case MENU_EDIT_INSERTBARS:
                 view.showInsertBarsDialog(1, 1);
                 break;
@@ -609,12 +626,16 @@ public class Page {
             case FIELD_PLAYSTART:
                 int measureStart = view.playControls.getPlayStartField();
                 view.setScrollPositionToMeasure(measureStart);
+                break;
             case FIELD_LOOPSTART:
                 //TODO
+                break;
             case FIELD_LOOPSTOP:
                 //TODO
+                break;
             case FIELD_BPM:
                 BPM = view.playControls.getBPMField();
+                break;
             default:
         }
         view.setFocus();

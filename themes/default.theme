@@ -14,11 +14,11 @@ track.topPanel.selected.background=0x666666
 track.nameField.color=0xbababa
 track.nameField.selected.background=0xffffff
 
-track.strings.spacing=20
+track.strings.spacing=12
 track.strings.margin.top=20
 track.strings.margin.right=10
 track.strings.margin.bottom=30
-track.strings.margin.left=60
+track.strings.margin.left=40
 
 track.strings.color=0x888888
 track.barLines.color=0x000000
@@ -26,7 +26,7 @@ track.gridLines.color=0xbababa
 
 note.unselected.background=0xEEEEEE
 note.selected.background=0xEECC00
-note.height=6
+note.height=4
 
 
 drumNote.height=12

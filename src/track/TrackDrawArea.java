@@ -32,18 +32,17 @@ class TrackDrawArea extends JLayeredPane {
 
     private TrackType trackType;
     private TrackController controller;
-    private float[] dash1 = { 2F, 2F };
+    private float[] dash1 = {2F, 2F};
     private BasicStroke dashed = new BasicStroke(1, BasicStroke.CAP_BUTT,
             BasicStroke.JOIN_ROUND, 1.0f, dash1, 2f);
-
-    private double zoomFactor = 1;
-    private double prevZoomFactor = 1;
-    private boolean zoomer = false;
 
     private Line2D progressLine;
     private Font fretFont = new Font("Dialog", Font.PLAIN, 11);
     private FontMetrics fontMetrics = getFontMetrics(fretFont);
     private int fontHeight = fontMetrics.getAscent();
+
+    private int topMargin;
+    private int leftMargin = 0; //TODO not using yet
 
     protected NumberInputField fretField;
     private Runnable sendFretField;
@@ -141,7 +140,8 @@ class TrackDrawArea extends JLayeredPane {
 
         for (int i = 0; i < trackType.numOfStrings; i++) {
             g.drawLine(
-                0,
+                //0,
+                leftMargin,
                 topMargin + i * lineSpacing,
                 PageView.width,
                 topMargin + i * lineSpacing);
@@ -150,21 +150,20 @@ class TrackDrawArea extends JLayeredPane {
         g.setColor(ThemeReader.getColor("track.gridLines.color"));
         for (int j = 0; j < 4 * PageView.width/measureSize; j++) {
             g.drawLine(
-                (int)(measureSize/4.0 * j),
+                leftMargin + (int)(measureSize/4.0 * j),
                 topMargin,
-                (int)(measureSize/4.0 * j),
+                leftMargin + (int)(measureSize/4.0 * j),
                 topMargin + lineSpacing * (trackType.numOfStrings - 1));
         }
 
         g.setColor(ThemeReader.getColor("track.barLines.color"));
         for (int i = 0; i < 1 + PageView.width/measureSize; i++) {
             g.drawLine(
-                measureSize * i,
+                leftMargin + measureSize * i,
                 topMargin,
-                measureSize * i,
+                leftMargin + measureSize * i,
                 topMargin + lineSpacing * (trackType.numOfStrings - 1));
         }
-
     }
 
     private void setNoteRectangle(Note note) {
@@ -179,13 +178,15 @@ class TrackDrawArea extends JLayeredPane {
     }
 
     private int getNoteY(int stringNum) {
-        return ThemeReader.getMeasure("track.strings.margin.top") +
-        stringNum * ThemeReader.getMeasure("track.strings.spacing") - ThemeReader.getMeasure("note.height")/2;
+        int stringSpacing = ThemeReader.getMeasure("track.strings.spacing");
+        int stringY = getNoteStringY(stringNum);
+        return stringY - stringSpacing / 2;
     }
 
-    private int getDrumNoteY(int stringNum) {
-        return ThemeReader.getMeasure("track.strings.margin.top") +
-        stringNum * ThemeReader.getMeasure("track.strings.spacing") - ThemeReader.getMeasure("drumNote.height")/2;
+    private int getNoteStringY(int stringNum) {
+        int topMargin = ThemeReader.getMeasure("track.strings.margin.top");
+        int stringSpacing = ThemeReader.getMeasure("track.strings.spacing");
+        return topMargin + stringNum * stringSpacing;
     }
 
     private int getNoteWidth(long duration) {
@@ -193,7 +194,9 @@ class TrackDrawArea extends JLayeredPane {
     }
 
     private int getNoteHeight() {
-        return ThemeReader.getMeasure("note.height");
+        //return ThemeReader.getMeasure("note.height");
+        int stringSpacing = ThemeReader.getMeasure("track.strings.spacing");
+        return stringSpacing * 1;
     }
 
     private void drawTriangle(Graphics2D g2, Note note, Color color) {
@@ -203,7 +206,7 @@ class TrackDrawArea extends JLayeredPane {
         Path2D path = new Path2D.Double();
 
         note.rectangle.x = getNoteX(note.start) + 0;
-        note.rectangle.y = getDrumNoteY(note.stringNum);
+        note.rectangle.y = getNoteY(note.stringNum);
         note.rectangle.width = ThemeReader.getMeasure("drumNote.width");;
         note.rectangle.height = ThemeReader.getMeasure("drumNote.height");
 
@@ -224,13 +227,16 @@ class TrackDrawArea extends JLayeredPane {
 
         String fretNum = "" + note.fret;
         int fretNumWidth = fontMetrics.stringWidth(fretNum);
-        int drawHeight = note.rectangle.height;
+        //int drawHeight = note.rectangle.height;
+        int drawHeight = ThemeReader.getMeasure("note.height");
+        int stringY = getNoteStringY(note.stringNum);
 
         //draw note color
         g2.setColor(color);
         g2.fillRect(
             note.rectangle.x,
-            note.rectangle.y,
+            //note.rectangle.y,
+            stringY - drawHeight/2,
             note.rectangle.width,
             drawHeight);
 
@@ -238,7 +244,8 @@ class TrackDrawArea extends JLayeredPane {
         g2.setColor(Color.BLACK);
         g2.drawRect(
             note.rectangle.x,
-            note.rectangle.y,
+            //note.rectangle.y,
+            stringY - drawHeight/2,
             note.rectangle.width,
             drawHeight);
 
@@ -246,7 +253,8 @@ class TrackDrawArea extends JLayeredPane {
         g2.setColor(color);
         g2.fillRect(
             note.rectangle.x,
-            note.rectangle.y + drawHeight/2 - fontHeight/2,
+            //note.rectangle.y + drawHeight/2 - fontHeight/2,
+            stringY - fontHeight/2,
             fretNumWidth,
             fontHeight);
 
@@ -254,7 +262,8 @@ class TrackDrawArea extends JLayeredPane {
         g2.setColor(Color.BLACK);
         g2.drawString(
             fretNum, note.rectangle.x,
-            note.rectangle.y + drawHeight/2 + fontHeight/2 - 1);
+            //note.rectangle.y + drawHeight/2 + fontHeight/2 - 1);
+            stringY + fontHeight/2 - 1);
     }
 
     private void drawSelectorRect(Graphics2D g2, Rectangle rect) {
@@ -276,7 +285,6 @@ class TrackDrawArea extends JLayeredPane {
     }
 
     protected void overwriteNote(Note note) {
-
         setNoteRectangle(note);
         // additions/subtractions: paint slightly more than needed to erase outdated pixels
         int xBuffer = PageView.measureSize + 20;
@@ -304,19 +312,15 @@ class TrackDrawArea extends JLayeredPane {
         fretField.setVisible(false);
     }
 
+    protected void setTheme() {
+
+    }
+
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g2.setFont(fretFont);
-
-        //if (zoomer) {
-            //AffineTransform at = new AffineTransform();
-            //at.scale(zoomFactor, zoomFactor);
-            //prevZoomFactor = zoomFactor;
-            //g2.transform(at);
-            //zoomer = false;
-        //}
 
         Color selectedColor = ThemeReader.getColor("note.selected.background");
         Color unselectedColor = ThemeReader.getColor("note.unselected.background");

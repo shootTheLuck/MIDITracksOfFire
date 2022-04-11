@@ -55,7 +55,6 @@ public class TrackView extends JPanel {
     private PageView pageView;
 
     // topBar items:
-    private Font topBarFont = new Font("Dialog", Font.PLAIN, 12);
     private JLabel collapseButton;
     private Constants collapseAction;
     private JLabel muteButton;
@@ -72,11 +71,6 @@ public class TrackView extends JPanel {
     private Icon muteOffIcon = new ImageIcon("assets/audio-volume-high.png");
     private Icon collapseIcon = new ImageIcon("assets/pan-down-symbolic.symbolic.png");
     private Icon expandIcon = new ImageIcon("assets/pan-end-symbolic.symbolic.png");
-
-    //private JFormattedTextField fretField;
-    private Font fretFont = new Font("Dialog", Font.PLAIN, 11);
-    private FontMetrics fMetrics = getFontMetrics(fretFont);
-    private int fHeight = fMetrics.getAscent();
 
     public TrackView(TrackController controller, String name) {
         this.controller = controller;
@@ -96,6 +90,7 @@ public class TrackView extends JPanel {
         add(topBar, BorderLayout.PAGE_START);
 
         int topElementHeight = ThemeReader.getMeasure("track.topPanel.height") - 5;
+        Font topBarFont = new Font("Dialog", Font.PLAIN, 12);
 
         UIManager.put("Label.font", topBarFont);
         UIManager.put("Button.font", topBarFont);
@@ -156,9 +151,9 @@ public class TrackView extends JPanel {
         // save reference to the standard border
         trackNameBorder = trackNameField.getBorder();
 
-        topBar.add(Box.createRigidArea(new Dimension(100, 1)));
+        topBar.add(Box.createRigidArea(new Dimension(200, 1)));
 
-        topBar.add(new JLabel("TrackType "));
+        topBar.add(new JLabel("  TrackType "));
         trackTypePicker = new JComboBox<>(TrackTypes.getArray());
         trackTypePicker.setSelectedItem(trackType);
         trackTypePicker.setFocusable(false);
@@ -168,7 +163,7 @@ public class TrackView extends JPanel {
         setComponentSize(trackTypePicker, 70, topElementHeight);
         topBar.add(trackTypePicker);
 
-        topBar.add(new JLabel(" GridSize "));
+        topBar.add(new JLabel("  GridSize "));
         String sizes[] = {"1/1", "1/2", "1/4", "1/8", "1/16" , "1/32" , "1/64"};
         gridSizePicker = new JComboBox<>(sizes);
         gridSizePicker.setSelectedIndex(3);
@@ -184,7 +179,7 @@ public class TrackView extends JPanel {
         setComponentSize(gridSizePicker, 60, topElementHeight);
         topBar.add(gridSizePicker);
 
-        topBar.add(new JLabel(" Volume "));
+        topBar.add(new JLabel("  Volume "));
         volumeField = new NumberInputField(0, 3);
         volumeField.addKeyListener(new KeyAdapter() {
             @Override
@@ -203,7 +198,7 @@ public class TrackView extends JPanel {
         setComponentSize(volumeField, 40, topElementHeight);
         topBar.add(volumeField);
 
-        topBar.add(new JLabel(" Instrument "));
+        topBar.add(new JLabel("  Instrument "));
         instrumentPicker = new TrackInstrumentPicker(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent evt) {
@@ -218,11 +213,11 @@ public class TrackView extends JPanel {
         drawContainer = new JPanel(null);
         add(drawContainer);
 
+        //TODO eliminate this. use leftmargin in drawarea instead
         side = new JPanel();
         setComponentSize(side, leftMargin, 100);
         drawContainer.add(side);
 
-        //setTrackType(trackType);
         gridSizePicker.setFocusTraversalKeysEnabled(false);
 
         deHighliteBorder();
@@ -234,7 +229,7 @@ public class TrackView extends JPanel {
     }
 
     public void setTheme() {
-
+        drawArea.setTheme();
     }
 
     //https://stackoverflow.com/questions/10271116/iterate-through-all-objects-in-jframe
@@ -336,6 +331,7 @@ public class TrackView extends JPanel {
         height += ThemeReader.getMeasure("track.strings.margin.top");
         height += ThemeReader.getMeasure("track.strings.margin.bottom");
         setComponentSize(side, leftMargin, height);
+        //setComponentSize(side, 0, height);
         adjustMeasureSize(PageView.measureSize);
         //setScrollPosition();
         //revalidate();
@@ -429,6 +425,8 @@ public class TrackView extends JPanel {
     }
 
     public void drawRectangle(Rectangle rect) {
+        rect.y = Math.max(0, rect.y);
+        rect.x = Math.max(0, rect.x);
          ///additions/subtractions paint slightly more than needed to erase outdated pixels
         drawArea.repaint(rect.x - 8, rect.y - 4, rect.width + 16, rect.height + 8);
     }

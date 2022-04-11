@@ -79,10 +79,10 @@ public class Midi {
 
                 mChannels = midiSynth.getChannels();
 
-                /* set reverb to 0 on all channels */
-                for (MidiChannel channel : mChannels) {
-                    channel.controlChange(91, 0);
-                }
+                /* set reverb to 0 on all channels .. not sure about this one */
+                //for (MidiChannel channel : mChannels) {
+                    //channel.controlChange(91, 0);
+                //}
 
             } catch(Exception e) {
                 e.printStackTrace();
@@ -198,7 +198,9 @@ public class Midi {
             }
             long startTime = getStartTime(trackNotes);
             sequencer.setSequence(sequence);
-            sequencer.setTickPosition(startTime);
+
+            /* hack? to play chord selection */
+            sequencer.setTickPosition(startTime - 1);
             sequencer.start();
 
         } catch(Exception ex) {
@@ -260,12 +262,11 @@ public class Midi {
     private byte[] getTempoData(int BPM) {
         // magic
         // http://www.java2s.com/example/java/javax.sound.midi/create-a-set-tempo-meta-event-for-midi.html
-        // mpqn microseconds per quarternote
-        long mpqn = 60000000 / BPM;
-        byte[] array = new byte[] { 0, 0, 0 };
+        long microsecondsPerQuarterNote = 60000000 / BPM;
+        byte[] array = new byte[] {0, 0, 0};
         for (int i = 0; i < 3; i++) {
             int shift = (3 - 1 - i) * 8;
-            array[i] = (byte) (mpqn >> shift);
+            array[i] = (byte) (microsecondsPerQuarterNote >> shift);
         }
         return array;
     }
@@ -289,7 +290,7 @@ public class Midi {
     }
 
     public void setVolume() {
-        // TODO
+        // TODO overall volume
     }
 
     public void setTrackVolume(int channel, int value) {
