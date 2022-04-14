@@ -1,13 +1,11 @@
 package midi;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 import javax.sound.midi.MetaEventListener;
 import javax.sound.midi.MetaMessage;
-import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiSystem;
 import javax.sound.midi.MidiUnavailableException;
@@ -37,7 +35,6 @@ public class Midi {
     private Page pageController;
     private Synthesizer midiSynth;
     private Sequencer sequencer;
-    private MidiChannel[] mChannels;
     private Receiver midiReceiver;
     private Soundbank soundBank;
     private Sequence playSequence;
@@ -77,7 +74,7 @@ public class Midi {
                     }
                 });
 
-                mChannels = midiSynth.getChannels();
+                midiSynth.getChannels();
 
                 /* set reverb to 0 on all channels .. not sure about this one */
                 //for (MidiChannel channel : mChannels) {

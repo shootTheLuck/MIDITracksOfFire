@@ -24,23 +24,25 @@ import javax.sound.midi.Track;
 import javax.swing.Timer;
 
 import commands.ActionsStack;
-//import commands.Command;
 import midi.Midi;
 import note.Note;
 import themes.ThemeReader;
 import track.TrackController;
 import track.TrackType;
-import track.TrackTypes;
+import track.TrackTypeGuitar;
+import track.TrackTypeBass;
+import track.TrackTypeDrums;
+//import track.TrackTypes;
 import widgets.VelocitySlider;
 import utils.console;
 
 
 public class Page {
 
-    private static volatile Page soleInstance;
-    // global!!
-    public static int scrollValue = 0;
-    public static int numOfMeasures = 50;
+    //private static volatile Page soleInstance;
+
+    private int scrollValue = 0;
+    private int numOfMeasures = 50;
     private int minNumOfMeasures = 50;
 
     private String prefFile = "config/preferences.txt";
@@ -59,9 +61,7 @@ public class Page {
     private List<TrackController> tracks;
     private File file;
 
-    //private ActionsStack actions;
-
-    private Page() {
+    public Page() {
         preferences = new Properties();
         setDefaultPreferences();
         boolean themed = false;
@@ -81,7 +81,6 @@ public class Page {
 
         view = new PageView(this);
         midi = new Midi(this);
-        //actions = new ActionsStack();
         resolution = 960;
         tracks = new ArrayList<>();
         clipboard = new ArrayList<>();
@@ -98,19 +97,6 @@ public class Page {
         }
         view.setVisible(true);
 
-    }
-
-    public static Page getInstance() {
-        //Double check locking pattern
-        if (soleInstance == null) { //Check for the first time
-
-            synchronized (Page.class) { //Check for the second time.
-                //if there is no instance available... create new one
-                if (soleInstance == null) soleInstance = new Page();
-            }
-        }
-
-        return soleInstance;
     }
 
     public String getPreference(String prefName) {
@@ -178,12 +164,12 @@ public class Page {
             MidiMessage message = event.getMessage();
 
             if (message instanceof MetaMessage) {
-                MetaMessage metaMessage = (MetaMessage) message;
+                MetaMessage metaMessage = (MetaMessage)message;
                 int messageType = metaMessage.getType();
 
                 if (messageType == 3) {
-                    // track name
-                    trackController.setName(new String(metaMessage.getData()));
+                    String trackName = new String(metaMessage.getData());
+                    trackController.setName(trackName);
                 } else if (messageType == 81) {
                     // BPM
                     /* https://stackoverflow.com/questions/22798345/
@@ -197,7 +183,7 @@ public class Page {
 
             } else if (message instanceof ShortMessage) {
 
-                ShortMessage shortMessage = (ShortMessage) message;
+                ShortMessage shortMessage = (ShortMessage)message;
 
                 int command = shortMessage.getCommand();
                 int pitch = shortMessage.getData1();
@@ -209,11 +195,11 @@ public class Page {
                     int instrumentNum = shortMessage.getData1();
 
                     if (channel == 9) {
-                        trackType =  TrackTypes.Drums;
+                        trackType = new TrackTypeDrums();
                     } else if (instrumentNum >= 32 && instrumentNum <= 39) {
-                        trackType =  TrackTypes.Bass;
+                        trackType = new TrackTypeBass();
                     } else {
-                        trackType =  TrackTypes.Guitar;
+                        trackType = new TrackTypeGuitar();
                     }
 
                     trackController.setTrackType(trackType);
@@ -263,6 +249,7 @@ public class Page {
                     for (int j = notes.size() - 1; j >= 0; j--) {
                         Note trackNote = notes.get(j);
                         if (trackNote.pitch == pitch) {
+                            //trackNote.duration = tick - trackNote.start;
                             trackNote.duration = tick - trackNote.start;
                             trackController.loadNote(trackNote);
                             break;
@@ -302,7 +289,7 @@ public class Page {
 
     private void addNewTrack() {
         TrackController track = new TrackController(this);
-        track.setTrackType(TrackTypes.Guitar);
+        track.setTrackType(new TrackTypeGuitar());
         track.setChannel(tracks.size());
 
         //TODO template pattern?
@@ -343,7 +330,7 @@ public class Page {
 
     protected void handleInsertBarsDialog(int numberToAdd, int addBefore, boolean allTracks) {
         if (numberToAdd > 0) {
-            Page.numOfMeasures += numberToAdd;
+            numOfMeasures += numberToAdd;
             view.addMeasures(numberToAdd);
             if (allTracks) {
                 for (TrackController track : tracks) {
@@ -359,7 +346,7 @@ public class Page {
         int numberToRemove = end - start + 1;
         if (start > 0 && end > 0) {
             if (allTracks) {
-                Page.numOfMeasures -= numberToRemove;
+                numOfMeasures -= numberToRemove;
                 view.addMeasures(-numberToRemove);
                 for (TrackController track : tracks) {
                     track.removeBars(start, end);
@@ -376,6 +363,7 @@ public class Page {
 
         view.setScrollPositionToMeasure(measureStart);
         midi.play(tracks, BPM, resolution, startTime);
+        isPlaying = true;
         progressTimer.start();
     }
 
@@ -383,6 +371,7 @@ public class Page {
         List<Note> selection = track.getSelection();
         if (selection.size() > 0) {
             midi.playSelection(track, BPM, resolution);
+            isPlaying = true;
         }
     }
 
@@ -422,15 +411,16 @@ public class Page {
 
     private void openFile() {
         String path;
+        String currentDirectory = System.getProperty("user.dir");
         String midiDirectory = preferences.getProperty("midiDirectory");
         if (midiDirectory != null && !midiDirectory.isEmpty()) {
             if (midiDirectory == "midi") {
-                path = System.getProperty("user.dir") + "/" + midiDirectory;
+                path = currentDirectory + "/" + midiDirectory;
             } else {
                 path = midiDirectory;
             }
         } else {
-            path = System.getProperty("user.dir");
+            path = currentDirectory;
         }
 
         String fileName = view.showFileChooser("mid", path);
@@ -441,15 +431,16 @@ public class Page {
 
     private void saveFileAs() {
         String path;
+        String currentDirectory = System.getProperty("user.dir");
         String midiDirectory = preferences.getProperty("midiDirectory");
         if (midiDirectory != null && !midiDirectory.isEmpty()) {
             if (midiDirectory == "midi") {
-                path = System.getProperty("user.dir") + "/" + midiDirectory;
+                path = currentDirectory + "/" + midiDirectory;
             } else {
                 path = midiDirectory;
             }
         } else {
-            path = System.getProperty("user.dir");
+            path = currentDirectory;
         }
 
         String fileName = view.showFileChooser("mid", path);
@@ -518,12 +509,15 @@ public class Page {
                 case KeyEvent.VK_TAB:
                     selectedTrack.tabThroughNotes();
                     break;
+                case KeyEvent.VK_SPACE:
+                    selectedTrack.tabThroughNotes();
+                    break;
             }
         }
     }
 
     public void handleMeasureSizeSlider(int sliderValue) {
-        view.adjustMeasureSize(sliderValue);
+        view.adjustMeasureSize(sliderValue, numOfMeasures);
     }
 
     public void handleMenuItem(Constants evt) {
@@ -600,26 +594,27 @@ public class Page {
                     playAll();
                     view.playControls.togglePlayButton(Constants.BUTTON_STOP);
                     view.menuBar.toggleMusicPlay(Constants.BUTTON_STOP);
-                    isPlaying = true;
+                    //isPlaying = true;
                 } else {
                     stopAll();
                     view.playControls.togglePlayButton(Constants.BUTTON_PLAY);
                     view.menuBar.toggleMusicPlay(Constants.BUTTON_PLAY);
-                    isPlaying = false;
+                    //isPlaying = false;
                 }
                 break;
 
             case BUTTON_PLAYSELECTION:
                 if (isPlaying == false) {
                     playSelection(selectedTrack);
-                    view.playControls.togglePlayButton(Constants.BUTTON_STOP);
-                    view.menuBar.toggleMusicPlay(Constants.BUTTON_STOP);
-                    isPlaying = true;
+                    //check again to see if there was an actual selection
+                    if (isPlaying == true) {
+                        view.playControls.togglePlayButton(Constants.BUTTON_STOP);
+                        view.menuBar.toggleMusicPlay(Constants.BUTTON_STOP);
+                    }
                 } else {
                     stopAll();
                     view.playControls.togglePlayButton(Constants.BUTTON_PLAY);
                     view.menuBar.toggleMusicPlay(Constants.BUTTON_PLAY);
-                    isPlaying = false;
                 }
                 break;
 
@@ -659,7 +654,7 @@ public class Page {
     public void handleSoundProgress(long tick) {
         view.setProgress(tick, getTicksPerMeasure());
         selectedTrack.setProgress(tick, getTicksPerMeasure());
-        int currentMeasure = (int) tick/getTicksPerMeasure();
+        int currentMeasure = (int)tick/getTicksPerMeasure();
         int currentPosition = currentMeasure * PageView.measureSize - scrollValue;
         int currentWidth = view.getCurrentWidth();
         if (currentPosition > currentWidth) {

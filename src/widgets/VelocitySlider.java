@@ -1,19 +1,20 @@
 package widgets;
 
-import javax.swing.JSlider;
-import javax.swing.SwingConstants;
-import javax.swing.plaf.SliderUI;
-import javax.swing.plaf.basic.BasicSliderUI;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.event.MouseEvent;
 import java.awt.Rectangle;
 
 import javax.swing.JComponent;
 import javax.swing.JSlider;
-//import javax.swing.plaf.basic.BasicSliderUI;
+import javax.swing.SwingConstants;
+import javax.swing.plaf.SliderUI;
+import javax.swing.plaf.basic.BasicSliderUI;
+import javax.swing.plaf.metal.MetalSliderUI;
+
+import utils.console;
 
 public class VelocitySlider extends JSlider {
 
@@ -141,6 +142,6 @@ class VelocitySliderUI extends BasicSliderUI {
 
     @Override
     public String toString() {
-        return "wowo";
+        return "velocitySlider";
     }
 }

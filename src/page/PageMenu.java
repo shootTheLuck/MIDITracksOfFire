@@ -73,7 +73,7 @@ class PageMenu extends JMenuBar {
         }
 
         private void setActionConstant(Constants c) {
-            actionConstant = c;
+            //actionConstant = c;
             addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     pageController.handleMenuItem(c);

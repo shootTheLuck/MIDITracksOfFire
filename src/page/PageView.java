@@ -34,7 +34,7 @@ import widgets.VelocitySlider;
 
 import utils.console;
 
-public class PageView extends JFrame {
+public class PageView {
 
     public static int measureSize = 150;
     public static int width = 3003;
@@ -43,6 +43,7 @@ public class PageView extends JFrame {
     private PageKeyListener keyListener;
 
     private Page page;
+    private JFrame frame;
     private JPanel mainPanel;
     private JScrollBar hScrollBar;
     private JScrollBar vScrollBar;
@@ -62,9 +63,9 @@ public class PageView extends JFrame {
 
     protected PageView(Page pageController) {
 
-        setTitle("untitled");
         this.page = pageController;
 
+        frame = new JFrame("untitled");
         String widthString = pageController.getPreference("window.width");
         String heightString = pageController.getPreference("window.height");
 
@@ -78,22 +79,22 @@ public class PageView extends JFrame {
             height = 900;
         }
 
-        setSize(new Dimension(width, height));
-        setPreferredSize(new Dimension(width, height));
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(new Dimension(width, height));
+        frame.setPreferredSize(new Dimension(width, height));
+        frame.setLocationRelativeTo(null);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        addComponentListener(new ComponentAdapter() {
+        frame.addComponentListener(new ComponentAdapter() {
             public void componentResized(ComponentEvent e) {
-                int height = getHeight();
-                int width = getWidth();
+                int height = frame.getHeight();
+                int width = frame.getWidth();
                 pageController.setPreference("window.width", width);
                 pageController.setPreference("window.height", height);
-                setPreferredSize(new Dimension(width, height));
+                frame.setPreferredSize(new Dimension(width, height));
             }
         });
 
-        addWindowListener(new WindowAdapter() {
+        frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 pageController.shutDown();
@@ -101,15 +102,15 @@ public class PageView extends JFrame {
         });
 
         ImageIcon img = new ImageIcon("./assets/icon.png");
-        setIconImage(img.getImage());
+        frame.setIconImage(img.getImage());
 
         menuBar = new PageMenu(pageController);
-        setJMenuBar(menuBar);
+        frame.setJMenuBar(menuBar);
 
         JPanel base = new JPanel();
         base.setBackground(Color.black);
         base.setLayout(new BoxLayout(base, BoxLayout.Y_AXIS));
-        add(base);
+        frame.add(base);
 
         topBar = new JPanel();
         topBar.setLayout(new BoxLayout(topBar, BoxLayout.LINE_AXIS));
@@ -123,7 +124,7 @@ public class PageView extends JFrame {
         topBar.setPreferredSize(new Dimension(PageView.width, 40));
         topBar.setMaximumSize(new Dimension(PageView.width, 40));
 
-        numberBar = new PageNumberBar(numberBarHeight, leftMargin);
+        numberBar = new PageNumberBar(page, numberBarHeight, leftMargin);
         numberBar.setLayout(null);
         numberBarContainer = new JPanel(null);
 
@@ -203,7 +204,7 @@ public class PageView extends JFrame {
 
         velocitySlider.setVisible(false);
         velocitySlider.setBorder(BorderFactory.createLineBorder(Color.gray));
-        JLayeredPane layers = getLayeredPane();
+        JLayeredPane layers = frame.getLayeredPane();
         layers.add(velocitySlider, 10);
 
         fileChooser = new FileChooser();
@@ -217,6 +218,15 @@ public class PageView extends JFrame {
     protected void setFocus() {
         keyListener.setFocus();
     }
+
+    protected void setTitle(String title) {
+        frame.setTitle(title);
+    }
+
+    protected void setVisible(boolean tf) {
+        frame.setVisible(tf);
+    }
+
 
     //@Override
     //protected Dimension getPreferredSize() {
@@ -233,7 +243,7 @@ public class PageView extends JFrame {
                 ((TrackView)components[i]).setTheme();
             }
         }
-        repaint();
+        frame.repaint();
     }
 
     protected void showInfo(Object o) {
@@ -278,7 +288,7 @@ public class PageView extends JFrame {
     }
 
     protected int getCurrentWidth() {
-        Dimension d = this.getSize();
+        Dimension d = frame.getSize();
         return d.width - leftMargin * 2;
     }
 
@@ -293,16 +303,16 @@ public class PageView extends JFrame {
         }
         //handleScrollChange();
         numberBar.adjustMeasureSize(measureSize);
-        revalidate();
-        repaint();
+        frame.revalidate();
+        frame.repaint();
         reset();
     }
 
-    protected void adjustMeasureSize(int sliderValue) {
+    protected void adjustMeasureSize(int sliderValue, int numOfMeasures) {
         double minimumMeasureSize = 50.0;
         double maximumMeasureSize = getCurrentWidth() * 0.8;
-        PageView.measureSize = (int) Math.min(Math.max(minimumMeasureSize, sliderValue), maximumMeasureSize);
-        PageView.width = Page.numOfMeasures * PageView.measureSize + PageView.measureSize;
+        PageView.measureSize = (int)Math.min(Math.max(minimumMeasureSize, sliderValue), maximumMeasureSize);
+        PageView.width = numOfMeasures * PageView.measureSize + PageView.measureSize;
 
         Component[] components = mainPanel.getComponents();
         for (int i = 0; i < components.length; i++) {
@@ -332,9 +342,9 @@ public class PageView extends JFrame {
         numberBarContainer.setSize(numberBarSize);
         numberBarContainer.setMaximumSize(numberBarSize);
         numberBarContainer.setPreferredSize(numberBarSize);
-        revalidate();
-        pack();
-        repaint();
+        frame.revalidate();
+        frame.pack();
+        frame.repaint();
     }
 
     protected void addTrackView(TrackView trackView, int totalNumOfTracks) {
@@ -356,15 +366,15 @@ public class PageView extends JFrame {
         mainPanel.setMinimumSize(newSize);
         mainPanel.setPreferredSize(newSize);
         trackView.setScrollPosition(scrollPosition);
-        revalidate();
-        pack();
+        frame.revalidate();
+        frame.pack();
     }
 
     protected void removeTrackView(TrackView trackView) {
         if (mainPanel.isAncestorOf(trackView)) {
             mainPanel.remove(trackView);
-            revalidate();
-            repaint();
+            frame.revalidate();
+            frame.repaint();
         }
     }
 
@@ -375,15 +385,15 @@ public class PageView extends JFrame {
                 mainPanel.remove(components[i]);
             }
         }
-        revalidate();
-        repaint();
+        frame.revalidate();
+        frame.repaint();
     }
 
 
     protected VelocitySlider showVelocitySlider(MouseEvent evt, int velocity) {
 
         Component c = (Component) evt.getSource();
-        Point point = SwingUtilities.convertPoint(c, evt.getX(), evt.getY(), this);
+        Point point = SwingUtilities.convertPoint(c, evt.getX(), evt.getY(), frame);
 
         int x = point.x;
         int y = point.y;
@@ -419,7 +429,7 @@ public class PageView extends JFrame {
     //}
 
     protected void showRemoveBarsDialog(int x, int y) {
-        RemoveBarsDialog removeBarsDialog = new RemoveBarsDialog((JFrame) this, x, y);
+        RemoveBarsDialog removeBarsDialog = new RemoveBarsDialog((JFrame) frame, x, y);
         removeBarsDialog.addWindowListener(new WindowAdapter() {
             @Override public void windowClosed(WindowEvent e) {
                 //int[] value = removeBarsDialog.getValue();
@@ -433,7 +443,7 @@ public class PageView extends JFrame {
     }
 
     protected void showInsertBarsDialog(int x, int y) {
-        InsertBarsDialog insertBarsDialog = new InsertBarsDialog((JFrame) this, x, y);
+        InsertBarsDialog insertBarsDialog = new InsertBarsDialog((JFrame) frame, x, y);
         insertBarsDialog.addWindowListener(new WindowAdapter() {
             @Override public void windowClosed(WindowEvent e) {
                 //int[] value = insertBarsDialog.getValue();

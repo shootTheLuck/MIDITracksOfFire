@@ -9,9 +9,9 @@ class Main {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 console.log("starting up...");
-                Page page = Page.getInstance();
-                //page.loadFile("midi/RepoMan2Test.mid");
-                //page.loadFile("midi/2Instruments.mid");
+                Page page = new Page();
+                page.loadFile("midi/RepoMan2Test.mid");
+                //page.loadFile("midi/Friday.mid");
                 //page.loadFile("midi/DrumHits.mid");
                 //page.loadFile("midi/test2.mid");
             }

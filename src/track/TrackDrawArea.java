@@ -30,31 +30,31 @@ import widgets.NumberInputField;
 
 class TrackDrawArea extends JLayeredPane {
 
-    private TrackType trackType;
-    private TrackController controller;
-    private float[] dash1 = {2F, 2F};
-    private BasicStroke dashed = new BasicStroke(1, BasicStroke.CAP_BUTT,
+    protected TrackType trackType;
+    protected TrackController controller;
+    protected float[] dash1 = {2F, 2F};
+    protected BasicStroke dashed = new BasicStroke(1, BasicStroke.CAP_BUTT,
             BasicStroke.JOIN_ROUND, 1.0f, dash1, 2f);
 
-    private Line2D progressLine;
-    private Font fretFont = new Font("Dialog", Font.PLAIN, 11);
-    private FontMetrics fontMetrics = getFontMetrics(fretFont);
-    private int fontHeight = fontMetrics.getAscent();
+    protected Line2D progressLine;
+    protected Font fretFont = new Font("Dialog", Font.PLAIN, 11);
+    protected FontMetrics fontMetrics = getFontMetrics(fretFont);
+    protected int fontHeight = fontMetrics.getAscent();
 
-    private int topMargin;
-    private int leftMargin = 0; //TODO not using yet
+    protected int topMargin;
+    protected int numOfStrings;
 
     protected NumberInputField fretField;
-    private Runnable sendFretField;
+    protected Runnable sendFretField;
 
-    public TrackDrawArea(TrackController controller, TrackType trackType) {
+    public TrackDrawArea(TrackController controller, int numOfStrings) {
 
         this.controller = controller;
-        this.trackType = trackType;
+        this.numOfStrings = numOfStrings;
         setLayout(null);
         setBorder(BorderFactory.createLineBorder(Color.black, 1));
 
-        //int trackHeight = Themes.getTrackHeight(trackType.numOfStrings);
+        //int trackHeight = Themes.getTrackHeight(numOfStrings);
         progressLine = new Line2D.Double(-1000, 0, -1000, 0);
 
         addMouseListener(new MouseAdapter() {
@@ -107,30 +107,61 @@ class TrackDrawArea extends JLayeredPane {
 
     }
 
-    private void drawDrumLines(Graphics2D g) {
-        int measureSize = PageView.measureSize;
+    @Override
+    public int getHeight() {
+        int height = ThemeReader.getMeasure("track.strings.spacing") * numOfStrings;
+        height += ThemeReader.getMeasure("track.strings.margin.top");
+        height += ThemeReader.getMeasure("track.strings.margin.bottom");
+        return height;
+    }
 
+    protected void drawDrumLines(Graphics2D g) {
+        int measureSize = PageView.measureSize;
         int topMargin = ThemeReader.getMeasure("track.strings.margin.top");
-        int lineSpacing = ThemeReader.getMeasure("track.strings.spacing");
+        int lineSpacing = ThemeReader.getMeasure("track.strings.spacing") * 1;
 
         g.setColor(Color.gray);
-        g.fillRect(0, 10, PageView.width, trackType.numOfStrings * lineSpacing * 2);
+        //g.fillRect(0, lineSpacing, PageView.width, numOfStrings * lineSpacing + (int)(lineSpacing * 0.5));
 
-        g.setColor(Color.white);
-        //g.setStroke(new BasicStroke(trackType.noteDrawHeight));
-        g.setStroke(new BasicStroke(ThemeReader.getMeasure("note.height")));
-        for (int i = 0; i < trackType.numOfStrings; i++) {
+        //g.setColor(Color.white);
+        //g.setStroke(new BasicStroke(noteDrawHeight));
+        //g.setStroke(new BasicStroke(ThemeReader.getMeasure("note.height")));
+        g.setStroke(new BasicStroke(1));
+        for (int i = 0; i < numOfStrings + 1; i++) {
             g.drawLine(
                 0,
-                topMargin + i * lineSpacing,
+                topMargin - lineSpacing/2 + i * lineSpacing,
                 PageView.width,
-                topMargin + i * lineSpacing);
+                topMargin - lineSpacing/2  + i * lineSpacing);
         }
         g.setStroke(new BasicStroke(1));
 
     }
 
-    private void drawLines(Graphics2D g) {
+    protected void drawGridLines(Graphics2D g) {
+        int measureSize = PageView.measureSize;
+        int topMargin = ThemeReader.getMeasure("track.strings.margin.top");
+        int lineSpacing = ThemeReader.getMeasure("track.strings.spacing");
+        g.setColor(ThemeReader.getColor("track.gridLines.color"));
+        for (int j = 0; j < 4 * PageView.width/measureSize; j++) {
+            g.drawLine(
+                (int)(measureSize/4.0 * j),
+                topMargin,
+                (int)(measureSize/4.0 * j),
+                topMargin + lineSpacing * (numOfStrings - 1));
+        }
+
+        g.setColor(ThemeReader.getColor("track.barLines.color"));
+        for (int i = 0; i < 1 + PageView.width/measureSize; i++) {
+            g.drawLine(
+                measureSize * i,
+                topMargin,
+                measureSize * i,
+                topMargin + lineSpacing * (numOfStrings - 1));
+        }
+    }
+
+    protected void drawLines(Graphics2D g) {
         int measureSize = PageView.measureSize;
         int topMargin = ThemeReader.getMeasure("track.strings.margin.top");
         int lineSpacing = ThemeReader.getMeasure("track.strings.spacing");
@@ -138,10 +169,9 @@ class TrackDrawArea extends JLayeredPane {
         g.setColor(ThemeReader.getColor("track.strings.color"));
         g.setStroke(new BasicStroke(1));
 
-        for (int i = 0; i < trackType.numOfStrings; i++) {
+        for (int i = 0; i < numOfStrings; i++) {
             g.drawLine(
-                //0,
-                leftMargin,
+                0,
                 topMargin + i * lineSpacing,
                 PageView.width,
                 topMargin + i * lineSpacing);
@@ -150,56 +180,56 @@ class TrackDrawArea extends JLayeredPane {
         g.setColor(ThemeReader.getColor("track.gridLines.color"));
         for (int j = 0; j < 4 * PageView.width/measureSize; j++) {
             g.drawLine(
-                leftMargin + (int)(measureSize/4.0 * j),
+                (int)(measureSize/4.0 * j),
                 topMargin,
-                leftMargin + (int)(measureSize/4.0 * j),
-                topMargin + lineSpacing * (trackType.numOfStrings - 1));
+                (int)(measureSize/4.0 * j),
+                topMargin + lineSpacing * (numOfStrings - 1));
         }
 
         g.setColor(ThemeReader.getColor("track.barLines.color"));
         for (int i = 0; i < 1 + PageView.width/measureSize; i++) {
             g.drawLine(
-                leftMargin + measureSize * i,
+                measureSize * i,
                 topMargin,
-                leftMargin + measureSize * i,
-                topMargin + lineSpacing * (trackType.numOfStrings - 1));
+                measureSize * i,
+                topMargin + lineSpacing * (numOfStrings - 1));
         }
     }
 
-    private void setNoteRectangle(Note note) {
+    protected void setNoteRectangle(Note note) {
         note.rectangle.x = getNoteX(note.start) + 1;
         note.rectangle.y = getNoteY(note.stringNum);
         note.rectangle.width = getNoteWidth(note.duration);
         note.rectangle.height = getNoteHeight();
     }
 
-    private int getNoteX(long start) {
-        return (int) ((double) start / controller.pageController.getTicksPerMeasure() * PageView.measureSize);
+    protected int getNoteX(long start) {
+        return (int)((double)start / controller.pageController.getTicksPerMeasure() * PageView.measureSize);
     }
 
-    private int getNoteY(int stringNum) {
+    protected int getNoteY(int stringNum) {
         int stringSpacing = ThemeReader.getMeasure("track.strings.spacing");
         int stringY = getNoteStringY(stringNum);
         return stringY - stringSpacing / 2;
     }
 
-    private int getNoteStringY(int stringNum) {
+    protected int getNoteStringY(int stringNum) {
         int topMargin = ThemeReader.getMeasure("track.strings.margin.top");
         int stringSpacing = ThemeReader.getMeasure("track.strings.spacing");
         return topMargin + stringNum * stringSpacing;
     }
 
-    private int getNoteWidth(long duration) {
-        return (int) ((double) duration / controller.pageController.getTicksPerMeasure() * PageView.measureSize);
+    protected int getNoteWidth(long duration) {
+        return (int)((double)duration / controller.pageController.getTicksPerMeasure() * PageView.measureSize);
     }
 
-    private int getNoteHeight() {
+    protected int getNoteHeight() {
         //return ThemeReader.getMeasure("note.height");
         int stringSpacing = ThemeReader.getMeasure("track.strings.spacing");
         return stringSpacing * 1;
     }
 
-    private void drawTriangle(Graphics2D g2, Note note, Color color) {
+    protected void drawTriangle(Graphics2D g2, Note note, Color color) {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
             RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -222,7 +252,7 @@ class TrackDrawArea extends JLayeredPane {
         g2.draw(path);
     }
 
-    private void drawNote(Graphics2D g2, Note note, Color color) {
+    protected void drawNote(Graphics2D g2, Note note, Color color) {
         setNoteRectangle(note);
 
         String fretNum = "" + note.fret;
@@ -266,7 +296,7 @@ class TrackDrawArea extends JLayeredPane {
             stringY + fontHeight/2 - 1);
     }
 
-    private void drawSelectorRect(Graphics2D g2, Rectangle rect) {
+    protected void drawSelectorRect(Graphics2D g2, Rectangle rect) {
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
             RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setPaint(Color.GRAY);
@@ -275,7 +305,7 @@ class TrackDrawArea extends JLayeredPane {
     }
 
     protected void setProgressLine(int x) {
-        int trackHeight = ThemeReader.getMeasure("track.strings.spacing") * trackType.numOfStrings;
+        int trackHeight = ThemeReader.getMeasure("track.strings.spacing") * numOfStrings;
         trackHeight += ThemeReader.getMeasure("track.strings.margin.top");
         trackHeight += ThemeReader.getMeasure("track.strings.margin.bottom");
         int oldX = (int) progressLine.getX1();
@@ -312,52 +342,4 @@ class TrackDrawArea extends JLayeredPane {
         fretField.setVisible(false);
     }
 
-    protected void setTheme() {
-
-    }
-
-    @Override
-    public void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g;
-        g2.setFont(fretFont);
-
-        Color selectedColor = ThemeReader.getColor("note.selected.background");
-        Color unselectedColor = ThemeReader.getColor("note.unselected.background");
-
-        if (trackType.name == "drums") {
-            //drawDrumLines(g2);
-            drawLines(g2);
-            for (Note note : controller.notes) {
-                //if (note.x < PageView.width) {
-                    if (note.isSelected) {
-                        drawTriangle(g2, note, selectedColor);
-                    } else {
-                        drawTriangle(g2, note, unselectedColor);
-                    }
-                //}
-            }
-        } else {
-            drawLines(g2);
-            for (Note note : controller.notes) {
-                //if (note.x < PageView.width) {
-                    if (note.isSelected) {
-                        drawNote(g2, note, selectedColor);
-                    } else {
-                        drawNote(g2, note, unselectedColor);
-                    }
-                //}
-            }
-        }
-
-        g2.draw(progressLine);
-
-        Rectangle rect = controller.selectorRect;
-        if (rect.width + rect.height > 0) {
-            drawSelectorRect(g2, rect);
-        }
-
-        g2.dispose();
-        getToolkit().sync();
-    }
 }

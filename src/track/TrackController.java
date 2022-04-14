@@ -79,7 +79,6 @@ public class TrackController {
 
     private boolean isMuted = false;
     private double gridFraction = 0.125;
-    private int lastY = 0; // using for velocitySlider
     private VelocitySlider vSlider;
 
     private Note selectedNote;
@@ -94,6 +93,7 @@ public class TrackController {
 
     public TrackController(Page page) {
         pageController = page;
+        trackType = new TrackType();
         view = new TrackView(this, name);
     }
 
@@ -137,8 +137,7 @@ public class TrackController {
 
             int xAmount = diffX / calcGridSize();
             int seriesId = dragStart.x + dragStart.y;
-            ActionsStack.Command moveNotesCommand = new MoveNotesCommand(selection, xAmount, diffY, seriesId);
-            pageController.addAction(moveNotesCommand);
+            pageController.addAction(new MoveNotesCommand(selection, xAmount, diffY, seriesId));
         }
     }
 
@@ -175,11 +174,9 @@ public class TrackController {
             int diffX = x2 - dragStartGrid.x;
 
             dragStartGrid.x = x2;
-            //lengthenSelectedNotes(diffX);
             if (diffX != 0) {
                 int seriesId = dragStart.x + dragStart.y;
-                ActionsStack.Command lengthenNotesCommand = new LengthenNotesCommand(selection, diffX, seriesId);
-                pageController.addAction(lengthenNotesCommand);
+                pageController.addAction(new LengthenNotesCommand(selection, diffX, seriesId));
             }
         }
     }
@@ -187,20 +184,16 @@ public class TrackController {
     class MouseMoveVelocity implements MouseStrategy {
         @Override
         public void doIt(MouseEvent evt) {
-            Component c = (Component) evt.getSource();
             Rectangle bounds = vSlider.getBounds();
-            bounds.grow(1, 4);
+            Component drawArea = (Component)evt.getSource();
             Rectangle adjusted =
-                    SwingUtilities.convertRectangle(vSlider.getParent(), bounds, c);
+                    SwingUtilities.convertRectangle(vSlider.getParent(), bounds, drawArea);
             int y = evt.getY();
-            int v = vSlider.getValue();
-            int delta = y - lastY;
-            if (y > adjusted.y && y < y + adjusted.height) {
-                vSlider.setValue(v - delta);
-                selectedNote.velocity = vSlider.getValue();
-                vSlider.setDisplay(selectedNote.velocity);
-                lastY = y;
-            }
+            vSlider.setValue((adjusted.y + adjusted.height - y));
+            selectedNote.velocity = vSlider.getValue();
+            vSlider.setDisplay(selectedNote.velocity);
+            // not undoing yet... show slider again?
+            // pageController.addAction(new SetNoteVelocitiesCommand(selection, diffX, seriesId));
         }
     }
 
@@ -247,15 +240,17 @@ public class TrackController {
 
         int x;
         int y;
+        boolean drum;
         Note note;
 
-        public AddNoteCommand(int x, int y) {
+        public AddNoteCommand(int x, int y, boolean drum) {
             this.x = x;
             this.y = y;
+            this.drum = drum;
         }
 
         public void execute() {
-            this.note = addNote(x, y);
+            this.note = addNote(x, y, drum);
         }
 
         public void redo() {
@@ -306,6 +301,38 @@ public class TrackController {
 
     }
 
+    class SetNoteVelocitiesCommand extends ActionsStack.Command {
+
+        int diffV;
+        ArrayList<Note> notes;
+
+        public SetNoteVelocitiesCommand(ArrayList<Note> notes, int diffV) {
+            this.notes = new ArrayList<Note>(notes);
+            this.diffV = diffV;
+        }
+
+        public void execute() {
+            setVelocitySelectedNotes(this.notes, diffV);
+        }
+
+        public void redo() {
+            clearSelection();
+            for (Note note : this.notes) {
+                selectNote(note);
+            }
+            setVelocitySelectedNotes(this.notes, diffV);
+        }
+
+        public void undo() {
+            clearSelection();
+            for (Note note : this.notes) {
+                selectNote(note);
+            }
+            setVelocitySelectedNotes(this.notes, -diffV);
+        }
+
+    }
+
     //////////////////   end Command Classes  //////////////////
 
     protected void handleMouseDownDrawArea(MouseEvent evt) {
@@ -341,7 +368,6 @@ public class TrackController {
             if (MouseMods.ctrl || MouseMods.rClick) {
                 vSlider = pageController.showVelocitySlider(evt, selectedNote.velocity);
                 mouseStrategy = setNoteVelocity;
-                lastY = y;
 
             } else if (x > selectedNote.rectangle.x + selectedNote.rectangle.width - 5) {
                 //view.changeCursor(new Cursor(Cursor.W_RESIZE_CURSOR));
@@ -362,10 +388,14 @@ public class TrackController {
             int stringNum = findNearestStringNum(y);
             if (stringNum > -1 && stringNum <= trackType.numOfStrings - 1) {
                 //addNote(x, y);
-                ActionsStack.Command addNoteCommand = new AddNoteCommand(x, y);
-                pageController.addAction(addNoteCommand);
-                //selectNote(note);
-                mouseStrategy = lengthenNoteTentative;
+                boolean drum = (trackType.toString().equals("drums"))? true : false;
+                pageController.addAction(new AddNoteCommand(x, y, drum));
+
+                if (drum) {
+                    mouseStrategy = mouseMoveNote;
+                } else {
+                    mouseStrategy = lengthenNoteTentative;
+                }
             } else {
                 mouseStrategy = moveSelectorRect;
             }
@@ -380,6 +410,7 @@ public class TrackController {
             clearSelection();
         }
 
+
         //view.changeCursor(new Cursor(Cursor.DEFAULT_CURSOR));
         pageController.hideVelocitySlider();
         if (mouseStrategy == moveSelectorRect) {
@@ -387,6 +418,9 @@ public class TrackController {
         } else if (selection.size() == 1) {
             pageController.playSelection(this);
         }
+        //if (selectedNote != null) {
+            //console.log(selectedNote);
+        //}
     }
 
     protected void handleMouseMoveDrawArea(MouseEvent evt) {
@@ -438,16 +472,22 @@ public class TrackController {
     public void loadNote(Note note) {
         trackType.assignStringAndFret(note);
         notes.add(note);
+        if (channel == 9) {
+            note.duration = 480;
+        }
         notes.sorted = false;
     }
 
-    private Note addNote(int x, int y) {
+    private Note addNote(int x, int y, boolean drum) {
         Note note = new Note();
         note.stringNum = findNearestStringNum(y);
         note.pitch = trackType.findNotePitch(note.stringNum, note.fret);
         x = findNearestGrid(x);
         note.start = setNoteStart(x);
         notes.add(note);
+        if (channel == 9) {
+            note.duration = 480;
+        }
         notes.sorted = false;
         selectNote(note);
         return note;
@@ -495,6 +535,7 @@ public class TrackController {
             Note note = notes.get(i);
             if (selectorRect.contains(note.rectangle)) {
                 selectNote(note);
+                selectedNote = note;
             }
         }
         selectorRect.setSize(0, 0);
@@ -563,6 +604,10 @@ public class TrackController {
         }
     }
 
+    private void setVelocitySelectedNotes(ArrayList<Note> notes, int deltaV) {
+
+    }
+
     private void lengthenSelectedNotes(ArrayList<Note> notes, int deltaX) {
         if (deltaX == 0) return;
         for (Note note : notes) {
@@ -570,7 +615,6 @@ public class TrackController {
             note.duration += Integer.signum(deltaX) * pageController.getTicksPerMeasure() * gridFraction;
         }
     }
-
 
     private void moveSelectedNotes(ArrayList<Note> notes, int deltaX, int deltaY) {
 
@@ -598,9 +642,7 @@ public class TrackController {
     }
 
     public void moveSelectionArrowKeys(int dirX, int dirY) {
-        //moveSelectedNotes(dirX, dirY, -1);
-        ActionsStack.Command moveNotesCommand = new MoveNotesCommand(selection, dirX, dirY, -1);
-        pageController.addAction(moveNotesCommand);
+        pageController.addAction(new MoveNotesCommand(selection, dirX, dirY, -1));
     }
 
     public void tabThroughNotes() {
@@ -671,11 +713,13 @@ public class TrackController {
     }
 
     public void setTrackType(TrackType type) {
-        trackType = type;
-        for (Note note : notes) {
-            trackType.assignStringAndFret(note);
+        if (!trackType.toString().equals(type.toString())) {
+            trackType = type;
+            for (Note note : notes) {
+                trackType.assignStringAndFret(note);
+            }
+            view.setTrackType(type);
         }
-        view.setTrackType(type);
     }
 
     public long getNoteMeasure(Note note) {
@@ -820,9 +864,14 @@ public class TrackController {
         gridFraction = value;
     }
 
-    protected void handleTrackTypePicker(Object i) {
-        TrackType type = (TrackType) i;
-        setTrackType(type);
+    protected void handleTrackTypePicker(String name) {
+        if (name.equals("guitar")) {
+            setTrackType(new TrackTypeGuitar());
+        } else if (name.equals("bass")) {
+            setTrackType(new TrackTypeBass());
+        } else if (name.equals("drums")) {
+            setTrackType(new TrackTypeDrums());
+        }
     }
 
     @Override

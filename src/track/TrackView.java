@@ -7,12 +7,13 @@ import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -36,6 +37,7 @@ import note.Note;
 import page.PageView;
 import page.Constants;
 import themes.ThemeReader;
+import utils.console;
 import widgets.InputField;
 import widgets.NumberInputField;
 import widgets.ObjectMenuItem;
@@ -45,12 +47,12 @@ public class TrackView extends JPanel {
 
     private JPanel topBar;
     private JPanel drawContainer;
-    private JPanel side;
+    private TrackSideBar side;
     private TrackDrawArea drawArea;
     private TrackDrawArea drawAreaGuitar;
     private TrackDrawArea drawAreaBass;
     private TrackDrawArea drawAreaDrums;
-    private TrackType trackType = TrackTypes.Guitar;
+    private TrackType trackType;
     private TrackController controller;
     private PageView pageView;
 
@@ -63,7 +65,7 @@ public class TrackView extends JPanel {
     private Border trackNameBorder;
     private TrackInstrumentPicker instrumentPicker;
     private JComboBox<String>gridSizePicker;
-    private JComboBox<TrackType>trackTypePicker;
+    private JComboBox<String> trackTypePicker;
     private NumberInputField volumeField;
     private int borderWidth = 1;
     private int leftMargin = ThemeReader.getMeasure("track.strings.margin.left");
@@ -75,9 +77,9 @@ public class TrackView extends JPanel {
     public TrackView(TrackController controller, String name) {
         this.controller = controller;
 
-        drawAreaGuitar = new TrackDrawArea(controller, TrackTypes.Guitar);
-        drawAreaBass = new TrackDrawArea(controller, TrackTypes.Bass);
-        drawAreaDrums = new TrackDrawArea(controller, TrackTypes.Drums);
+        drawAreaGuitar = new TrackDrawAreaGuitar(controller, 6);
+        drawAreaBass = new TrackDrawAreaBass(controller, 4);
+        drawAreaDrums = new TrackDrawAreaDrums(controller, 8);
         drawArea = drawAreaGuitar;
 
         setBorder(BorderFactory.createLineBorder(Color.black, borderWidth));
@@ -154,11 +156,20 @@ public class TrackView extends JPanel {
         topBar.add(Box.createRigidArea(new Dimension(200, 1)));
 
         topBar.add(new JLabel("  TrackType "));
-        trackTypePicker = new JComboBox<>(TrackTypes.getArray());
-        trackTypePicker.setSelectedItem(trackType);
+        String[] trackTypeList = {"guitar", "bass", "drums"};
+        trackTypePicker = new JComboBox<String>(trackTypeList);
         trackTypePicker.setFocusable(false);
-        trackTypePicker.addActionListener((ActionEvent ae) -> {
-            controller.handleTrackTypePicker(trackTypePicker.getSelectedItem());
+        trackTypePicker.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent ie) {
+                if (ie.getStateChange() == ItemEvent.DESELECTED) {
+                    //
+                }
+                if (ie.getStateChange() == ItemEvent.SELECTED) {
+                    String trackTypeName = (String)trackTypePicker.getSelectedItem();
+                    controller.handleTrackTypePicker(trackTypeName);
+                }
+            }
         });
         setComponentSize(trackTypePicker, 70, topElementHeight);
         topBar.add(trackTypePicker);
@@ -213,8 +224,7 @@ public class TrackView extends JPanel {
         drawContainer = new JPanel(null);
         add(drawContainer);
 
-        //TODO eliminate this. use leftmargin in drawarea instead
-        side = new JPanel();
+        side = new TrackSideBar();
         setComponentSize(side, leftMargin, 100);
         drawContainer.add(side);
 
@@ -229,14 +239,13 @@ public class TrackView extends JPanel {
     }
 
     public void setTheme() {
-        drawArea.setTheme();
+        //drawArea.setTheme();
     }
 
     //https://stackoverflow.com/questions/10271116/iterate-through-all-objects-in-jframe
     private void addNotifierToAllComponents(Container parent) {
         for (Component c : parent.getComponents()) {
             addNotifier(c);
-
             if (c instanceof Container) {
                 addNotifierToAllComponents((Container) c);
             }
@@ -308,40 +317,39 @@ public class TrackView extends JPanel {
         instrumentPicker.setText(name);
     }
 
-    public void setTrackType(TrackType trackType) {
-        this.trackType = trackType;
+    public void setTrackType(TrackType type) {
+        trackType = type;
         if (drawArea != null) {
             drawContainer.remove(drawArea);
         }
-
         String s = trackType.toString();
+
         if (s.equals("guitar")) {
             drawArea = drawAreaGuitar;
+            String[] stringNames = {"E", "B", "G", "D", "A", "E"};
+            side.setContent(stringNames);
         } else if (s.equals("bass")) {
             drawArea = drawAreaBass;
+            String[] stringNames = {"G", "D", "A", "E"};
+            side.setContent(stringNames);
         } else if (s.equals("drums")) {
             drawArea = drawAreaDrums;
+            String[] stringNames = {"", "Crash", "Ride", "Open HH", "Closed HH", "Snare", "Stick", "Kick"};
+            side.setContent(stringNames);
         }
 
-        trackTypePicker.setSelectedItem(trackType);
+        trackTypePicker.setSelectedItem(s);
         addNotifier(drawArea);
         drawContainer.add(drawArea);
 
-        int height = ThemeReader.getMeasure("track.strings.spacing") * trackType.numOfStrings;
-        height += ThemeReader.getMeasure("track.strings.margin.top");
-        height += ThemeReader.getMeasure("track.strings.margin.bottom");
-        setComponentSize(side, leftMargin, height);
+        int height = drawArea.getHeight();
+        //setComponentSize(side, leftMargin, height);
         //setComponentSize(side, 0, height);
         adjustMeasureSize(PageView.measureSize);
-        //setScrollPosition();
-        //revalidate();
-        //drawArea.repaint();
     }
 
     public void adjustMeasureSize(int measureSize) {
-        int height = ThemeReader.getMeasure("track.strings.spacing") * trackType.numOfStrings;
-        height += ThemeReader.getMeasure("track.strings.margin.top");
-        height += ThemeReader.getMeasure("track.strings.margin.bottom");
+        int height = drawArea.getHeight();
         setComponentSize(this, PageView.width, height);
         setComponentSize(drawArea, PageView.width, height);
         revalidate();
@@ -354,9 +362,7 @@ public class TrackView extends JPanel {
     }
 
     private void expand() {
-        int height = ThemeReader.getMeasure("track.strings.spacing") * trackType.numOfStrings;
-        height += ThemeReader.getMeasure("track.strings.margin.top");
-        height += ThemeReader.getMeasure("track.strings.margin.bottom");
+        int height = drawArea.getHeight();
         setComponentSize(this, PageView.width, height);
         setComponentSize(drawArea, PageView.width, height);
         revalidate();

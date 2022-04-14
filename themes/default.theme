@@ -18,7 +18,7 @@ track.strings.spacing=12
 track.strings.margin.top=20
 track.strings.margin.right=10
 track.strings.margin.bottom=30
-track.strings.margin.left=40
+track.strings.margin.left=80
 
 track.strings.color=0x888888
 track.barLines.color=0x000000

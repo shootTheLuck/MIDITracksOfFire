@@ -44,6 +44,7 @@ public class Note {
     }
 
     //https://www.geeksforgeeks.org/overriding-equals-method-in-java/
+    // not using this? should also override hashCode method?
     @Override
     public boolean equals(Object o) {
         if (o == this) {

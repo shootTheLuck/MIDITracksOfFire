@@ -16,6 +16,7 @@ import utils.console;
 class PageNumberBar extends JPanel {
 
     private boolean dragging = false;
+    private Page page;
 
     private Font font = new Font("Dialog", Font.PLAIN, 11);
     private FontMetrics fontMetrics = getFontMetrics(font);
@@ -28,12 +29,11 @@ class PageNumberBar extends JPanel {
     private Rectangle playingMeasure;
     private Rectangle playingPosition;
 
-    public PageNumberBar(int height, int lMargin) {
-
+    public PageNumberBar(Page page, int height, int lMargin) {
+        this.page = page;
         this.height = height;
         this.lMargin = lMargin;
-        //this.page = page;
-        //this.pageView = pageView;
+
         measureSizeDragger = new Rectangle(new Dimension(20, 20));
         measureSizeDragger.x = PageView.measureSize - measureSizeDragger.width/2 + lMargin;
         indicatorHeight = height/10;
@@ -63,7 +63,7 @@ class PageNumberBar extends JPanel {
             public void mouseDragged(MouseEvent evt) {
                 if (dragging) {
                     int x = evt.getX();
-                    Page.getInstance().handleMeasureSizeSlider(x - lMargin);
+                    page.handleMeasureSizeSlider(x - lMargin);
                 }
             }
         });
@@ -71,6 +71,7 @@ class PageNumberBar extends JPanel {
 
     private void drawNumbersAndLines(Graphics2D g2) {
         g2.setColor(Color.BLACK);
+        g2.setFont(font);
         int tickMarkHeight = height/5;
 
         //TODO j < Page.numOfMeasures?
@@ -93,7 +94,7 @@ class PageNumberBar extends JPanel {
         g2.drawLine(
             lMargin,
             height - indicatorHeight,
-            lMargin + Page.numOfMeasures * PageView.measureSize,
+            lMargin + PageView.width,
             height - indicatorHeight);
 
         // draw dragger rectangle
