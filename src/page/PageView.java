@@ -55,7 +55,6 @@ public class PageView {
 
     private int scrollPosition = 0;
     private int scrollIncrement = 160;
-    private boolean scrollButtonPressed = false;
     private int numberBarHeight = 30;
     private Dimension numberBarSize;
     private FileChooser fileChooser;
