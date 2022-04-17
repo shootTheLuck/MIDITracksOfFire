@@ -21,7 +21,6 @@ import instruments.Instrument;
 import instruments.Instruments;
 import themes.ThemeReader;
 import utils.console;
-import utils.MouseMods;
 import widgets.VelocitySlider;
 
 interface MouseStrategy {
@@ -344,7 +343,6 @@ public class TrackController {
         dragStartGrid.setLocation(findNearestGrid(x), findNearestStringNum(y));
         selectorRect.setLocation(x, y);
 
-        MouseMods.setFromEvent(evt);
         view.hideFretField();
         tabbedNotes.clear();
 
@@ -360,12 +358,14 @@ public class TrackController {
 
         if (note != null) {
             //console.log(note);
-            if (!selection.contains(note) && !MouseMods.shift) {
+            if (!selection.contains(note) && !evt.isShiftDown()) {
                 clearSelection();
             }
 
             selectNote(note);
-            if (MouseMods.ctrl || MouseMods.rClick) {
+            //pageController.playNote(this, note);
+
+            if (evt.isControlDown() || SwingUtilities.isRightMouseButton(evt)) {
                 vSlider = pageController.showVelocitySlider(evt, selectedNote.velocity);
                 mouseStrategy = setNoteVelocity;
 
@@ -373,7 +373,7 @@ public class TrackController {
                 //view.changeCursor(new Cursor(Cursor.W_RESIZE_CURSOR));
                 mouseStrategy = lengthenNote;
 
-            } else if (MouseMods.alt) {
+            } else if (evt.isAltDown()) {
                 pageController.copySelection();
                 pageController.pasteSelection();
                 mouseStrategy = mouseMoveNote;
@@ -383,7 +383,7 @@ public class TrackController {
                 mouseStrategy = mouseMoveNote;
             }
 
-        } else if (MouseMods.lClick) {
+        } else if (SwingUtilities.isLeftMouseButton(evt)) {
             clearSelection();
             int stringNum = findNearestStringNum(y);
             if (stringNum > -1 && stringNum <= trackType.numOfStrings - 1) {
@@ -406,10 +406,8 @@ public class TrackController {
     protected void handleMouseUpDrawArea(MouseEvent evt) {
 
         if (selectedNote != null && selectedNote.duration <= 0) {
-            //notes.remove(selectedNote);
             clearSelection();
         }
-
 
         //view.changeCursor(new Cursor(Cursor.DEFAULT_CURSOR));
         pageController.hideVelocitySlider();
@@ -456,8 +454,8 @@ public class TrackController {
         return (long)(corrected * pageController.getTicksPerMeasure());
     }
 
-    public void setProgress(long tick, int ticksPerMeasure) {
-        int x = (int) ((double) tick / ticksPerMeasure * PageView.measureSize);
+    public void setProgress(double progress) {
+        int x = (int)(progress* PageView.measureSize);
         view.drawProgressLine(x);
     }
 
@@ -547,7 +545,6 @@ public class TrackController {
             if (note.duration <= 0) {
                 notes.remove(note);
             }
-            //view.drawRectangle(note.rectangle);
             view.drawNote(note);
         });
         selectedNote = null;
@@ -682,8 +679,6 @@ public class TrackController {
         int stringNum = (int)Math.round((double)(y - topMargin) / stringSpacing);
         //not this for some reason...
         //int stringNum = Math.round((y - topMargin) / stringSpacing);
-        //stringNum = Math.min(trackType.numOfStrings - 1, Math.max(0, stringNum));
-        //stringNum = Math.min(trackType.numOfStrings - 1, stringNum);
         return stringNum;
     }
 

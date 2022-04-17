@@ -109,7 +109,7 @@ class TrackDrawArea extends JLayeredPane {
 
     @Override
     public int getHeight() {
-        int height = ThemeReader.getMeasure("track.strings.spacing") * numOfStrings;
+        int height = ThemeReader.getMeasure("track.strings.spacing") * (numOfStrings - 1);
         height += ThemeReader.getMeasure("track.strings.margin.top");
         height += ThemeReader.getMeasure("track.strings.margin.bottom");
         return height;

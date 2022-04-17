@@ -1,7 +1,7 @@
 #---Preferences File---
-#Thu Apr 14 14:30:13 PDT 2022
+#Sat Apr 16 16:55:07 PDT 2022
 midiDirectory=midi
-window.width=1192
+window.width=1464
 theme=default.theme
-window.height=955
+window.height=915
 soundFont=sf2/Windows.sf2

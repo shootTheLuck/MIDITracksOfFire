@@ -227,7 +227,6 @@ public class PageView {
         frame.setVisible(tf);
     }
 
-
     //@Override
     //protected Dimension getPreferredSize() {
         //return new Dimension(1200, 900);
@@ -250,8 +249,16 @@ public class PageView {
         playControls.infoField.setText(o.toString());
     }
 
-    protected void setProgress(long tick, int ticksPerMeasure) {
-        numberBar.setProgress(tick, ticksPerMeasure);
+    protected void setProgress(double progress) {
+        numberBar.setProgress(progress);
+
+        int currentMeasure = (int)progress;
+        int currentPosition = currentMeasure * PageView.measureSize - scrollPosition;
+        int currentWidth = getCurrentWidth();
+        if (currentPosition > currentWidth) {
+            scrollPosition += currentPosition;
+            setHorizontalScroll(scrollPosition);
+        }
     }
 
     protected void cancelProgress() {
@@ -270,30 +277,27 @@ public class PageView {
     }
 
     protected void setScrollPositionToMeasure(int number) {
-        int scrollValue = PageView.measureSize * (number - 1);
+        int scrollValue = PageView.measureSize * number;
         setHorizontalScroll(scrollValue);
     }
 
-    protected void setHorizontalScroll(int value) {
+    private void setHorizontalScroll(int value) {
         handleHorizontalScrollBar(value);
         hScrollBar.setValue(scrollPosition);
     }
 
-    protected int getScrollPostion() {
-        return scrollPosition;
-    }
-
-    protected void setVerticalScroll(int value) {
+    private void setVerticalScroll(int value) {
         mainPanel.setLocation(0, -value);
     }
 
-    protected int getCurrentWidth() {
+    private int getCurrentWidth() {
         Dimension d = frame.getSize();
         return d.width - leftMargin * 2;
     }
 
-    protected void addMeasures(int howMany) {
+    protected void addMeasures(int howMany, int minNumOfMeasures) {
         PageView.width += PageView.measureSize * howMany;
+        PageView.width = Math.max(PageView.width, minNumOfMeasures * PageView.measureSize);
 
         Component[] components = mainPanel.getComponents();
         for (int i = 0; i < components.length; i++) {
@@ -309,7 +313,7 @@ public class PageView {
     }
 
     protected void adjustMeasureSize(int sliderValue, int numOfMeasures) {
-        double minimumMeasureSize = 50.0;
+        int minimumMeasureSize = 50;
         double maximumMeasureSize = getCurrentWidth() * 0.8;
         PageView.measureSize = (int)Math.min(Math.max(minimumMeasureSize, sliderValue), maximumMeasureSize);
         PageView.width = numOfMeasures * PageView.measureSize + PageView.measureSize;
@@ -337,7 +341,6 @@ public class PageView {
         numberBar.setSize(numberBarSize);
         numberBar.setMinimumSize(numberBarSize);
         numberBar.setPreferredSize(numberBarSize);
-        numberBar.repaint();
 
         numberBarContainer.setSize(numberBarSize);
         numberBarContainer.setMaximumSize(numberBarSize);
@@ -392,15 +395,16 @@ public class PageView {
 
     protected VelocitySlider showVelocitySlider(MouseEvent evt, int velocity) {
 
-        Component c = (Component) evt.getSource();
+        Component c = (Component)evt.getSource();
         Point point = SwingUtilities.convertPoint(c, evt.getX(), evt.getY(), frame);
 
         int x = point.x;
         int y = point.y;
+
         //sub slider width/2
-        x -= 15;
+        x -= velocitySlider.getWidth() / 2;
         //sub track topbar height
-        y -= 26;
+        y -= ThemeReader.getMeasure("track.topPanel.height");
         //center slider on velocity
         y -= 127 - velocity;
 
@@ -413,33 +417,6 @@ public class PageView {
 
     protected void hideVelocitySlider() {
         velocitySlider.setVisible(false);
-    }
-
-    //protected int[] showAddBarsDialog() {
-
-        //AddBarsDialog addBarsDialog = new AddBarsDialog((JFrame) this);
-
-        //int[] result = addBarsDialog.getValue();
-        //if (result[0] > 0) {
-            //return result;
-        //} else {
-            //int[] nothingToAdd = {0, 0};
-            //return nothingToAdd;
-        //}
-    //}
-
-    protected void showRemoveBarsDialog(int x, int y) {
-        RemoveBarsDialog removeBarsDialog = new RemoveBarsDialog((JFrame) frame, x, y);
-        removeBarsDialog.addWindowListener(new WindowAdapter() {
-            @Override public void windowClosed(WindowEvent e) {
-                //int[] value = removeBarsDialog.getValue();
-                page.handleRemoveBarsDialog(
-                    removeBarsDialog.from,
-                    removeBarsDialog.to,
-                    removeBarsDialog.allTracks);
-            }
-        });
-        removeBarsDialog.setVisible(true);
     }
 
     protected void showInsertBarsDialog(int x, int y) {
@@ -455,6 +432,20 @@ public class PageView {
             }
         });
         insertBarsDialog.setVisible(true);
+    }
+
+    protected void showRemoveBarsDialog(int x, int y) {
+        RemoveBarsDialog removeBarsDialog = new RemoveBarsDialog((JFrame) frame, x, y);
+        removeBarsDialog.addWindowListener(new WindowAdapter() {
+            @Override public void windowClosed(WindowEvent e) {
+                //int[] value = removeBarsDialog.getValue();
+                page.handleRemoveBarsDialog(
+                    removeBarsDialog.from,
+                    removeBarsDialog.to,
+                    removeBarsDialog.allTracks);
+            }
+        });
+        removeBarsDialog.setVisible(true);
     }
 
     protected String showFileChooser(String filter) {
@@ -477,7 +468,7 @@ public class PageView {
         menuBar.disableMenuItem(c);
     }
 
-    public void close() {
+    protected void close() {
         if (openDialog != null) {
             openDialog.dispose();
         }

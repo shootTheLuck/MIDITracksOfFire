@@ -91,7 +91,7 @@ public class TrackView extends JPanel {
         //topBar.setPreferredSize(new Dimension(520, Themes.getTrackTopBarHeight()));
         add(topBar, BorderLayout.PAGE_START);
 
-        int topElementHeight = ThemeReader.getMeasure("track.topPanel.height") - 5;
+        int topBarHeight = ThemeReader.getMeasure("track.topPanel.height");
         Font topBarFont = new Font("Dialog", Font.PLAIN, 12);
 
         UIManager.put("Label.font", topBarFont);
@@ -101,7 +101,7 @@ public class TrackView extends JPanel {
         UIManager.put("MenuItem.font", topBarFont);
         UIManager.put("Menu.font", topBarFont);
 
-        topBar.add(Box.createRigidArea(new Dimension(1, topElementHeight)));
+        topBar.add(Box.createRigidArea(new Dimension(1, topBarHeight)));
 
         collapseAction = Constants.BUTTON_TRACKCOLLAPSE;
         collapseButton = new JLabel(collapseIcon);
@@ -147,7 +147,7 @@ public class TrackView extends JPanel {
             }
         });
 
-        setComponentSize(trackNameField, 200, topElementHeight);
+        setComponentSize(trackNameField, 200, topBarHeight);
         topBar.add(trackNameField);
 
         // save reference to the standard border
@@ -171,7 +171,7 @@ public class TrackView extends JPanel {
                 }
             }
         });
-        setComponentSize(trackTypePicker, 70, topElementHeight);
+        setComponentSize(trackTypePicker, 70, topBarHeight);
         topBar.add(trackTypePicker);
 
         topBar.add(new JLabel("  GridSize "));
@@ -187,7 +187,7 @@ public class TrackView extends JPanel {
             double gridFraction = Double.parseDouble(ratio[0]) / Double.parseDouble(ratio[1]);
             controller.handleGridSizePicker(gridFraction);
         });
-        setComponentSize(gridSizePicker, 60, topElementHeight);
+        setComponentSize(gridSizePicker, 60, topBarHeight);
         topBar.add(gridSizePicker);
 
         topBar.add(new JLabel("  Volume "));
@@ -206,7 +206,7 @@ public class TrackView extends JPanel {
                 }
             }
         });
-        setComponentSize(volumeField, 40, topElementHeight);
+        setComponentSize(volumeField, 40, topBarHeight);
         topBar.add(volumeField);
 
         topBar.add(new JLabel("  Instrument "));
@@ -218,7 +218,7 @@ public class TrackView extends JPanel {
                 controller.handleInstrumentPicker(instrument);
             }
         });
-        setComponentSize(instrumentPicker, 180, topElementHeight);
+        setComponentSize(instrumentPicker, 180, topBarHeight);
         topBar.add(instrumentPicker);
 
         drawContainer = new JPanel(null);
@@ -350,7 +350,8 @@ public class TrackView extends JPanel {
 
     public void adjustMeasureSize(int measureSize) {
         int height = drawArea.getHeight();
-        setComponentSize(this, PageView.width, height);
+        setComponentSize(this, PageView.width, height + ThemeReader.getMeasure("track.topPanel.height"));
+        setComponentSize(side, leftMargin, height);
         setComponentSize(drawArea, PageView.width, height);
         revalidate();
         repaint();
@@ -363,7 +364,7 @@ public class TrackView extends JPanel {
 
     private void expand() {
         int height = drawArea.getHeight();
-        setComponentSize(this, PageView.width, height);
+        setComponentSize(this, PageView.width, height + ThemeReader.getMeasure("track.topPanel.height"));
         setComponentSize(drawArea, PageView.width, height);
         revalidate();
     }

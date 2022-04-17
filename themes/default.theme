@@ -8,7 +8,7 @@ page.numberBar.background=0xeeeeee
 
 track.unselected.background=0xC0C0C0
 track.selected.background=0x666666
-track.topPanel.height=30
+track.topPanel.height=25
 track.topPanel.unselected.background=0xC0C0C0
 track.topPanel.selected.background=0x666666
 track.nameField.color=0xbababa
@@ -17,7 +17,7 @@ track.nameField.selected.background=0xffffff
 track.strings.spacing=12
 track.strings.margin.top=20
 track.strings.margin.right=10
-track.strings.margin.bottom=30
+track.strings.margin.bottom=20
 track.strings.margin.left=80
 
 track.strings.color=0x888888
@@ -27,7 +27,6 @@ track.gridLines.color=0xbababa
 note.unselected.background=0xEEEEEE
 note.selected.background=0xEECC00
 note.height=4
-
 
 drumNote.height=12
 drumNote.width=12

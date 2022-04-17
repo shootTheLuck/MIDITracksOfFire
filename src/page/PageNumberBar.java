@@ -7,8 +7,10 @@ import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
-import java.awt.event.*;
-import javax.swing.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import javax.swing.JPanel;
 
 import themes.ThemeReader;
 import utils.console;
@@ -21,6 +23,7 @@ class PageNumberBar extends JPanel {
     private Font font = new Font("Dialog", Font.PLAIN, 11);
     private FontMetrics fontMetrics = getFontMetrics(font);
 
+    private int scrollPosition;
     private int indicatorHeight;
     private int lMargin;
     private int height;
@@ -62,8 +65,8 @@ class PageNumberBar extends JPanel {
         addMouseMotionListener(new MouseAdapter() {
             public void mouseDragged(MouseEvent evt) {
                 if (dragging) {
-                    int x = evt.getX();
-                    page.handleMeasureSizeSlider(x - lMargin);
+                    int newValue = evt.getX() + getX() - lMargin;
+                    page.handleMeasureSizeSlider(newValue);
                 }
             }
         });
@@ -77,7 +80,7 @@ class PageNumberBar extends JPanel {
         //TODO j < Page.numOfMeasures?
         for (int j = 0; j < PageView.width/PageView.measureSize; j++) {
 
-            // draw measure numbers (starting with 1) centered by they're width
+            // draw measure numbers (starting with 1) centered by their width
             String string = String.valueOf(j + 1);
             int width = fontMetrics.stringWidth(string);
             g2.drawString(string, lMargin + j * PageView.measureSize - width/2, height * 2/3);
@@ -119,7 +122,7 @@ class PageNumberBar extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g;
+        Graphics2D g2 = (Graphics2D)g;
         drawNumbersAndLines(g2);
         drawPlayingIndicators(g2);
         g2.dispose();
@@ -135,17 +138,16 @@ class PageNumberBar extends JPanel {
 
     public void adjustMeasureSize(int measureSize) {
         measureSizeDragger.x = measureSize - measureSizeDragger.width/2 + lMargin;
-        playingMeasure.setSize(measureSize, 3);
+        playingMeasure.width = measureSize;
     }
 
-    public void setProgress(long tick, int ticksPerMeasure) {
-
+    public void setProgress(double progress) {
         drawRectangle(playingMeasure);
-        playingMeasure.x = (int) (tick / ticksPerMeasure * PageView.measureSize);
+        playingMeasure.x = (int)Math.floor(progress) * PageView.measureSize;
         drawRectangle(playingMeasure);
 
         drawRectangle(playingPosition);
-        playingPosition.x = (int) ((double) tick / ticksPerMeasure * PageView.measureSize);
+        playingPosition.x = (int)(progress* PageView.measureSize);
         drawRectangle(playingPosition);
     }
 
@@ -156,7 +158,7 @@ class PageNumberBar extends JPanel {
 
         drawRectangle(playingPosition);
         playingPosition.x = -10000;
-        drawRectangle(playingPosition);
+        //drawRectangle(playingPosition);
     }
 
 

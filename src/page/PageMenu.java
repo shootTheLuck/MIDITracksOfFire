@@ -5,6 +5,8 @@ import javax.swing.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import utils.console;
+
 class PageMenu extends JMenuBar {
 
     private Page pageController;
@@ -73,7 +75,7 @@ class PageMenu extends JMenuBar {
         }
 
         private void setActionConstant(Constants c) {
-            //actionConstant = c;
+            this.actionConstant = c;
             addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent ae) {
                     pageController.handleMenuItem(c);

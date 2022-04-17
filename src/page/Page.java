@@ -32,16 +32,12 @@ import track.TrackType;
 import track.TrackTypeGuitar;
 import track.TrackTypeBass;
 import track.TrackTypeDrums;
-//import track.TrackTypes;
 import widgets.VelocitySlider;
 import utils.console;
 
 
 public class Page {
 
-    //private static volatile Page soleInstance;
-
-    private int scrollValue = 0;
     private int numOfMeasures = 50;
     private int minNumOfMeasures = 50;
 
@@ -86,7 +82,7 @@ public class Page {
         clipboard = new ArrayList<>();
         progressTimer = new Timer(20, (ActionEvent evt) -> {
             long currentTick = midi.getTickPosition();
-            handleSoundProgress(currentTick);
+            handleProgressTimer(currentTick);
         });
 
         addNewTrack();
@@ -331,7 +327,7 @@ public class Page {
     protected void handleInsertBarsDialog(int numberToAdd, int addBefore, boolean allTracks) {
         if (numberToAdd > 0) {
             numOfMeasures += numberToAdd;
-            view.addMeasures(numberToAdd);
+            view.addMeasures(numberToAdd, minNumOfMeasures);
             if (allTracks) {
                 for (TrackController track : tracks) {
                     track.insertBars(numberToAdd, addBefore);
@@ -347,7 +343,8 @@ public class Page {
         if (start > 0 && end > 0) {
             if (allTracks) {
                 numOfMeasures -= numberToRemove;
-                view.addMeasures(-numberToRemove);
+                numOfMeasures = Math.max(numOfMeasures, minNumOfMeasures);
+                view.addMeasures(-numberToRemove, minNumOfMeasures);
                 for (TrackController track : tracks) {
                     track.removeBars(start, end);
                 }
@@ -358,8 +355,8 @@ public class Page {
     }
 
     private void playAll() {
-        int measureStart = view.playControls.getPlayStartField();
-        long startTime = (measureStart - 1) * getTicksPerMeasure();
+        int measureStart = view.playControls.getPlayStartField() - 1;
+        long startTime = measureStart * getTicksPerMeasure();
 
         view.setScrollPositionToMeasure(measureStart);
         midi.play(tracks, BPM, resolution, startTime);
@@ -532,7 +529,7 @@ public class Page {
                 saveFileAs();
                 break;
             case MENU_FILE_CLOSE:
-                view.disableMenuItem(Constants.MENU_FILE_CLOSE);
+                shutDown();
                 break;
             case MENU_FILE_QUIT:
                 shutDown();
@@ -619,7 +616,7 @@ public class Page {
                 break;
 
             case FIELD_PLAYSTART:
-                int measureStart = view.playControls.getPlayStartField();
+                int measureStart = view.playControls.getPlayStartField() - 1;
                 view.setScrollPositionToMeasure(measureStart);
                 break;
             case FIELD_LOOPSTART:
@@ -651,16 +648,10 @@ public class Page {
         view.menuBar.toggleMusicPlay(Constants.BUTTON_PLAY);
     }
 
-    public void handleSoundProgress(long tick) {
-        view.setProgress(tick, getTicksPerMeasure());
-        selectedTrack.setProgress(tick, getTicksPerMeasure());
-        int currentMeasure = (int)tick/getTicksPerMeasure();
-        int currentPosition = currentMeasure * PageView.measureSize - scrollValue;
-        int currentWidth = view.getCurrentWidth();
-        if (currentPosition > currentWidth) {
-            scrollValue += currentPosition;
-            view.setHorizontalScroll(scrollValue);
-        }
+    public void handleProgressTimer(long tick) {
+        double progress = (double)tick / getTicksPerMeasure();
+        view.setProgress(progress);
+        selectedTrack.setProgress(progress);
     }
 
     public VelocitySlider showVelocitySlider(MouseEvent evt, int velocity) {
