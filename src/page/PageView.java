@@ -392,6 +392,31 @@ public class PageView {
         frame.repaint();
     }
 
+    protected void setBPMField(int value) {
+        playControls.BPMField.setValue(value);
+    }
+
+    protected int getBPMField() {
+        return playControls.BPMField.getValue();
+    }
+
+    protected void setPlayStartField(int value) {
+        playControls.playStartField.setValue(value);
+    }
+
+    protected int getPlayStartField() {
+        return playControls.playStartField.getValue();
+    }
+
+    protected void showPlaying() {
+        playControls.togglePlayButton(Constants.BUTTON_STOP);
+        menuBar.toggleMusicPlay(Constants.BUTTON_STOP);
+    }
+
+    protected void showStopped() {
+        playControls.togglePlayButton(Constants.BUTTON_PLAY);
+        menuBar.toggleMusicPlay(Constants.BUTTON_PLAY);
+    }
 
     protected VelocitySlider showVelocitySlider(MouseEvent evt, int velocity) {
 

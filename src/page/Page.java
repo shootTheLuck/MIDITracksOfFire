@@ -48,6 +48,7 @@ public class Page {
     private Midi midi;
     private List<Note> clipboard;
     private int BPM = 120;
+    private int measureStart = 1;
     private int resolution;
     private Timer progressTimer;
 
@@ -174,7 +175,7 @@ public class Page {
                     byte[] data = metaMessage.getData();
                     int tempo = (data[0] & 0xff) << 16 | (data[1] & 0xff) << 8 | (data[2] & 0xff);
                     BPM = 60000000 / tempo;
-                    view.playControls.setBPMField(BPM);
+                    view.setBPMField(BPM);
                 }
 
             } else if (message instanceof ShortMessage) {
@@ -355,7 +356,7 @@ public class Page {
     }
 
     private void playAll() {
-        int measureStart = view.playControls.getPlayStartField() - 1;
+        int measureStart = view.getPlayStartField() - 1;
         long startTime = measureStart * getTicksPerMeasure();
 
         view.setScrollPositionToMeasure(measureStart);
@@ -589,14 +590,10 @@ public class Page {
             case BUTTON_PLAY:
                 if (isPlaying == false) {
                     playAll();
-                    view.playControls.togglePlayButton(Constants.BUTTON_STOP);
-                    view.menuBar.toggleMusicPlay(Constants.BUTTON_STOP);
-                    //isPlaying = true;
+                    view.showPlaying();
                 } else {
                     stopAll();
-                    view.playControls.togglePlayButton(Constants.BUTTON_PLAY);
-                    view.menuBar.toggleMusicPlay(Constants.BUTTON_PLAY);
-                    //isPlaying = false;
+                    view.showStopped();
                 }
                 break;
 
@@ -605,18 +602,16 @@ public class Page {
                     playSelection(selectedTrack);
                     //check again to see if there was an actual selection
                     if (isPlaying == true) {
-                        view.playControls.togglePlayButton(Constants.BUTTON_STOP);
-                        view.menuBar.toggleMusicPlay(Constants.BUTTON_STOP);
+                        view.showPlaying();
                     }
                 } else {
                     stopAll();
-                    view.playControls.togglePlayButton(Constants.BUTTON_PLAY);
-                    view.menuBar.toggleMusicPlay(Constants.BUTTON_PLAY);
+                    view.showStopped();
                 }
                 break;
 
             case FIELD_PLAYSTART:
-                int measureStart = view.playControls.getPlayStartField() - 1;
+                int measureStart = view.getPlayStartField() - 1;
                 view.setScrollPositionToMeasure(measureStart);
                 break;
             case FIELD_LOOPSTART:
@@ -626,7 +621,7 @@ public class Page {
                 //TODO
                 break;
             case FIELD_BPM:
-                BPM = view.playControls.getBPMField();
+                BPM = view.getBPMField();
                 break;
             default:
         }
@@ -644,8 +639,7 @@ public class Page {
 
     public void handleSoundComplete() {
         stopAll();
-        view.playControls.togglePlayButton(Constants.BUTTON_PLAY);
-        view.menuBar.toggleMusicPlay(Constants.BUTTON_PLAY);
+        view.showStopped();
     }
 
     public void handleProgressTimer(long tick) {

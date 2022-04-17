@@ -12,12 +12,12 @@ import widgets.NumberInputField;
 
 class PagePlayControls extends JPanel {
 
-    private JButton playButton;
-    private NumberInputField playStartField;
-    private JButton loopButton;
-    private NumberInputField loopStartField;
-    private NumberInputField loopStopField;
-    private NumberInputField BPMField;
+    protected JButton playButton;
+    protected NumberInputField playStartField;
+    protected JButton loopButton;
+    protected NumberInputField loopStartField;
+    protected NumberInputField loopStopField;
+    protected NumberInputField BPMField;
     public JTextField infoField;
 
     private Icon playIcon = new ImageIcon("assets/media-playback-start.png");
