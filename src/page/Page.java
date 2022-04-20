@@ -8,9 +8,18 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
 
 import javax.sound.midi.InvalidMidiDataException;
 import javax.sound.midi.MetaMessage;
@@ -23,7 +32,7 @@ import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
 import javax.swing.Timer;
 
-import commands.ActionsStack;
+import actions.Actions;
 import midi.Midi;
 import note.Note;
 import themes.ThemeReader;
@@ -116,6 +125,13 @@ public class Page {
         preferences.setProperty("soundFont", "sf2/Windows.sf2");
     }
 
+    public void startNewFile() {
+        removeAllTracks();
+        view.setTitle("untitled");
+        midi.unMuteAllTracks();
+        addNewTrack();
+    }
+
     public void loadFile(String filename) {
         removeAllTracks();
         midi.unMuteAllTracks();
@@ -137,7 +153,6 @@ public class Page {
                 loadTrack(track);
             }
             selectTrack(tracks.get(0));
-
         } catch (Exception e) {
             if (e instanceof MidiUnavailableException) {
                 console.log("midi unavailable on this system: " + e);
@@ -381,19 +396,23 @@ public class Page {
         midi.stop();
         progressTimer.stop();
         view.cancelProgress();
-        selectedTrack.cancelProgress();
+        for (TrackController track : tracks) {
+            track.cancelProgress();
+        }
         isPlaying = false;
     }
 
-    public void addAction(ActionsStack.Command action) {
-        ActionsStack.add(action);
+    public void addAction(Actions.Item action) {
+        Actions.add(action);
     }
 
     public void shutDown() {
         console.log("shutting down...");
+        //console.log("items", Actions.list.size(), "unsaved?", Actions.hasUnsavedChanges());
         midi.close();
         view.close();
         String settingsFileName = ThemeReader.getSettingsName();
+
         if (settingsFileName != null) {
             setPreference("theme", settingsFileName);
         }
@@ -432,7 +451,7 @@ public class Page {
         String currentDirectory = System.getProperty("user.dir");
         String midiDirectory = preferences.getProperty("midiDirectory");
         if (midiDirectory != null && !midiDirectory.isEmpty()) {
-            if (midiDirectory == "midi") {
+            if (midiDirectory.equals("midi")) {
                 path = currentDirectory + "/" + midiDirectory;
             } else {
                 path = midiDirectory;
@@ -440,8 +459,8 @@ public class Page {
         } else {
             path = currentDirectory;
         }
-
-        String fileName = view.showFileChooser("mid", path);
+        String currentName = file.getName();
+        String fileName = view.showFileSaver("mid", path, currentName);
         if (!"".equals(fileName)) {
             file = new File(fileName);
             midi.writeToFile(file, tracks, BPM, resolution);
@@ -465,7 +484,7 @@ public class Page {
     }
 
     private void chooseTheme() {
-        String fileName = view.showFileChooser("theme");
+        String fileName = view.showFileChooser("theme", null);
         if (!"".equals(fileName)) {
             ThemeReader.loadTheme(fileName);
             view.setTheme();
@@ -520,6 +539,9 @@ public class Page {
 
     public void handleMenuItem(Constants evt) {
         switch(evt) {
+            case MENU_FILE_NEW:
+                startNewFile();
+                break;
             case MENU_FILE_OPEN:
                 openFile();
                 break;
@@ -569,10 +591,10 @@ public class Page {
                 pasteSelection();
                 break;
             case MENU_EDIT_UNDO:
-                ActionsStack.undo();
+                Actions.undo();
                 break;
             case MENU_EDIT_REDO:
-                ActionsStack.redo();
+                Actions.redo();
                 break;
             case MENU_EDIT_INSERTBARS:
                 view.showInsertBarsDialog(1, 1);
@@ -645,7 +667,11 @@ public class Page {
     public void handleProgressTimer(long tick) {
         double progress = (double)tick / getTicksPerMeasure();
         view.setProgress(progress);
-        selectedTrack.setProgress(progress);
+
+        for (TrackController track : tracks) {
+            track.setProgress(progress, tick);
+        }
+        //selectedTrack.setProgress(progress, tick);
     }
 
     public VelocitySlider showVelocitySlider(MouseEvent evt, int velocity) {

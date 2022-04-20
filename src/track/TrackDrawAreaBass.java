@@ -14,18 +14,19 @@ class TrackDrawAreaBass extends TrackDrawArea {
 
     public TrackDrawAreaBass(TrackController controller, int numOfStrings) {
         super(controller, numOfStrings);
+        this.type = "bass";
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D)g;
-        g2.setFont(fretFont);
 
         Color selectedColor = ThemeReader.getColor("note.selected.background");
         Color unselectedColor = ThemeReader.getColor("note.unselected.background");
 
-        drawLines(g2);
+        drawStrings(g2);
+        drawGridLines(g2);
         for (Note note : controller.notes) {
             if (note.isSelected) {
                 drawNote(g2, note, selectedColor);
@@ -41,7 +42,5 @@ class TrackDrawAreaBass extends TrackDrawArea {
             drawSelectorRect(g2, rect);
         }
 
-        g2.dispose();
-        getToolkit().sync();
     }
 }

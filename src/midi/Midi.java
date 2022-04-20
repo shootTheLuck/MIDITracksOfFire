@@ -247,7 +247,7 @@ public class Midi {
                 System.err.println("No supported MIDI file types available on this system.");
             } else {
                 MidiSystem.write(sequence, allowedTypes[0], file);
-                console.log("Wrote sequence to file.");
+                console.log("Wrote sequence to file", file.getName());
             }
 
         } catch(Exception ex) {

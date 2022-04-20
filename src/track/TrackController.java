@@ -12,7 +12,7 @@ import java.util.List;
 
 import javax.swing.SwingUtilities;
 
-import commands.ActionsStack;
+import actions.Actions;
 import page.Page;
 import page.PageView;
 import page.Constants;
@@ -76,7 +76,8 @@ public class TrackController {
     private MouseStrategy setNoteVelocity = new MouseMoveVelocity();
     private MouseStrategy mouseStrategy;
 
-    private boolean isMuted = false;
+    protected boolean isMuted = false;
+    protected boolean isSelected = false;
     private double gridFraction = 0.125;
     private VelocitySlider vSlider;
 
@@ -200,7 +201,7 @@ public class TrackController {
 
     //////////////////   Command Classes  //////////////////
 
-    class MoveNotesCommand extends ActionsStack.Command {
+    class MoveNotesCommand extends Actions.Item {
 
         ArrayList<Note> notes;
         int x;
@@ -235,7 +236,7 @@ public class TrackController {
 
     }
 
-    class AddNoteCommand extends ActionsStack.Command {
+    class AddNoteCommand extends Actions.Item {
 
         int x;
         int y;
@@ -267,7 +268,7 @@ public class TrackController {
 
     }
 
-    class LengthenNotesCommand extends ActionsStack.Command {
+    class LengthenNotesCommand extends Actions.Item {
 
         int diffX;
         ArrayList<Note> notes;
@@ -300,7 +301,7 @@ public class TrackController {
 
     }
 
-    class SetNoteVelocitiesCommand extends ActionsStack.Command {
+    class SetNoteVelocitiesCommand extends Actions.Item {
 
         int diffV;
         ArrayList<Note> notes;
@@ -454,13 +455,20 @@ public class TrackController {
         return (long)(corrected * pageController.getTicksPerMeasure());
     }
 
-    public void setProgress(double progress) {
+    public void setProgress(double progress, long tick) {
         int x = (int)(progress* PageView.measureSize);
-        view.drawProgressLine(x);
+        int soundAmount = 0;
+        for (Note note: notes) {
+            if (tick > note.start && tick < note.start + note.duration) {
+                soundAmount += note.velocity;
+                if (soundAmount > 126) break;
+            }
+        }
+        view.showProgress(x, soundAmount);
     }
 
     public void cancelProgress() {
-        view.hideProgressLine();
+        view.cancelProgress();
     }
 
     public boolean isMuted() {
@@ -492,10 +500,12 @@ public class TrackController {
     }
 
     public void setAsSelectedTrack() {
+        isSelected = true;
         view.highliteBorder();
     }
 
     public void setAsNotSelectedTrack() {
+        isSelected = false;
         view.deHighliteBorder();
         clearSelection();
     }

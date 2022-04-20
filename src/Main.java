@@ -10,8 +10,8 @@ class Main {
             public void run() {
                 console.log("starting up...");
                 Page page = new Page();
-                page.loadFile("midi/RepoMan2Test.mid");
-                //page.loadFile("midi/Friday.mid");
+                page.loadFile("midi/RepoMan3Test.mid");
+                //page.loadFile("midi/2Instruments2.mid");
                 //page.loadFile("midi/DrumHits.mid");
                 //page.loadFile("midi/test2.mid");
             }

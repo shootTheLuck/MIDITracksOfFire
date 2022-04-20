@@ -7,6 +7,7 @@ import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -47,7 +48,7 @@ public class TrackView extends JPanel {
 
     private JPanel topBar;
     private JPanel drawContainer;
-    private TrackSideBar side;
+    private TrackSideBar sideBar;
     private TrackDrawArea drawArea;
     private TrackDrawArea drawAreaGuitar;
     private TrackDrawArea drawAreaBass;
@@ -69,26 +70,22 @@ public class TrackView extends JPanel {
     private NumberInputField volumeField;
     private int borderWidth = 1;
     private int leftMargin = ThemeReader.getMeasure("track.strings.margin.left");
-    private Icon muteOnIcon = new ImageIcon("assets/audio-volume-muted.png");
-    private Icon muteOffIcon = new ImageIcon("assets/audio-volume-high.png");
+
+    private Icon volumeHighIcon = new ImageIcon("assets/audio-volume-high.png");
+    private Icon volumeZeroIcon = new ImageIcon("assets/audio-volume-0.png");
+    private Icon volumeMuteIcon = new ImageIcon("assets/audio-volume-muted.png");
+
     private Icon collapseIcon = new ImageIcon("assets/pan-down-symbolic.symbolic.png");
     private Icon expandIcon = new ImageIcon("assets/pan-end-symbolic.symbolic.png");
 
     public TrackView(TrackController controller, String name) {
         this.controller = controller;
 
-        drawAreaGuitar = new TrackDrawAreaGuitar(controller, 6);
-        drawAreaBass = new TrackDrawAreaBass(controller, 4);
-        drawAreaDrums = new TrackDrawAreaDrums(controller, 8);
-        drawArea = drawAreaGuitar;
-
         setBorder(BorderFactory.createLineBorder(Color.black, borderWidth));
         setLayout(new BorderLayout());
 
         topBar = new JPanel();
         topBar.setLayout(new BoxLayout(topBar, BoxLayout.LINE_AXIS));
-        //topBar.setMinimumSize(new Dimension(520, Themes.getTrackTopBarHeight()));
-        //topBar.setPreferredSize(new Dimension(520, Themes.getTrackTopBarHeight()));
         add(topBar, BorderLayout.PAGE_START);
 
         int topBarHeight = ThemeReader.getMeasure("track.topPanel.height");
@@ -101,7 +98,8 @@ public class TrackView extends JPanel {
         UIManager.put("MenuItem.font", topBarFont);
         UIManager.put("Menu.font", topBarFont);
 
-        topBar.add(Box.createRigidArea(new Dimension(1, topBarHeight)));
+        //topBar.add(Box.createRigidArea(new Dimension(1, topBarHeight)));
+        topBar.add(Box.createHorizontalStrut(5));
 
         collapseAction = Constants.BUTTON_TRACKCOLLAPSE;
         collapseButton = new JLabel(collapseIcon);
@@ -112,9 +110,10 @@ public class TrackView extends JPanel {
             }
         });
         topBar.add(collapseButton);
+        topBar.add(Box.createHorizontalStrut(5));
 
         muteAction = Constants.BUTTON_TRACKMUTE;
-        muteButton = new JLabel(muteOffIcon);
+        muteButton = new JLabel(volumeZeroIcon);
         muteButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -122,6 +121,7 @@ public class TrackView extends JPanel {
             }
         });
         topBar.add(muteButton);
+        topBar.add(Box.createHorizontalStrut(15));
 
         trackNameField = new InputField(name);
         trackNameField.setFont(new Font("Dialog", Font.BOLD, 12));
@@ -224,9 +224,14 @@ public class TrackView extends JPanel {
         drawContainer = new JPanel(null);
         add(drawContainer);
 
-        side = new TrackSideBar();
-        setComponentSize(side, leftMargin, 100);
-        drawContainer.add(side);
+        drawAreaGuitar = new TrackDrawAreaGuitar(controller, 6);
+        drawAreaBass = new TrackDrawAreaBass(controller, 4);
+        drawAreaDrums = new TrackDrawAreaDrums(controller, 8);
+        drawArea = drawAreaGuitar;
+
+        sideBar = new TrackSideBar();
+        setComponentSize(sideBar, leftMargin, 100);
+        drawContainer.add(sideBar);
 
         gridSizePicker.setFocusTraversalKeysEnabled(false);
 
@@ -257,7 +262,8 @@ public class TrackView extends JPanel {
      * to set this as the selected track.
      */
     private void addNotifier(Component component) {
-        component.addMouseListener(new MouseAdapter() {
+        MouseAdapter gainFocusOnMousePressed = new MouseAdapter() {
+            @Override
             public void mousePressed(MouseEvent evt) {
                 if (component instanceof JTextField ||
                     component.getParent() instanceof JComboBox) {
@@ -266,9 +272,10 @@ public class TrackView extends JPanel {
                     controller.handleTrackInput(false);
                 }
             }
-        });
+        };
 
         KeyAdapter loseFocusOnEnter = new KeyAdapter() {
+            @Override
             public void keyPressed(KeyEvent evt) {
                 if (evt.getKeyChar() == KeyEvent.VK_ENTER) {
                     controller.handleTrackInput(false);
@@ -276,6 +283,7 @@ public class TrackView extends JPanel {
             }
         };
 
+        component.addMouseListener(gainFocusOnMousePressed);
         component.addKeyListener(loseFocusOnEnter);
     }
 
@@ -293,7 +301,7 @@ public class TrackView extends JPanel {
         drawArea.setLocation(-value + leftMargin, 0);
     }
 
-    public void highliteBorder() {
+    protected void highliteBorder() {
         topBar.setBackground(ThemeReader.getColor("track.topPanel.selected.background"));
         trackNameField.setBackground(ThemeReader.getColor("track.nameField.selected.background"));
         if (!trackNameField.isFocused) {
@@ -301,11 +309,11 @@ public class TrackView extends JPanel {
         }
     }
 
-    public void deHighliteBorder() {
+    protected void deHighliteBorder() {
         topBar.setBackground(ThemeReader.getColor("track.topPanel.unselected.background"));
         trackNameField.setBackground(ThemeReader.getColor("track.topPanel.unselected.background"));
         trackNameField.setBorder(new LineBorder(ThemeReader.getColor("track.topPanel.unselected.background"), 2));
-        hideProgressLine();
+        cancelProgress();
     }
 
     @Override
@@ -318,68 +326,67 @@ public class TrackView extends JPanel {
     }
 
     public void setTrackType(TrackType type) {
-        trackType = type;
-        if (drawArea != null) {
+        String s = type.toString();
+        Point currentScroll = drawArea.getLocation();
+
+        if (!drawArea.type.equals(s)) {
             drawContainer.remove(drawArea);
         }
-        String s = trackType.toString();
 
+        trackType = type;
         if (s.equals("guitar")) {
             drawArea = drawAreaGuitar;
             String[] stringNames = {"E", "B", "G", "D", "A", "E"};
-            side.setContent(stringNames);
+            sideBar.setContent(stringNames);
         } else if (s.equals("bass")) {
             drawArea = drawAreaBass;
             String[] stringNames = {"G", "D", "A", "E"};
-            side.setContent(stringNames);
+            sideBar.setContent(stringNames);
         } else if (s.equals("drums")) {
             drawArea = drawAreaDrums;
             String[] stringNames = {"", "Crash", "Ride", "Open HH", "Closed HH", "Snare", "Stick", "Kick"};
-            side.setContent(stringNames);
+            sideBar.setContent(stringNames);
         }
 
         trackTypePicker.setSelectedItem(s);
         addNotifier(drawArea);
         drawContainer.add(drawArea);
-
-        int height = drawArea.getHeight();
-        //setComponentSize(side, leftMargin, height);
-        //setComponentSize(side, 0, height);
+        drawArea.setLocation(currentScroll);
         adjustMeasureSize(PageView.measureSize);
     }
 
     public void adjustMeasureSize(int measureSize) {
         int height = drawArea.getHeight();
         setComponentSize(this, PageView.width, height + ThemeReader.getMeasure("track.topPanel.height"));
-        setComponentSize(side, leftMargin, height);
+        setComponentSize(sideBar, leftMargin, height);
         setComponentSize(drawArea, PageView.width, height);
         revalidate();
         repaint();
     }
 
-    private void collapse() {
+    protected void collapse() {
         setComponentSize(this, PageView.width, ThemeReader.getMeasure("track.topPanel.height") + 2);
         revalidate();
     }
 
-    private void expand() {
+    protected void expand() {
         int height = drawArea.getHeight();
         setComponentSize(this, PageView.width, height + ThemeReader.getMeasure("track.topPanel.height"));
         setComponentSize(drawArea, PageView.width, height);
         revalidate();
     }
 
-    public void toggleMuteButton(Constants c) {
+    protected void toggleMuteButton(Constants c) {
         if (c == Constants.BUTTON_TRACKUNMUTE) {
-            muteButton.setIcon(muteOnIcon);
+            muteButton.setIcon(volumeMuteIcon);
             muteAction = Constants.BUTTON_TRACKUNMUTE;
         } else {
-            muteButton.setIcon(muteOffIcon);
+            muteButton.setIcon(volumeZeroIcon);
             muteAction = Constants.BUTTON_TRACKMUTE;
         }
     }
 
-    public void toggleCollapseButton(Constants c) {
+    protected void toggleCollapseButton(Constants c) {
         if (c == Constants.BUTTON_TRACKEXPAND) {
             collapseButton.setIcon(collapseIcon);
             expand();
@@ -442,12 +449,33 @@ public class TrackView extends JPanel {
         drawArea.overwriteNote(note);
     }
 
-    public void drawProgressLine(int x) {
-        drawArea.setProgressLine(x);
+    protected void showMuted() {
+
     }
 
-    public void hideProgressLine() {
+    protected void showUnMuted() {
+
+    }
+
+    protected void showProgress(int x, int soundAmount) {
+        if (controller.isSelected) {
+            drawArea.setProgressLine(x);
+        }
+
+        if (!controller.isMuted) {
+            if (soundAmount > 0) {
+                muteButton.setIcon(volumeHighIcon);
+            } else {
+                muteButton.setIcon(volumeZeroIcon);
+            }
+        }
+    }
+
+    protected void cancelProgress() {
         drawArea.setProgressLine(-1000);
+        if (!controller.isMuted) {
+            muteButton.setIcon(volumeZeroIcon);
+        }
     }
 
     @Override

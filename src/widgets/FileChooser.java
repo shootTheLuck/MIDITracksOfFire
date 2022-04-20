@@ -10,8 +10,8 @@ public class FileChooser extends JFileChooser {
 
     private void setup(String filter, String path) {
 
-        //String workingPath = System.getProperty("user.dir");
         if (path != null) {
+            File file = new File(path);
             setCurrentDirectory(new File(path));
         } else {
             String workingPath = System.getProperty("user.dir");
@@ -32,13 +32,6 @@ public class FileChooser extends JFileChooser {
         }
     }
 
-    public String showOpenChooser(String filter) {
-        setup(filter, null);
-        setDialogTitle("Open File");
-        int result = showOpenDialog(null);
-        return evaluate(result);
-    }
-
     public String showOpenChooser(String filter, String path) {
         setup(filter, path);
         setDialogTitle("Open File");
@@ -46,16 +39,10 @@ public class FileChooser extends JFileChooser {
         return evaluate(result);
     }
 
-    public String showSaveChooser(String filter) {
-        setup(filter, null);
-        setDialogTitle("Save File");
-        int result = showSaveDialog(null);
-        return evaluate(result);
-    }
-
-    public String showSaveChooser(String filter, String path) {
+    public String showSaveChooser(String filter, String path, String name) {
         setup(filter, path);
         setDialogTitle("Save File");
+        setSelectedFile(new File(name));
         int result = showSaveDialog(null);
         return evaluate(result);
     }

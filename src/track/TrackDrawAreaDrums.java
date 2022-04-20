@@ -17,6 +17,7 @@ class TrackDrawAreaDrums extends TrackDrawArea {
 
     public TrackDrawAreaDrums(TrackController controller, int numOfStrings) {
         super(controller, numOfStrings);
+        this.type = "drums";
     }
 
     @Override
@@ -31,14 +32,17 @@ class TrackDrawAreaDrums extends TrackDrawArea {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
-        g2.setFont(fretFont);
 
         Color selectedColor = ThemeReader.getColor("note.selected.background");
         Color unselectedColor = ThemeReader.getColor("note.unselected.background");
+        int width = ThemeReader.getMeasure("drumNote.width");
+        int height = ThemeReader.getMeasure("drumNote.height");
 
         drawDrumLines(g2);
         drawGridLines(g2);
         for (Note note : controller.notes) {
+            note.rectangle.width = width;
+            note.rectangle.height = height;
             if (note.isSelected) {
                 drawTriangle(g2, note, selectedColor);
             } else {
@@ -53,8 +57,6 @@ class TrackDrawAreaDrums extends TrackDrawArea {
             drawSelectorRect(g2, rect);
         }
 
-        g2.dispose();
-        getToolkit().sync();
     }
 
     protected void drawTriangle(Graphics2D g2, Note note, Color color) {
@@ -65,8 +67,8 @@ class TrackDrawAreaDrums extends TrackDrawArea {
 
         note.rectangle.x = getNoteX(note.start) + 0;
         note.rectangle.y = getNoteY(note.stringNum);
-        note.rectangle.width = ThemeReader.getMeasure("drumNote.width");;
-        note.rectangle.height = ThemeReader.getMeasure("drumNote.height");
+        //note.rectangle.width = ThemeReader.getMeasure("drumNote.width");
+        //note.rectangle.height = ThemeReader.getMeasure("drumNote.height");
 
         int stringY = note.rectangle.y + note.rectangle.height/2;
 
@@ -78,6 +80,33 @@ class TrackDrawAreaDrums extends TrackDrawArea {
         g2.fill(path);
         g2.setColor(Color.BLACK);
         g2.draw(path);
+    }
+
+    //@Override
+    protected void drawGridLines(Graphics2D g) {
+        int measureSize = PageView.measureSize;
+        int topMargin = ThemeReader.getMeasure("track.strings.margin.top");
+        int lineSpacing = ThemeReader.getMeasure("track.strings.spacing");
+        int topOfStrings = topMargin - lineSpacing/2;
+        int bottomOfStrings = topMargin + lineSpacing/2 + lineSpacing * (numOfStrings - 1);
+
+        g.setColor(ThemeReader.getColor("track.gridLines.color"));
+        for (int j = 0; j < 4 * PageView.width/measureSize; j++) {
+            g.drawLine(
+                (int)(measureSize/4.0 * j),
+                topOfStrings,
+                (int)(measureSize/4.0 * j),
+                bottomOfStrings);
+        }
+
+        g.setColor(ThemeReader.getColor("track.barLines.color"));
+        for (int i = 0; i < 1 + PageView.width/measureSize; i++) {
+            g.drawLine(
+                measureSize * i,
+                topOfStrings,
+                measureSize * i,
+                bottomOfStrings);
+        }
     }
 
     protected void drawDrumLines(Graphics2D g) {
@@ -97,7 +126,7 @@ class TrackDrawAreaDrums extends TrackDrawArea {
                 0,
                 topMargin - lineSpacing/2 + i * lineSpacing,
                 PageView.width,
-                topMargin - lineSpacing/2  + i * lineSpacing);
+                topMargin - lineSpacing/2 + i * lineSpacing);
         }
         g.setStroke(new BasicStroke(1));
 

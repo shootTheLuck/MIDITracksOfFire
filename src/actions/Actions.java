@@ -1,23 +1,33 @@
-package commands;
+package actions;
 
 //import java.util.LinkedList;
 import java.util.ArrayList;
 
 import utils.console;
 
-public class ActionsStack {
+public class Actions {
 
     static private int index = 0;
-    static ArrayList<Command>list = new ArrayList<Command>();
+    static private int undoIndex = 0;
+    static private int savedAt = 0;
+    public static ArrayList<Item>list = new ArrayList<Item>();
 
-    public static class Command {
+    public static class Item {
         public int series = -1;
         public void execute() {}
         public void redo() {}
         public void undo() {}
     }
 
-    public static void add(Command c) {
+    public static void markSave() {
+        savedAt = index;
+    }
+
+    public static boolean hasUnsavedChanges() {
+        return (savedAt != index || index != 0);
+    }
+
+    public static void add(Item c) {
         c.execute();
         list.add(index, c);
         index += 1;
@@ -29,7 +39,7 @@ public class ActionsStack {
 
     public static  void redo() {
         if (index < list.size()) {
-            Command action = list.get(index);
+            Item action = list.get(index);
             action.redo();
             index += 1;
             int series = action.series;
@@ -45,11 +55,12 @@ public class ActionsStack {
                 }
             }
         }
+        //console.log("redo . index is", index, "list size:", list.size());
     }
 
     public static  void undo() {
         if (index > 0) {
-            Command action = list.get(index -1);
+            Item action = list.get(index -1);
             int series = action.series;
             if (series > -1) {
                 /* loop backward through list */

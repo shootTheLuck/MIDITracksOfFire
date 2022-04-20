@@ -148,16 +148,16 @@ public class PageView {
         hScrollBar.setUnitIncrement(scrollIncrement);
         vScrollBar.setUnitIncrement(scrollIncrement);
 
-        Component lButton = hScrollBar.getComponent(1);
-        Component rButton = hScrollBar.getComponent(0);
+        Component lScrollButton = hScrollBar.getComponent(1);
+        Component rScrollButton = hScrollBar.getComponent(0);
 
-        lButton.addMouseListener(new MouseAdapter() {
+        lScrollButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 setHorizontalScroll(Math.max(0, scrollPosition - scrollIncrement));
             }
         });
-        rButton.addMouseListener(new MouseAdapter() {
+        rScrollButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 setHorizontalScroll(scrollPosition + scrollIncrement);
@@ -462,7 +462,6 @@ public class PageView {
         RemoveBarsDialog removeBarsDialog = new RemoveBarsDialog((JFrame) frame, x, y);
         removeBarsDialog.addWindowListener(new WindowAdapter() {
             @Override public void windowClosed(WindowEvent e) {
-                //int[] value = removeBarsDialog.getValue();
                 page.handleRemoveBarsDialog(
                     removeBarsDialog.from,
                     removeBarsDialog.to,
@@ -472,20 +471,12 @@ public class PageView {
         removeBarsDialog.setVisible(true);
     }
 
-    protected String showFileChooser(String filter) {
-        return fileChooser.showOpenChooser(filter);
-    }
-
     protected String showFileChooser(String filter, String path) {
         return fileChooser.showOpenChooser(filter, path);
     }
 
-    protected String showFileSaver(String filter) {
-        return fileChooser.showSaveChooser(filter);
-    }
-
-    protected String showFileSaver(String filter, String path) {
-        return fileChooser.showSaveChooser(filter, path);
+    protected String showFileSaver(String filter, String path, String name) {
+        return fileChooser.showSaveChooser(filter, path, name);
     }
 
     protected void disableMenuItem(Constants c) {

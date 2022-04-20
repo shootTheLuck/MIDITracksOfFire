@@ -90,7 +90,7 @@ class PageMenu extends JMenuBar {
             setText("File");
             setAccessibleText(this, "File Menu");
 
-            MenuItem fileNew = new MenuItem("New...");
+            MenuItem fileNew = new MenuItem("New");
             fileNew.setAccessible("Create New File");
             fileNew.setCommandKey("N");
             fileNew.setActionConstant(Constants.MENU_FILE_NEW);

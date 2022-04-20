@@ -30,7 +30,7 @@ import widgets.NumberInputField;
 
 class TrackDrawArea extends JLayeredPane {
 
-    protected TrackType trackType;
+    //protected TrackType trackType; // not using yet
     protected TrackController controller;
     protected float[] dash1 = {2F, 2F};
     protected BasicStroke dashed = new BasicStroke(1, BasicStroke.CAP_BUTT,
@@ -46,13 +46,15 @@ class TrackDrawArea extends JLayeredPane {
 
     protected NumberInputField fretField;
     protected Runnable sendFretField;
+    protected String type;
 
     public TrackDrawArea(TrackController controller, int numOfStrings) {
 
         this.controller = controller;
         this.numOfStrings = numOfStrings;
+        this.type = "generic";
+
         setLayout(null);
-        setBorder(BorderFactory.createLineBorder(Color.black, 1));
 
         //int trackHeight = Themes.getTrackHeight(numOfStrings);
         progressLine = new Line2D.Double(-1000, 0, -1000, 0);
@@ -119,13 +121,15 @@ class TrackDrawArea extends JLayeredPane {
         int measureSize = PageView.measureSize;
         int topMargin = ThemeReader.getMeasure("track.strings.margin.top");
         int lineSpacing = ThemeReader.getMeasure("track.strings.spacing");
+        int bottomOfStrings = topMargin + lineSpacing * (numOfStrings - 1);
+
         g.setColor(ThemeReader.getColor("track.gridLines.color"));
         for (int j = 0; j < 4 * PageView.width/measureSize; j++) {
             g.drawLine(
                 (int)(measureSize/4.0 * j),
                 topMargin,
                 (int)(measureSize/4.0 * j),
-                topMargin + lineSpacing * (numOfStrings - 1));
+                bottomOfStrings);
         }
 
         g.setColor(ThemeReader.getColor("track.barLines.color"));
@@ -134,14 +138,15 @@ class TrackDrawArea extends JLayeredPane {
                 measureSize * i,
                 topMargin,
                 measureSize * i,
-                topMargin + lineSpacing * (numOfStrings - 1));
+                bottomOfStrings);
         }
     }
 
-    protected void drawLines(Graphics2D g) {
+    protected void drawStrings(Graphics2D g) {
         int measureSize = PageView.measureSize;
         int topMargin = ThemeReader.getMeasure("track.strings.margin.top");
         int lineSpacing = ThemeReader.getMeasure("track.strings.spacing");
+        int bottomOfStrings = topMargin + lineSpacing * (numOfStrings - 1);
 
         g.setColor(ThemeReader.getColor("track.strings.color"));
         g.setStroke(new BasicStroke(1));
@@ -152,24 +157,6 @@ class TrackDrawArea extends JLayeredPane {
                 topMargin + i * lineSpacing,
                 PageView.width,
                 topMargin + i * lineSpacing);
-        }
-
-        g.setColor(ThemeReader.getColor("track.gridLines.color"));
-        for (int j = 0; j < 4 * PageView.width/measureSize; j++) {
-            g.drawLine(
-                (int)(measureSize/4.0 * j),
-                topMargin,
-                (int)(measureSize/4.0 * j),
-                topMargin + lineSpacing * (numOfStrings - 1));
-        }
-
-        g.setColor(ThemeReader.getColor("track.barLines.color"));
-        for (int i = 0; i < 1 + PageView.width/measureSize; i++) {
-            g.drawLine(
-                measureSize * i,
-                topMargin,
-                measureSize * i,
-                topMargin + lineSpacing * (numOfStrings - 1));
         }
     }
 
@@ -211,7 +198,6 @@ class TrackDrawArea extends JLayeredPane {
 
         String fretNum = "" + note.fret;
         int fretNumWidth = fontMetrics.stringWidth(fretNum);
-        //int drawHeight = note.rectangle.height;
         int drawHeight = ThemeReader.getMeasure("note.height");
         int stringY = getNoteStringY(note.stringNum);
 
@@ -262,7 +248,7 @@ class TrackDrawArea extends JLayeredPane {
         int trackHeight = ThemeReader.getMeasure("track.strings.spacing") * numOfStrings;
         trackHeight += ThemeReader.getMeasure("track.strings.margin.top");
         trackHeight += ThemeReader.getMeasure("track.strings.margin.bottom");
-        int oldX = (int) progressLine.getX1();
+        int oldX = (int)progressLine.getX1();
         repaint(oldX - 1, 0, oldX + 1, trackHeight);
         progressLine.setLine(x, 0, x, trackHeight);
         repaint(x, 0, x, trackHeight);
