@@ -441,7 +441,7 @@ public class TrackController {
 
     public void setName(String n) {
         name = n;
-        view.setName(name);
+        view.setTrackNameField(name);
     }
 
     public String getName() {

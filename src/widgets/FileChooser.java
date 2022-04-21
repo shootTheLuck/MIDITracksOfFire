@@ -11,7 +11,6 @@ public class FileChooser extends JFileChooser {
     private void setup(String filter, String path) {
 
         if (path != null) {
-            //File file = new File(path);
             setCurrentDirectory(new File(path));
         } else {
             String workingPath = System.getProperty("user.dir");
@@ -49,8 +48,7 @@ public class FileChooser extends JFileChooser {
 
     @Override
     public String toString() {
-        return getClass() + ". methods return String filename.";
+        return getClass() + ". display open and save dialogs.";
     }
-
 
 }

@@ -97,7 +97,7 @@ public class Page {
         preferences.setProperty(prefName, String.valueOf(prefValue));
     }
 
-    public void setDefaultPreferences() {
+    private void setDefaultPreferences() {
         preferences.setProperty("theme", "default.theme");
         preferences.setProperty("window.width", "1000");
         preferences.setProperty("window.height", "800");
@@ -437,7 +437,7 @@ public class Page {
         return result;
     }
 
-    public void shutDown() {
+    protected void shutDown() {
         console.log("shutting down...");
         boolean ready = true;
         try {
@@ -551,7 +551,7 @@ public class Page {
         }
     }
 
-    public void handleKeys(int keyCode) {
+    protected void handleKeys(int keyCode) {
         if (keyCode >= 96 && keyCode <= 105) {
             int number = keyCode - 96;
             selectedTrack.showFretField(number);
@@ -586,11 +586,11 @@ public class Page {
         }
     }
 
-    public void handleMeasureSizeSlider(int sliderValue) {
+    protected void handleMeasureSizeSlider(int sliderValue) {
         view.adjustMeasureSize(sliderValue, numOfMeasures);
     }
 
-    public void handleMenuItem(Constants evt) {
+    protected void handleMenuItem(Constants evt) {
         switch(evt) {
             case MENU_FILE_NEW:
                 startNewFile();
@@ -659,7 +659,7 @@ public class Page {
         }
     }
 
-    public void handlePlayControls(Constants c) {
+    protected void handlePlayControls(Constants c) {
         switch(c) {
 
             case BUTTON_PLAY:
@@ -717,7 +717,7 @@ public class Page {
         view.showStopped();
     }
 
-    public void handleProgressTimer(long tick) {
+    private void handleProgressTimer(long tick) {
         double progress = (double)tick / getTicksPerMeasure();
         view.setProgress(progress);
 

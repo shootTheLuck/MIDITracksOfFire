@@ -139,10 +139,15 @@ public class TrackView extends JPanel {
         trackNameField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent evt) {
-                if (evt.getKeyChar() == KeyEvent.VK_ENTER) {
+                int keyPressed = evt.getKeyChar();
+                if (keyPressed == KeyEvent.VK_ENTER) {
                     // don't start playing music on first enter after name change
                     evt.consume();
                     controller.handleTrackNameField();
+                }
+                if (keyPressed == KeyEvent.VK_SPACE) {
+                    // don't start playing selection while trackNameField is focused
+                    evt.consume();
                 }
             }
         });
@@ -316,16 +321,15 @@ public class TrackView extends JPanel {
         cancelProgress();
     }
 
-    @Override
-    public void setName(String name) {
+    protected void showName(String name) {
         trackNameField.setText(name);
     }
 
-    public void setInstrumentName(String name) {
+    protected void setInstrumentName(String name) {
         instrumentPicker.setText(name);
     }
 
-    public void setTrackType(TrackType type) {
+    protected void setTrackType(TrackType type) {
         String s = type.toString();
         Point currentScroll = drawArea.getLocation();
 
@@ -376,6 +380,14 @@ public class TrackView extends JPanel {
         revalidate();
     }
 
+    protected void showMuted() {
+
+    }
+
+    protected void showUnMuted() {
+
+    }
+
     protected void toggleMuteButton(Constants c) {
         if (c == Constants.BUTTON_TRACKUNMUTE) {
             muteButton.setIcon(volumeMuteIcon);
@@ -399,7 +411,7 @@ public class TrackView extends JPanel {
         }
     }
 
-    public void changeCursor(Cursor cursor) {
+    protected void changeCursor(Cursor cursor) {
 
         //drawArea.setCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));
         drawArea.setCursor(cursor);
@@ -410,55 +422,47 @@ public class TrackView extends JPanel {
         //drawArea.setCursor(c);
     }
 
-    public void setTrackNameField(String string) {
+    protected void setTrackNameField(String string) {
         trackNameField.setText(string);
     }
 
-    public String getTrackNameField() {
+    protected String getTrackNameField() {
         return trackNameField.getText();
     }
 
-    public void setVolumeField(Object object) {
+    protected void setVolumeField(Object object) {
         volumeField.setValue(Integer.valueOf(object.toString()));
     }
 
-    public int getVolumeField() {
+    protected int getVolumeField() {
         return volumeField.getValue();
     }
 
-    public void showFretField(Note note, int fretNum) {
+    protected void showFretField(Note note, int fretNum) {
         drawArea.showFretField(note, fretNum);
     }
 
-    public void hideFretField() {
+    protected void hideFretField() {
         drawArea.hideFretField();
     }
 
-    public String getFretField() {
+    protected String getFretField() {
         return drawArea.fretField.getText().trim();
     }
 
-    public void drawRectangle(Rectangle rect) {
+    protected void drawRectangle(Rectangle rect) {
         rect.y = Math.max(0, rect.y);
         rect.x = Math.max(0, rect.x);
          ///additions/subtractions paint slightly more than needed to erase outdated pixels
         drawArea.repaint(rect.x - 8, rect.y - 4, rect.width + 16, rect.height + 8);
     }
 
-    public void drawNew() {
+    protected void drawNew() {
         drawArea.repaint();
     }
 
-    public void drawNote(Note note) {
+    protected void drawNote(Note note) {
         drawArea.overwriteNote(note);
-    }
-
-    protected void showMuted() {
-
-    }
-
-    protected void showUnMuted() {
-
     }
 
     protected void showProgress(int x, int soundAmount) {

@@ -1,6 +1,5 @@
 package track;
 
-
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -16,7 +15,7 @@ class TrackSideBar extends JPanel {
     private Font font;
     private FontMetrics fontMetrics;
     private int fontHeight;
-    private String[] content = {};
+    private String[] content;
 
     public TrackSideBar() {
         font = new Font("MonoSpace", Font.PLAIN, 9);

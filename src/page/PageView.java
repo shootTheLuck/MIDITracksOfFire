@@ -28,12 +28,12 @@ import javax.swing.SwingUtilities;
 
 import themes.ThemeReader;
 import track.TrackView;
+import utils.console;
 import widgets.FileChooser;
 import widgets.InsertBarsDialog;
 import widgets.RemoveBarsDialog;
 import widgets.VelocitySlider;
 
-import utils.console;
 
 public class PageView {
 
