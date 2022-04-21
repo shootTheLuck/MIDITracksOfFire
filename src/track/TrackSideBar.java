@@ -1,32 +1,14 @@
 package track;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
+
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Line2D;
-import java.awt.geom.Path2D;
 
-import javax.swing.BorderFactory;
-import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
-import note.Note;
-import page.PageView;
 import themes.ThemeReader;
 import utils.console;
-import widgets.NumberInputField;
 
 
 class TrackSideBar extends JPanel {

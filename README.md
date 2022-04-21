@@ -19,7 +19,6 @@ GOALS/TODO's:
 - tests!
 - undo/redo (started)
 - duplicate measures via edit menu
-- warn on close before save
 
 ## Credits:
 - Easy Beat(c) Macility/Ergonis Software.

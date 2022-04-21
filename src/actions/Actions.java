@@ -8,7 +8,6 @@ import utils.console;
 public class Actions {
 
     static private int index = 0;
-    static private int undoIndex = 0;
     static private int savedAt = 0;
     public static ArrayList<Item>list = new ArrayList<Item>();
 

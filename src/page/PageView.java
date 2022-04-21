@@ -31,7 +31,6 @@ import track.TrackView;
 import widgets.FileChooser;
 import widgets.InsertBarsDialog;
 import widgets.RemoveBarsDialog;
-import widgets.UnsavedDialog;
 import widgets.VelocitySlider;
 
 import utils.console;
