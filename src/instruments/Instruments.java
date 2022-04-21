@@ -12,7 +12,7 @@ public class Instruments {
             "Synth Effects", "Ethnic", "Percussive", "Sound Effects", "Drum Sets"};
     static {
 
-        //list.add(new Instrument("Piano", 999));
+        // Piano
             list.add(new Instrument("Acoustic Grand Piano", 0));
             list.add(new Instrument("Bright Acoustic Piano", 1));
             list.add(new Instrument("Electric Grand Piano", 2));
@@ -22,7 +22,7 @@ public class Instruments {
             list.add(new Instrument("Harpsichord", 6));
             list.add(new Instrument("Clavinet", 7));
 
-        //list.add(new Instrument("Chromatic", 999));
+        // Chromatic
             list.add(new Instrument("Celesta", 8));
             list.add(new Instrument("Glockenspiel", 9));
             list.add(new Instrument("Music Box", 10));
@@ -32,7 +32,7 @@ public class Instruments {
             list.add(new Instrument("Tubular Bells", 14));
             list.add(new Instrument("Dulcimer", 15));
 
-        //list.add(new Instrument("Organ", 999));
+        // Organ
             list.add(new Instrument("Drawbar Organ", 16));
             list.add(new Instrument("Percussive Organ", 17));
             list.add(new Instrument("Rock Organ", 18));
@@ -42,7 +42,7 @@ public class Instruments {
             list.add(new Instrument("Harmonica", 22));
             list.add(new Instrument("Tango Accordian", 23));
 
-        //list.add(new Instrument("Guitar", 999));
+        // Guitar
             list.add(new Instrument("Acoustic Nylon Guitar", 24));
             list.add(new Instrument("Acoustic Steel Guitar", 25));
             list.add(new Instrument("Electric Jazz Guitar", 26));
@@ -52,7 +52,7 @@ public class Instruments {
             list.add(new Instrument("Distortion Guitar", 30));
             list.add(new Instrument("Guitar Harmonics", 31));
 
-        //list.add(new Instrument("Bass", 999));
+        // Bass
             list.add(new Instrument("Acoustic Bass", 32));
             list.add(new Instrument("Fingered Electric Bass", 33));
             list.add(new Instrument("Plucked Electric Bass", 34));
@@ -62,7 +62,7 @@ public class Instruments {
             list.add(new Instrument("Synth Bass 1", 38));
             list.add(new Instrument("Synth Bass 2", 39));
 
-        //list.add(new Instrument("Strings", 999));
+        // Strings
             list.add(new Instrument("Violin", 40));
             list.add(new Instrument("Viola", 41));
             list.add(new Instrument("Cello", 42));
@@ -72,7 +72,7 @@ public class Instruments {
             list.add(new Instrument("Orchestral Harp", 46));
             list.add(new Instrument("Timpani", 47));
 
-        //list.add(new Instrument("Ensemble", 999));
+        // Ensemble
             list.add(new Instrument("String Ensemble 1", 48));
             list.add(new Instrument("String Ensemble 2", 49));
             list.add(new Instrument("Synth Strings 1", 50));
@@ -82,7 +82,7 @@ public class Instruments {
             list.add(new Instrument("Synth Choir", 54));
             list.add(new Instrument("Orchestra Hit", 55));
 
-        //list.add(new Instrument("Brass", 999));
+        // Brass
             list.add(new Instrument("Trumpet", 56));
             list.add(new Instrument("Trombone", 57));
             list.add(new Instrument("Tuba", 58));
@@ -92,7 +92,7 @@ public class Instruments {
             list.add(new Instrument("Synth Brass 1", 62));
             list.add(new Instrument("Synth Brass 2", 63));
 
-        //list.add(new Instrument("Reed", 999));
+        // Reed
             list.add(new Instrument("Soprano Sax", 64));
             list.add(new Instrument("Alto Sax", 65));
             list.add(new Instrument("Tenor Sax", 66));
@@ -102,7 +102,7 @@ public class Instruments {
             list.add(new Instrument("Bassoon", 70));
             list.add(new Instrument("Clarinet", 71));
 
-        //list.add(new Instrument("Pipe", 999));
+        // Pipe"
             list.add(new Instrument("Piccolo", 72));
             list.add(new Instrument("Flute", 73));
             list.add(new Instrument("Recorder", 74));
@@ -112,7 +112,7 @@ public class Instruments {
             list.add(new Instrument("Whistle", 78));
             list.add(new Instrument("Ocarina", 79));
 
-        //list.add(new Instrument("Synth Lead", 999));
+        // Synth Lead
             list.add(new Instrument("Square Wave", 80));
             list.add(new Instrument("Sawtooth Wave", 81));
             list.add(new Instrument("Calliope", 82));
@@ -122,7 +122,7 @@ public class Instruments {
             list.add(new Instrument("Fifths", 86));
             list.add(new Instrument("Bass + Lead", 87));
 
-        //list.add(new Instrument("Synth Pad", 999));
+        // Synth Pad
             list.add(new Instrument("New Age", 88));
             list.add(new Instrument("Warm", 89));
             list.add(new Instrument("Polysynth", 90));
@@ -132,7 +132,7 @@ public class Instruments {
             list.add(new Instrument("Halo", 94));
             list.add(new Instrument("Sweep", 95));
 
-        //list.add(new Instrument("Synth Effects", 999));
+        // Synth Effects
             list.add(new Instrument("Rain", 96));
             list.add(new Instrument("Soundtrack", 97));
             list.add(new Instrument("Crystal", 98));
@@ -142,7 +142,7 @@ public class Instruments {
             list.add(new Instrument("Echoes", 102));
             list.add(new Instrument("Sci-Fi", 103));
 
-        //list.add(new Instrument("Ethnic", 999));
+        // Ethnic
             list.add(new Instrument("Sitar", 104));
             list.add(new Instrument("Banjo", 105));
             list.add(new Instrument("Shamisen", 106));
@@ -152,7 +152,7 @@ public class Instruments {
             list.add(new Instrument("Fiddle", 110));
             list.add(new Instrument("Shanai", 111));
 
-        //list.add(new Instrument("Percussive", 999));
+        // Percussive
             list.add(new Instrument("Tinkle Bell", 112));
             list.add(new Instrument("Agogo", 113));
             list.add(new Instrument("Steel Drums", 114));
@@ -162,7 +162,7 @@ public class Instruments {
             list.add(new Instrument("Synth Drum", 118));
             list.add(new Instrument("Reverse Cymbal", 119));
 
-        //list.add(new Instrument("Sound Effects", 999));
+        // Sound Effects
             list.add(new Instrument("Guitar Fret Noise", 120));
             list.add(new Instrument("Breath Noise", 121));
             list.add(new Instrument("Seashore", 122));
@@ -172,7 +172,7 @@ public class Instruments {
             list.add(new Instrument("Applause", 126));
             list.add(new Instrument("Gunshot", 127));
 
-        //list.add(new Instrument("Drum Sets", 999));
+        // Drum Sets
             drumList.add(new Instrument("Standard Drum Kit", 0));
             drumList.add(new Instrument("Room Kit", 8));
             drumList.add(new Instrument("Power Kit", 16));

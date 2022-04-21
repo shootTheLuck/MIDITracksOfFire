@@ -27,6 +27,7 @@ class TrackDrawAreaBass extends TrackDrawArea {
 
         drawStrings(g2);
         drawGridLines(g2);
+
         for (Note note : controller.notes) {
             if (note.isSelected) {
                 drawNote(g2, note, selectedColor);
