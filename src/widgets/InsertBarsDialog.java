@@ -15,7 +15,7 @@ public class InsertBarsDialog extends Dialog {
     public boolean allTracks;
 
     public InsertBarsDialog(JFrame owner, int x, int y) {
-        super(owner);
+        super(owner, "", false);
         xField = new NumberInputField(x, 3);
         yField = new NumberInputField(y, 3);
 

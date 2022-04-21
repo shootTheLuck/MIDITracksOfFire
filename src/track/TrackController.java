@@ -755,11 +755,12 @@ public class TrackController {
             long noteMeasure = 1 + (note.start / ticksPerMeasure);
             if (noteMeasure >= measureStart && noteMeasure < afterRange) {
                 notes.remove(note);
-                view.drawNote(note);
+                //view.drawNote(note);
             } else if (noteMeasure >= afterRange) {
                 note.start -= noteStartDelta;
             }
         }
+        view.drawNew();
 
     }
 

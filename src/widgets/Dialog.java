@@ -18,8 +18,8 @@ class Dialog extends JDialog {
     JButton enterButton;
     JButton cancelButton;
 
-    public Dialog(JFrame owner) {
-        super(owner);
+    public Dialog(JFrame owner, String title, boolean modal) {
+        super(owner, "", true);
 
         setLayout(new BorderLayout());
         contents = new JPanel();

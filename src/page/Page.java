@@ -42,52 +42,38 @@ import track.TrackTypeGuitar;
 import track.TrackTypeBass;
 import track.TrackTypeDrums;
 import widgets.VelocitySlider;
+import utils.Checksum;
 import utils.console;
 
 
 public class Page {
 
-    private int numOfMeasures = 50;
-    private int minNumOfMeasures = 50;
-
-    private String prefFile = "config/preferences.txt";
-    private Properties preferences;
-    private int minWidth = 3003;
     private PageView view;
     private Midi midi;
     private List<Note> clipboard;
-    private int BPM = 120;
-    private int measureStart = 1;
-    private int resolution;
-    private Timer progressTimer;
-
-    private boolean isPlaying = false;
-
     private TrackController selectedTrack;
     private List<TrackController> tracks;
+    private Timer progressTimer;
     private File file;
+    private String fileChecksum;
 
-    public Page() {
-        preferences = new Properties();
+    private String prefFile = "config/preferences.txt";
+    private Properties preferences = new Properties();
+    private int minWidth = 3003;
+    private int BPM = 120;
+    private int measureStart = 1;
+    private int numOfMeasures = 50;
+    private int minNumOfMeasures = 50;
+    private int resolution = 960;
+    private boolean isPlaying = false;
+
+
+    public Page(String pathToFile) {
         setDefaultPreferences();
-        boolean themed = false;
-
-        try (FileInputStream fis = new FileInputStream(prefFile)) {
-            preferences.load(fis);
-            String themeFile = preferences.getProperty("theme");
-            if (themeFile != null && !themeFile.isEmpty()) {
-                ThemeReader.loadTheme("themes/" + themeFile);
-                themed = true;
-            }
-        } catch (FileNotFoundException ex) {
-            console.log("an error occured trying to load preferences file", prefFile, ":", ex);
-        } catch (IOException ex) {
-            //
-        }
+        loadPreferences();
 
         view = new PageView(this);
         midi = new Midi(this);
-        resolution = 960;
         tracks = new ArrayList<>();
         clipboard = new ArrayList<>();
         progressTimer = new Timer(20, (ActionEvent evt) -> {
@@ -95,14 +81,17 @@ public class Page {
             handleProgressTimer(currentTick);
         });
 
-        addNewTrack();
-        //view.pack();
-        view.reset();
-        if (themed) {
-            view.setTheme();
+        if (pathToFile == null ||
+            pathToFile.isEmpty() ||
+            pathToFile.trim().isEmpty()) {
+            startNewFile();
+        } else {
+            loadFile(pathToFile);
         }
-        view.setVisible(true);
 
+        view.reset();
+        view.setTheme();
+        view.setVisible(true);
     }
 
     public String getPreference(String prefName) {
@@ -125,11 +114,42 @@ public class Page {
         preferences.setProperty("soundFont", "sf2/Windows.sf2");
     }
 
+    private void loadPreferences() {
+        try (FileInputStream fis = new FileInputStream(prefFile)) {
+            preferences.load(fis);
+            String themeFile = preferences.getProperty("theme");
+            if (themeFile != null && !themeFile.isEmpty()) {
+                ThemeReader.loadTheme("themes/" + themeFile);
+            }
+        } catch (FileNotFoundException ex) {
+            console.log("an error occured trying to load preferences file", prefFile, ":", ex);
+        } catch (IOException ex) {
+            //
+        }
+    }
+
+    private void savePreferences() {
+        String themeFilename = ThemeReader.getThemeFilename();
+        if (themeFilename != null) {
+            setPreference("theme", themeFilename);
+        }
+        try (FileOutputStream out = new FileOutputStream(prefFile)) {
+            preferences.store(out, "---Preferences File---");
+        } catch (FileNotFoundException ex) {
+            console.log("an error occured trying to save preferences to file", prefFile, ":", ex);
+        } catch (IOException ex) {
+            //
+        }
+    }
+
     public void startNewFile() {
+        file = null;
+        String filename = "untitled.mid";
         removeAllTracks();
-        view.setTitle("untitled");
         midi.unMuteAllTracks();
         addNewTrack();
+        fileChecksum = generateChecksum();
+        view.setTitle(filename);
     }
 
     public void loadFile(String filename) {
@@ -153,6 +173,12 @@ public class Page {
                 loadTrack(track);
             }
             selectTrack(tracks.get(0));
+
+            File tempFile = File.createTempFile("temp", "");
+            tempFile.deleteOnExit();
+            midi.writeToFile(tempFile, tracks, BPM, resolution);
+            fileChecksum = Checksum.generate(tempFile.getAbsolutePath());
+
         } catch (Exception e) {
             if (e instanceof MidiUnavailableException) {
                 console.log("midi unavailable on this system: " + e);
@@ -406,23 +432,47 @@ public class Page {
         Actions.add(action);
     }
 
+    private String generateChecksum() {
+        String result = "";
+        try {
+            File tempFile = File.createTempFile("temp", "");
+            tempFile.deleteOnExit();
+            midi.writeToFile(tempFile, tracks, BPM, resolution);
+            result = Checksum.generate(tempFile.getAbsolutePath());
+
+        } catch (Exception ex) {
+            console.log("an error occured trying to save temp file", ex);
+        }
+        return result;
+    }
+
     public void shutDown() {
         console.log("shutting down...");
-        //console.log("items", Actions.list.size(), "unsaved?", Actions.hasUnsavedChanges());
+        boolean ready = true;
+        try {
+            //File tempFile = File.createTempFile("temp", "");
+            //tempFile.deleteOnExit();
+            //midi.writeToFile(tempFile, tracks, BPM, resolution);
+            String c = generateChecksum();
+            //console.log("orig", fileChecksum);
+            if (!c.equals(fileChecksum)) {
+                String test = view.showUnsavedDialog();
+                if (test.equals("save")) {
+                    ready = saveFile();
+                } else if (test.equals("cancel")) {
+                    ready = false;
+                }
+
+            }
+        } catch (Exception ex) {
+            console.log("an error occured trying to save temp file", ex);
+        }
+
+        if (ready == false) return;
+
+        savePreferences();
         midi.close();
         view.close();
-        String settingsFileName = ThemeReader.getSettingsName();
-
-        if (settingsFileName != null) {
-            setPreference("theme", settingsFileName);
-        }
-        try (FileOutputStream out = new FileOutputStream(prefFile)) {
-            preferences.store(out, "---Preferences File---");
-        } catch (FileNotFoundException ex) {
-            console.log("an error occured trying to save preferences to file", prefFile, ":", ex);
-        } catch (IOException ex) {
-            //
-        }
         System.exit(0);
     }
 
@@ -446,7 +496,7 @@ public class Page {
         }
     }
 
-    private void saveFileAs() {
+    private boolean saveFileAs() {
         String path;
         String currentDirectory = System.getProperty("user.dir");
         String midiDirectory = preferences.getProperty("midiDirectory");
@@ -459,20 +509,32 @@ public class Page {
         } else {
             path = currentDirectory;
         }
-        String currentName = file.getName();
-        String fileName = view.showFileSaver("mid", path, currentName);
-        if (!"".equals(fileName)) {
-            file = new File(fileName);
-            midi.writeToFile(file, tracks, BPM, resolution);
-            view.setTitle(file.getName());
+
+        String currentFileName = "";
+        if (file != null) {
+            currentFileName = file.getName();
         }
+
+        String newFileName = view.showFileSaver("mid", path, currentFileName);
+        if (!"".equals(newFileName)) {
+            file = new File(newFileName);
+            midi.writeToFile(file, tracks, BPM, resolution);
+            fileChecksum = generateChecksum();
+            view.setTitle(file.getName());
+            console.log("file saved as", newFileName);
+            return true;
+        }
+        return false;
     }
 
-    private void saveFile() {
+    private boolean saveFile() {
         if (file != null) {
             midi.writeToFile(file, tracks, BPM, resolution);
+            fileChecksum = generateChecksum();
+            console.log("file saved");
+            return true;
         } else {
-            saveFileAs();
+            return saveFileAs();
         }
     }
 

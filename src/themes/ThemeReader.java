@@ -26,7 +26,7 @@ public class ThemeReader {
 
     private static Properties defaults = new Properties();
     public static Properties settings = new Properties();
-    public static File settingsFile;
+    public static File themeFile;
 
     static {
         try (FileInputStream fis = new FileInputStream("src/themes/default.theme")) {
@@ -41,7 +41,7 @@ public class ThemeReader {
     public static void loadTheme(String fileName) {
         try (FileInputStream fis = new FileInputStream(fileName)) {
             /// save as file as well
-            settingsFile = new File(fileName);
+            themeFile = new File(fileName);
             settings.load(fis);
         } catch (FileNotFoundException ex) {
             console.log("an error occured trying to load theme file", fileName, ":", ex);
@@ -49,9 +49,10 @@ public class ThemeReader {
             //
         }
     }
-    public static String getSettingsName() {
-        if (settingsFile != null) {
-            return settingsFile.getName();
+
+    public static String getThemeFilename() {
+        if (themeFile != null) {
+            return themeFile.getName();
         }
         return null;
     }

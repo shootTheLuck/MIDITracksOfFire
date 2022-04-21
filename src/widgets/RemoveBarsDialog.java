@@ -15,7 +15,7 @@ public class RemoveBarsDialog extends Dialog {
     public boolean allTracks;
 
     public RemoveBarsDialog(JFrame owner, int x, int y) {
-        super(owner);
+        super(owner, "", false);
         xField = new NumberInputField(x, 3);
         yField = new NumberInputField(y, 3);
 

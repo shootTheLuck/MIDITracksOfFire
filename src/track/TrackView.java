@@ -445,6 +445,10 @@ public class TrackView extends JPanel {
         drawArea.repaint(rect.x - 8, rect.y - 4, rect.width + 16, rect.height + 8);
     }
 
+    public void drawNew() {
+        drawArea.repaint();
+    }
+
     public void drawNote(Note note) {
         drawArea.overwriteNote(note);
     }

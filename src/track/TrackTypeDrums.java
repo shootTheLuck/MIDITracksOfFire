@@ -19,7 +19,7 @@ public class TrackTypeDrums extends TrackType {
         if (stringNum == 4) return 42; // closed hi hat
         if (stringNum == 5) return 38; // snare
         if (stringNum == 6) return 31; // stick
-        if (stringNum == 7) return 35; // bass
+        if (stringNum == 7) return 36; // kick
         return 0;
     }
 

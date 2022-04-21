@@ -18,6 +18,7 @@ import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
@@ -30,6 +31,7 @@ import track.TrackView;
 import widgets.FileChooser;
 import widgets.InsertBarsDialog;
 import widgets.RemoveBarsDialog;
+import widgets.UnsavedDialog;
 import widgets.VelocitySlider;
 
 import utils.console;
@@ -81,7 +83,8 @@ public class PageView {
         frame.setSize(new Dimension(width, height));
         frame.setPreferredSize(new Dimension(width, height));
         frame.setLocationRelativeTo(null);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
         frame.addComponentListener(new ComponentAdapter() {
             public void componentResized(ComponentEvent e) {
@@ -443,8 +446,22 @@ public class PageView {
         velocitySlider.setVisible(false);
     }
 
-    protected void showInsertBarsDialog(int x, int y) {
-        InsertBarsDialog insertBarsDialog = new InsertBarsDialog((JFrame) frame, x, y);
+    protected String showUnsavedDialog() {
+        int a = JOptionPane.showConfirmDialog(frame,"Unsaved Changes. Would you like to save?");
+        if (a == JOptionPane.YES_OPTION) {
+            //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            return "save";
+        } else if (a == JOptionPane.CANCEL_OPTION) {
+            //frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+            return "cancel";
+        } else {
+            //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            return "exit";
+        }
+    }
+
+    protected void  showInsertBarsDialog(int x, int y) {
+        InsertBarsDialog insertBarsDialog = new InsertBarsDialog((JFrame)frame, x, y);
         insertBarsDialog.addWindowListener(new WindowAdapter() {
             @Override public void windowClosed(WindowEvent e) {
                 //int[] value = insertBarsDialog.getValue();
