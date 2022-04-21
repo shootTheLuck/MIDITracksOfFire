@@ -11,6 +11,7 @@ class Main {
                 console.log("starting up...");
                 //Page page = new Page(null);
                 Page page = new Page("midi/RepoMan2Test.mid");
+                //Page page = new Page("midi/2Instruments2.mid");
             }
         });
     }

@@ -15,7 +15,6 @@ import javax.swing.SwingUtilities;
 import actions.Actions;
 import page.Page;
 import page.PageView;
-import page.Constants;
 import note.Note;
 import instruments.Instrument;
 import instruments.Instruments;
@@ -359,18 +358,19 @@ public class TrackController {
 
         if (note != null) {
             //console.log(note);
+
             if (!selection.contains(note) && !evt.isShiftDown()) {
                 clearSelection();
             }
 
             selectNote(note);
-            //pageController.playNote(this, note);
+            double lastPartOfNote = selectedNote.rectangle.x + selectedNote.rectangle.width * 0.80;
 
             if (evt.isControlDown() || SwingUtilities.isRightMouseButton(evt)) {
                 vSlider = pageController.showVelocitySlider(evt, selectedNote.velocity);
                 mouseStrategy = setNoteVelocity;
 
-            } else if (x > selectedNote.rectangle.x + selectedNote.rectangle.width - 5) {
+            } else if (x > lastPartOfNote && channel != 9) {
                 //view.changeCursor(new Cursor(Cursor.W_RESIZE_CURSOR));
                 mouseStrategy = lengthenNote;
 
@@ -479,7 +479,8 @@ public class TrackController {
         trackType.assignStringAndFret(note);
         notes.add(note);
         if (channel == 9) {
-            note.duration = 480;
+            // 1/32 note
+            note.duration = pageController.getTicksPerMeasure() / 32;
         }
         notes.sorted = false;
     }
@@ -492,7 +493,8 @@ public class TrackController {
         note.start = setNoteStart(x);
         notes.add(note);
         if (channel == 9) {
-            note.duration = 480;
+            // 1/32 note
+            note.duration = pageController.getTicksPerMeasure() / 32;
         }
         notes.sorted = false;
         selectNote(note);
@@ -516,6 +518,16 @@ public class TrackController {
 
     public List<Note> getNotes() {
         return notes.sortByStart(true);
+    }
+
+    public void selectAllNotes() {
+        selection.clear();
+
+        /* loop backward through notes */
+        for (int i = notes.size() - 1; i >= 0; i--) {
+            Note note = notes.get(i);
+            selectNote(note);
+        }
     }
 
     private void selectNote(Note note) {
@@ -604,7 +616,6 @@ public class TrackController {
             clearSelection();
             for (Note note : clipboard) {
                 Note clone = note.clone();
-                clone.fromClipboard = true;
                 loadNote(clone);
                 selectNote(clone);
             }
@@ -829,29 +840,13 @@ public class TrackController {
         pageController.handleTrackInput(this, elementNeedsFocus);
     }
 
-    protected void handleCollapseButton(Constants c) {
-        switch(c) {
-            case BUTTON_TRACKCOLLAPSE:
-                view.toggleCollapseButton(c);
-                break;
-            case BUTTON_TRACKEXPAND:
-                view.toggleCollapseButton(c);
-                break;
-            default:
-        }
-    }
-
-    protected void handleMuteButton(Constants c) {
-        switch(c) {
-            case BUTTON_TRACKMUTE:
-                isMuted = true;
-                view.toggleMuteButton(Constants.BUTTON_TRACKUNMUTE);
-                break;
-            case BUTTON_TRACKUNMUTE:
-                isMuted = false;
-                view.toggleMuteButton(Constants.BUTTON_TRACKMUTE);
-                break;
-            default:
+    protected void handleMuteButton() {
+        if (isMuted == true) {
+            isMuted = false;
+            view.showUnMuted();
+        } else {
+            isMuted = true;
+            view.showMuted();
         }
         pageController.handleMuteButton(this, isMuted);
     }

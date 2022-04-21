@@ -3,11 +3,9 @@ package note;
 import java.awt.Rectangle;
 import utils.console;
 
-class Serial {
-    static int number = 0;
-}
-
 public class Note {
+
+    private static int number = 0;
 
     public int velocity = 80;
     public long start = 0;
@@ -16,13 +14,12 @@ public class Note {
     public int fret = 0;
     public int pitch = 65;
     public boolean isSelected = false;
-    public boolean fromClipboard = false;
     public Rectangle rectangle = new Rectangle();
     public final int serialNumber;
 
     public Note() {
-        serialNumber = Serial.number;
-        Serial.number += 1;
+        serialNumber = number;
+        number += 1;
     }
 
     public Note clone() {
@@ -39,7 +36,6 @@ public class Note {
         clone.stringNum = this.stringNum;
         clone.fret = this.fret;
         clone.pitch = this.pitch;
-        clone.fromClipboard = false;
         return clone;
     }
 
@@ -69,10 +65,10 @@ public class Note {
             "\n  end: " + (start + duration) +
             "\n  pitch " + pitch +
             "\n  velocity " + velocity +
-            //"\n  rectangle x: " +
-                //rectangle.x + ", y: " +
-                //rectangle.y + ", width: " +
-                //rectangle.width + ", height: " + rectangle.height +
+            "\n  rectangle x: " +
+                rectangle.x + ", y: " +
+                rectangle.y + ", width: " +
+                rectangle.width + ", height: " + rectangle.height +
             "\n";
     }
 

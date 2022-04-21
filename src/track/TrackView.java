@@ -29,6 +29,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
@@ -36,7 +37,6 @@ import javax.swing.border.LineBorder;
 import instruments.Instrument;
 import note.Note;
 import page.PageView;
-import page.Constants;
 import themes.ThemeReader;
 import utils.console;
 import widgets.InputField;
@@ -59,21 +59,26 @@ public class TrackView extends JPanel {
 
     // topBar items:
     private JLabel collapseButton;
-    private Constants collapseAction;
     private JLabel muteButton;
-    private Constants muteAction;
     private InputField trackNameField;
     private Border trackNameBorder;
     private TrackInstrumentPicker instrumentPicker;
     private JComboBox<String>gridSizePicker;
     private JComboBox<String> trackTypePicker;
     private NumberInputField volumeField;
+    private boolean isCollapsed = false;
     private int borderWidth = 1;
     private int leftMargin = ThemeReader.getMeasure("track.strings.margin.left");
 
     private Icon volumeHighIcon = new ImageIcon("assets/audio-volume-high.png");
+    private Icon volumeMediumIcon = new ImageIcon("assets/audio-volume-medium.png");
+    private Icon volumeLowIcon = new ImageIcon("assets/audio-volume-low.png");
     private Icon volumeZeroIcon = new ImageIcon("assets/audio-volume-0.png");
     private Icon volumeMuteIcon = new ImageIcon("assets/audio-volume-muted.png");
+    private Icon[] volumeIcons = {volumeZeroIcon, volumeLowIcon, volumeMediumIcon, volumeHighIcon};
+    private int volumeIconLevel = 0;
+
+    private Timer volumeIconTimer;
 
     private Icon collapseIcon = new ImageIcon("assets/pan-down-symbolic.symbolic.png");
     private Icon expandIcon = new ImageIcon("assets/pan-end-symbolic.symbolic.png");
@@ -101,26 +106,42 @@ public class TrackView extends JPanel {
         //topBar.add(Box.createRigidArea(new Dimension(1, topBarHeight)));
         topBar.add(Box.createHorizontalStrut(5));
 
-        collapseAction = Constants.BUTTON_TRACKCOLLAPSE;
         collapseButton = new JLabel(collapseIcon);
         collapseButton.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                controller.handleCollapseButton(collapseAction);
+            public void mousePressed(MouseEvent e) {
+                if (isCollapsed) {
+                    expand();
+                    isCollapsed = false;
+                    collapseButton.setIcon(collapseIcon);
+                } else {
+                    collapse();
+                    isCollapsed = true;
+                    collapseButton.setIcon(expandIcon);
+
+                }
             }
         });
         topBar.add(collapseButton);
         topBar.add(Box.createHorizontalStrut(5));
 
-        muteAction = Constants.BUTTON_TRACKMUTE;
         muteButton = new JLabel(volumeZeroIcon);
         muteButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                controller.handleMuteButton(muteAction);
+                controller.handleMuteButton();
             }
         });
         topBar.add(muteButton);
+        volumeIconTimer = new Timer(50, new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                muteButton.setIcon(volumeIcons[volumeIconLevel]);
+                volumeIconLevel -= 1;
+                if (volumeIconLevel < 0) {
+                    volumeIconTimer.stop();
+                }
+            }
+        });
         topBar.add(Box.createHorizontalStrut(15));
 
         trackNameField = new InputField(name);
@@ -185,7 +206,7 @@ public class TrackView extends JPanel {
         gridSizePicker.setSelectedIndex(3);
         gridSizePicker.setFocusable(false);
         gridSizePicker.addActionListener((ActionEvent ae) -> {
-            String fraction = (String) gridSizePicker.getSelectedItem();
+            String fraction = (String)gridSizePicker.getSelectedItem();
 
             //https://stackoverflow.com/questions/13249858s
             String[] ratio = fraction.split("/");
@@ -218,8 +239,8 @@ public class TrackView extends JPanel {
         instrumentPicker = new TrackInstrumentPicker(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent evt) {
-                ObjectMenuItem item = (ObjectMenuItem) evt.getSource();
-                Instrument instrument = (Instrument) item.object;
+                ObjectMenuItem item = (ObjectMenuItem)evt.getSource();
+                Instrument instrument = (Instrument)item.object;
                 controller.handleInstrumentPicker(instrument);
             }
         });
@@ -255,9 +276,11 @@ public class TrackView extends JPanel {
     //https://stackoverflow.com/questions/10271116/iterate-through-all-objects-in-jframe
     private void addNotifierToAllComponents(Container parent) {
         for (Component c : parent.getComponents()) {
-            addNotifier(c);
+            if (c != collapseButton) {
+                addNotifier(c);
+            }
             if (c instanceof Container) {
-                addNotifierToAllComponents((Container) c);
+                addNotifierToAllComponents((Container)c);
             }
         }
     }
@@ -381,34 +404,12 @@ public class TrackView extends JPanel {
     }
 
     protected void showMuted() {
-
+        muteButton.setIcon(volumeMuteIcon);
+        volumeIconTimer.stop();
     }
 
     protected void showUnMuted() {
-
-    }
-
-    protected void toggleMuteButton(Constants c) {
-        if (c == Constants.BUTTON_TRACKUNMUTE) {
-            muteButton.setIcon(volumeMuteIcon);
-            muteAction = Constants.BUTTON_TRACKUNMUTE;
-        } else {
-            muteButton.setIcon(volumeZeroIcon);
-            muteAction = Constants.BUTTON_TRACKMUTE;
-        }
-    }
-
-    protected void toggleCollapseButton(Constants c) {
-        if (c == Constants.BUTTON_TRACKEXPAND) {
-            collapseButton.setIcon(collapseIcon);
-            expand();
-            revalidate();
-            collapseAction = Constants.BUTTON_TRACKCOLLAPSE;
-        } else {
-            collapseButton.setIcon(expandIcon);
-            collapse();
-            collapseAction = Constants.BUTTON_TRACKEXPAND;
-        }
+        muteButton.setIcon(volumeZeroIcon);
     }
 
     protected void changeCursor(Cursor cursor) {
@@ -465,25 +466,32 @@ public class TrackView extends JPanel {
         drawArea.overwriteNote(note);
     }
 
+    private void showVolume(int soundAmount) {
+        if (soundAmount > 80) {
+            volumeIconLevel = 3;
+        } else if (soundAmount > 40) {
+            volumeIconLevel = 2;
+        } else {
+            volumeIconLevel = 1;
+        }
+
+        if (!volumeIconTimer.isRunning()) {
+            volumeIconTimer.start();
+        }
+    }
+
     protected void showProgress(int x, int soundAmount) {
         if (controller.isSelected) {
             drawArea.setProgressLine(x);
         }
 
-        if (!controller.isMuted) {
-            if (soundAmount > 0) {
-                muteButton.setIcon(volumeHighIcon);
-            } else {
-                muteButton.setIcon(volumeZeroIcon);
-            }
+        if (!controller.isMuted && soundAmount > 0) {
+            showVolume(soundAmount);
         }
     }
 
     protected void cancelProgress() {
         drawArea.setProgressLine(-1000);
-        if (!controller.isMuted) {
-            muteButton.setIcon(volumeZeroIcon);
-        }
     }
 
     @Override

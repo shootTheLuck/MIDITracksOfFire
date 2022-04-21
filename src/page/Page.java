@@ -45,7 +45,7 @@ public class Page {
     private TrackController selectedTrack;
     private List<TrackController> tracks;
     private Timer progressTimer;
-    private File file;
+    private File file ;
     private String fileChecksum;
 
     private String prefFile = "config/preferences.txt";
@@ -134,6 +134,11 @@ public class Page {
     }
 
     public void startNewFile() {
+        //console.log("file", file);
+        if (tracks.size() > 0) {
+            boolean ready = checkForSaved();
+            if (ready == false) return;
+        }
         file = null;
         String filename = "untitled.mid";
         removeAllTracks();
@@ -155,20 +160,16 @@ public class Page {
             setPreference("midiDirectory", pathWithoutFileName);
 
             long l = sequence.getTickLength();
+            resolution = sequence.getResolution();
             numOfMeasures = (int) l/(sequence.getResolution() * 4);
             numOfMeasures = Math.max(numOfMeasures, minNumOfMeasures);
             PageView.width = Math.max(minWidth, numOfMeasures * PageView.measureSize + PageView.measureSize);
-            resolution = sequence.getResolution();
             view.reset();
             for (Track track : sequence.getTracks()) {
                 loadTrack(track);
             }
             selectTrack(tracks.get(0));
-
-            File tempFile = File.createTempFile("temp", "");
-            tempFile.deleteOnExit();
-            midi.writeToFile(tempFile, tracks, BPM, resolution);
-            fileChecksum = Checksum.generate(tempFile.getAbsolutePath());
+            fileChecksum = generateChecksum();
 
         } catch (Exception e) {
             if (e instanceof MidiUnavailableException) {
@@ -437,28 +438,23 @@ public class Page {
         return result;
     }
 
+    private boolean checkForSaved() {
+        boolean ready = true;
+        String c = generateChecksum();
+        if (!c.equals(fileChecksum)) {
+            String test = view.showUnsavedDialog();
+            if (test.equals("save")) {
+                ready = saveFile();
+            } else if (test.equals("cancel")) {
+                ready = false;
+            }
+        }
+        return ready;
+    }
+
     protected void shutDown() {
         console.log("shutting down...");
-        boolean ready = true;
-        try {
-            //File tempFile = File.createTempFile("temp", "");
-            //tempFile.deleteOnExit();
-            //midi.writeToFile(tempFile, tracks, BPM, resolution);
-            String c = generateChecksum();
-            //console.log("orig", fileChecksum);
-            if (!c.equals(fileChecksum)) {
-                String test = view.showUnsavedDialog();
-                if (test.equals("save")) {
-                    ready = saveFile();
-                } else if (test.equals("cancel")) {
-                    ready = false;
-                }
-
-            }
-        } catch (Exception ex) {
-            console.log("an error occured trying to save temp file", ex);
-        }
-
+        boolean ready = checkForSaved();
         if (ready == false) return;
 
         savePreferences();
@@ -468,6 +464,8 @@ public class Page {
     }
 
     private void openFile() {
+        boolean ready = checkForSaved();
+        if (ready == false) return;
         String path;
         String currentDirectory = System.getProperty("user.dir");
         String midiDirectory = preferences.getProperty("midiDirectory");
@@ -642,6 +640,9 @@ public class Page {
                 break;
             case MENU_EDIT_PASTE:
                 pasteSelection();
+                break;
+            case MENU_EDIT_SELECTALL:
+                selectedTrack.selectAllNotes();
                 break;
             case MENU_EDIT_UNDO:
                 Actions.undo();
