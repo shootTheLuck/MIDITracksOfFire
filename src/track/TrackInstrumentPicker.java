@@ -9,8 +9,9 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.MenuElement;
 
-import instruments.Instruments;
+import instruments.Instrument;
 import widgets.ObjectMenuItem;
+import utils.console;
 
 class TrackInstrumentPicker extends JButton {
 
@@ -19,8 +20,8 @@ class TrackInstrumentPicker extends JButton {
         setFocusPainted(false);
         JPopupMenu popUp = new JPopupMenu();
 
-        for (int i = 0; i < Instruments.categories.length; i ++) {
-            JMenu category = new JMenu(Instruments.categories[i]);
+        for (int i = 0; i < Instrument.categories.length; i ++) {
+            JMenu category = new JMenu(Instrument.categories[i]);
             popUp.add(category);
         }
 
@@ -36,20 +37,22 @@ class TrackInstrumentPicker extends JButton {
         MenuElement[] categories = popUp.getSubElements();
 
         for (int i = 0; i < categories.length - 1; i++) {
-            for (int j = i * 8; j < i * 8 + 8; j++) {
-                JMenuItem instNameItem = new ObjectMenuItem(Instruments.list.get(j));
+            //console.log(categories[i]);
+            for (int j = i * Instrument.NUM_PER_CATEGORY;
+                     j < i * Instrument.NUM_PER_CATEGORY + Instrument.NUM_PER_CATEGORY; j++) {
+                JMenuItem instNameItem = new ObjectMenuItem(Instrument.list.get(j));
                 instNameItem.addActionListener(setDisplayName);
                 instNameItem.addActionListener(action);
-                JMenuItem m = (JMenuItem) categories[i];
+                JMenuItem m = (JMenuItem)categories[i];
                 m.add(instNameItem);
             }
         }
 
-        for (int j = 0; j < Instruments.drumList.size(); j++) {
-            JMenuItem drumNameItem = new ObjectMenuItem(Instruments.drumList.get(j));
+        for (int j = 0; j < Instrument.drumList.size(); j++) {
+            JMenuItem drumNameItem = new ObjectMenuItem(Instrument.drumList.get(j));
             drumNameItem.addActionListener(setDisplayName);
             drumNameItem.addActionListener(action);
-            JMenuItem m = (JMenuItem) categories[categories.length - 1];
+            JMenuItem m = (JMenuItem)categories[categories.length - 1];
             m.add(drumNameItem);
         }
     }

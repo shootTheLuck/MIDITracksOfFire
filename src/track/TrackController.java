@@ -17,7 +17,7 @@ import page.Page;
 import page.PageView;
 import note.Note;
 import instruments.Instrument;
-import instruments.Instruments;
+//import instruments.Instruments;
 import themes.ThemeReader;
 import utils.console;
 import widgets.VelocitySlider;
@@ -710,7 +710,7 @@ public class TrackController {
     //TODO template pattern?
     public void setInstrument(int number) {
         if (channel == 9) {
-            for (Instrument drum : Instruments.drumList) {
+            for (Instrument drum : Instrument.drumList) {
                 if (drum.number == number) {
                     instrument = drum;
                     view.setInstrumentName(drum.name);
@@ -718,7 +718,7 @@ public class TrackController {
                 }
             }
         } else {
-            for (Instrument inst : Instruments.list) {
+            for (Instrument inst : Instrument.list) {
                 if (inst.number == number) {
                     instrument = inst;
                     view.setInstrumentName(inst.name);
@@ -852,7 +852,7 @@ public class TrackController {
     }
 
     protected void handleInstrumentPicker(Instrument instrument) {
-        if (Instruments.isDrumSet(instrument)) {
+        if (Instrument.isDrumSet(instrument)) {
             setChannel(9);
         } else {
             //don't do this --but need to get from drum to other inst
