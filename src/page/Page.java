@@ -35,6 +35,7 @@ import track.TrackTypeDrums;
 import widgets.VelocitySlider;
 import utils.Checksum;
 import utils.console;
+import utils.StringChecker;
 
 
 public class Page {
@@ -52,16 +53,20 @@ public class Page {
     private Properties preferences = new Properties();
     private int minWidth = 3003;
     private int BPM = 120;
-    private int measureStart = 1;
     private int numOfMeasures = 50;
     private int minNumOfMeasures = 50;
     private int resolution = 960;
+
+    private int playStart = 1;
+    private int loopStart = 0;
+    private int loopStop = 1;
     private boolean isPlaying = false;
+    private boolean isLooping = false;
 
 
     public Page(String pathToFile) {
         setDefaultPreferences();
-        loadPreferences();
+        loadUserPreferences();
 
         view = new PageView(this);
         midi = new Midi(this);
@@ -72,9 +77,7 @@ public class Page {
             handleProgressTimer(currentTick);
         });
 
-        if (pathToFile == null ||
-            pathToFile.isEmpty() ||
-            pathToFile.trim().isEmpty()) {
+        if (StringChecker.isNullOrEmpty(pathToFile)) {
             startNewFile();
         } else {
             loadFile(pathToFile);
@@ -105,11 +108,11 @@ public class Page {
         preferences.setProperty("soundFont", "sf2/Windows.sf2");
     }
 
-    private void loadPreferences() {
+    private void loadUserPreferences() {
         try (FileInputStream fis = new FileInputStream(prefFile)) {
             preferences.load(fis);
             String themeFile = preferences.getProperty("theme");
-            if (themeFile != null && !themeFile.isEmpty()) {
+            if (!StringChecker.isNullOrEmpty(themeFile)) {
                 ThemeReader.loadTheme("themes/" + themeFile);
             }
         } catch (FileNotFoundException ex) {
@@ -121,7 +124,7 @@ public class Page {
 
     private void savePreferences() {
         String themeFilename = ThemeReader.getThemeFilename();
-        if (themeFilename != null) {
+        if (!StringChecker.isNullOrEmpty(themeFilename)) {
             setPreference("theme", themeFilename);
         }
         try (FileOutputStream out = new FileOutputStream(prefFile)) {
@@ -134,7 +137,6 @@ public class Page {
     }
 
     public void startNewFile() {
-        //console.log("file", file);
         if (tracks.size() > 0) {
             boolean ready = checkForSaved();
             if (ready == false) return;
@@ -156,12 +158,12 @@ public class Page {
             Sequence sequence = MidiSystem.getSequence(file);
             view.setTitle(file.getName());
 
-            String pathWithoutFileName = file.getParent();
-            setPreference("midiDirectory", pathWithoutFileName);
+            //String pathWithoutFileName = file.getParent();
+            //setPreference("midiDirectory", pathWithoutFileName);
 
             long l = sequence.getTickLength();
             resolution = sequence.getResolution();
-            numOfMeasures = (int) l/(sequence.getResolution() * 4);
+            numOfMeasures = (int)l/(sequence.getResolution() * 4);
             numOfMeasures = Math.max(numOfMeasures, minNumOfMeasures);
             PageView.width = Math.max(minWidth, numOfMeasures * PageView.measureSize + PageView.measureSize);
             view.reset();
@@ -389,16 +391,26 @@ public class Page {
     }
 
     private void playAll() {
+        midi.stop();
+
+        boolean ready = true;
+        if (isLooping && !setLoop()) {
+            stopAll();
+            return;
+        }
+
         int measureStart = view.getPlayStartField() - 1;
         long startTime = measureStart * getTicksPerMeasure();
 
         view.setScrollPositionToMeasure(measureStart);
         midi.play(tracks, BPM, resolution, startTime);
         isPlaying = true;
+        view.showPlaying();
         progressTimer.start();
     }
 
     public void playSelection(TrackController track) {
+        midi.stop();
         List<Note> selection = track.getSelection();
         if (selection.size() > 0) {
             midi.playSelection(track, BPM, resolution);
@@ -413,7 +425,7 @@ public class Page {
     private void stopAll() {
         midi.stop();
         progressTimer.stop();
-        view.cancelProgress();
+        view.showStopped();
         for (TrackController track : tracks) {
             track.cancelProgress();
         }
@@ -431,7 +443,6 @@ public class Page {
             tempFile.deleteOnExit();
             midi.writeToFile(tempFile, tracks, BPM, resolution);
             result = Checksum.generate(tempFile.getAbsolutePath());
-
         } catch (Exception ex) {
             console.log("an error occured trying to save temp file", ex);
         }
@@ -440,8 +451,8 @@ public class Page {
 
     private boolean checkForSaved() {
         boolean ready = true;
-        String c = generateChecksum();
-        if (!c.equals(fileChecksum)) {
+        String currentChecksum = generateChecksum();
+        if (!currentChecksum.equals(fileChecksum)) {
             String test = view.showUnsavedDialog();
             if (test.equals("save")) {
                 ready = saveFile();
@@ -454,8 +465,16 @@ public class Page {
 
     protected void shutDown() {
         console.log("shutting down...");
-        boolean ready = checkForSaved();
-        if (ready == false) return;
+        midi.stop();
+
+        boolean forProduction = false;
+
+        if (forProduction) {
+            boolean ready = checkForSaved();
+            if (ready == false) return;
+        } else {
+            setPreference("midiDirectory", "midi");
+        }
 
         savePreferences();
         midi.close();
@@ -463,13 +482,11 @@ public class Page {
         System.exit(0);
     }
 
-    private void openFile() {
-        boolean ready = checkForSaved();
-        if (ready == false) return;
+    private String getPathToMidiFiles() {
         String path;
         String currentDirectory = System.getProperty("user.dir");
         String midiDirectory = preferences.getProperty("midiDirectory");
-        if (midiDirectory != null && !midiDirectory.isEmpty()) {
+        if (!StringChecker.isNullOrEmpty(midiDirectory)) {
             if (midiDirectory == "midi") {
                 path = currentDirectory + "/" + midiDirectory;
             } else {
@@ -478,38 +495,40 @@ public class Page {
         } else {
             path = currentDirectory;
         }
+        return path;
+    }
 
+    private void setPathToMidiFiles(String path) {
+        preferences.setProperty("midiDirectory", path);
+    }
+
+    private void openFile() {
+        boolean ready = checkForSaved();
+        if (ready == false) return;
+
+        String path = getPathToMidiFiles();
         String fileName = view.showFileChooser("mid", path);
-        if (!"".equals(fileName)) {
+        if (!StringChecker.isNullOrEmpty(fileName)) {
             loadFile(fileName);
         }
     }
 
     private boolean saveFileAs() {
-        String path;
-        String currentDirectory = System.getProperty("user.dir");
-        String midiDirectory = preferences.getProperty("midiDirectory");
-        if (midiDirectory != null && !midiDirectory.isEmpty()) {
-            if (midiDirectory.equals("midi")) {
-                path = currentDirectory + "/" + midiDirectory;
-            } else {
-                path = midiDirectory;
-            }
-        } else {
-            path = currentDirectory;
-        }
 
+        String path = getPathToMidiFiles();
         String currentFileName = "";
+
         if (file != null) {
             currentFileName = file.getName();
         }
 
         String newFileName = view.showFileSaver("mid", path, currentFileName);
-        if (!"".equals(newFileName)) {
+        if (!StringChecker.isNullOrEmpty(newFileName)) {
             file = new File(newFileName);
             midi.writeToFile(file, tracks, BPM, resolution);
             fileChecksum = generateChecksum();
             view.setTitle(file.getName());
+            setPathToMidiFiles(file.getParent());
             console.log("file saved as", newFileName);
             return true;
         }
@@ -529,14 +548,14 @@ public class Page {
 
     private void openSoundFont() {
         String sf2 = view.showFileChooser("sf2", "sf2");
-        if (!"".equals(sf2)) {
+        if (!StringChecker.isNullOrEmpty(sf2)) {
             midi.setSoundfont(sf2);
         }
     }
 
     private void chooseTheme() {
         String fileName = view.showFileChooser("theme", null);
-        if (!"".equals(fileName)) {
+        if (!StringChecker.isNullOrEmpty(fileName)) {
             ThemeReader.loadTheme(fileName);
             view.setTheme();
         }
@@ -666,10 +685,8 @@ public class Page {
             case BUTTON_PLAY:
                 if (isPlaying == false) {
                     playAll();
-                    view.showPlaying();
                 } else {
                     stopAll();
-                    view.showStopped();
                 }
                 break;
 
@@ -690,11 +707,17 @@ public class Page {
                 int measureStart = view.getPlayStartField() - 1;
                 view.setScrollPositionToMeasure(measureStart);
                 break;
-            case FIELD_LOOPSTART:
-                //TODO
+
+            case BUTTON_LOOP:
+                isLooping = !isLooping;
+                if (isLooping) {
+                    setLoop();
+                }
                 break;
+
+            case FIELD_LOOPSTART:
             case FIELD_LOOPSTOP:
-                //TODO
+                setLoop();
                 break;
             case FIELD_BPM:
                 BPM = view.getBPMField();
@@ -718,14 +741,38 @@ public class Page {
         view.showStopped();
     }
 
+    private boolean setLoop() {
+        loopStart = view.getLoopStartField() - 1;
+        loopStop = view.getLoopStopField() - 1;
+        if (loopStart > loopStop) {
+            stopAll();
+            view.showPlayLoopProblem();
+            return false;
+        }
+        return true;
+    }
+
+    private void handleLoop(double progress) {
+
+        /* loopStop += 1 because loop will play through the whole loopStop measure */
+        // TODO: use non-hack method to not play past the loop
+        if (progress >= loopStop + 0.99) {
+            long starTime = loopStart * getTicksPerMeasure();
+            midi.setPlayPosition(starTime);
+        }
+    }
+
     private void handleProgressTimer(long tick) {
         double progress = (double)tick / getTicksPerMeasure();
-        view.setProgress(progress);
 
+        if (isLooping) {
+            handleLoop(progress);
+        }
+
+        view.setProgress(progress);
         for (TrackController track : tracks) {
             track.setProgress(progress, tick);
         }
-        //selectedTrack.setProgress(progress, tick);
     }
 
     public VelocitySlider showVelocitySlider(MouseEvent evt, int velocity) {

@@ -11,16 +11,18 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 
 import widgets.InputField;
 import widgets.NumberInputField;
+import utils.console;
 
 
 class PagePlayControls extends JPanel {
 
     protected JButton playButton;
     protected NumberInputField playStartField;
-    protected JButton loopButton;
+    protected JToggleButton loopButton;
     protected NumberInputField loopStartField;
     protected NumberInputField loopStopField;
     protected NumberInputField BPMField;
@@ -56,13 +58,13 @@ class PagePlayControls extends JPanel {
         });
         add(playStartField);
 
-        loopButton = new JButton(loopIcon);
+        loopButton = new JToggleButton(loopIcon);
         loopButton.setPreferredSize(playControlButtonSize);
         loopButton.setMaximumSize(playControlButtonSize);
         loopButton.setFocusPainted(false);
 
         loopButton.addActionListener((ActionEvent ae) -> {
-            //pageController.handleLoopButton(playAction);
+            pageController.handlePlayControls(Constants.BUTTON_LOOP);
         });
         add(loopButton);
 
@@ -117,28 +119,13 @@ class PagePlayControls extends JPanel {
         add(infoField);
     }
 
-    protected void togglePlayButton(Constants c) {
-        if (c == Constants.BUTTON_STOP) {
-            playButton.setIcon(stopIcon);
-        } else {
-            playButton.setIcon(playIcon);
-        }
+    protected void showPlaying() {
+        playButton.setIcon(stopIcon);
     }
 
-    protected int getPlayStartField() {
-        return playStartField.getValue();
+    protected void showStopped() {
+        playButton.setIcon(playIcon);
     }
 
-    protected void setPlayStartField(int value) {
-        playStartField.setValue(value);
-    }
-
-    protected int getBPMField() {
-        return BPMField.getValue();
-    }
-
-    protected void setBPMField(int bpm) {
-        BPMField.setValue(bpm);
-    }
 
 }

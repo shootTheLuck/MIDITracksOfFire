@@ -13,11 +13,10 @@ import java.util.List;
 import javax.swing.SwingUtilities;
 
 import actions.Actions;
+import instruments.Instrument;
+import note.Note;
 import page.Page;
 import page.PageView;
-import note.Note;
-import instruments.Instrument;
-//import instruments.Instruments;
 import themes.ThemeReader;
 import utils.console;
 import widgets.VelocitySlider;
@@ -97,7 +96,7 @@ public class TrackController {
     }
 
     private int calcGridSize() {
-        return (int) (gridFraction * PageView.measureSize);
+        return (int)(gridFraction * PageView.measureSize);
     }
 
     //////////////////   MouseStrategy Classes   //////////////////
@@ -144,9 +143,11 @@ public class TrackController {
         @Override
         public void doIt(MouseEvent evt) {
 
+            int x = evt.getX();
             int y = evt.getY();
 
-            if (selectedNote.duration < 0 ||
+            //if (selectedNote.duration < 0 ||
+            if (x <= dragStart.x ||
                     Math.abs(y - dragStart.y) > ThemeReader.getMeasure("track.strings.spacing")) {
                 mouseStrategy = moveSelectorRect;
                 notes.remove(selectedNote);
@@ -154,11 +155,9 @@ public class TrackController {
 
                 /* set duration to 0 to remove from gui */
                 selectedNote.duration = 0;
-            } else {
-                int x = evt.getX();
+            } else if (!trackType.isDrums()) {
                 int x2 = findNearestGrid(x);
                 int diffX = x2 - dragStartGrid.x;
-
                 dragStartGrid.x = x2;
                 lengthenSelectedNotes(selection, diffX);
             }
@@ -364,7 +363,7 @@ public class TrackController {
             }
 
             selectNote(note);
-            double lastPartOfNote = selectedNote.rectangle.x + selectedNote.rectangle.width * 0.80;
+            double lastPartOfNote = selectedNote.rectangle.x + selectedNote.rectangle.width * 0.8;
 
             if (evt.isControlDown() || SwingUtilities.isRightMouseButton(evt)) {
                 vSlider = pageController.showVelocitySlider(evt, selectedNote.velocity);
@@ -389,14 +388,9 @@ public class TrackController {
             int stringNum = findNearestStringNum(y);
             if (stringNum > -1 && stringNum <= trackType.numOfStrings - 1) {
                 //addNote(x, y);
-                boolean drum = (trackType.toString().equals("drums"))? true : false;
+                boolean drum = trackType.isDrums();
                 pageController.addAction(new AddNoteCommand(x, y, drum));
-
-                if (drum) {
-                    mouseStrategy = mouseMoveNote;
-                } else {
-                    mouseStrategy = lengthenNoteTentative;
-                }
+                mouseStrategy = lengthenNoteTentative;
             } else {
                 mouseStrategy = moveSelectorRect;
             }
@@ -492,7 +486,7 @@ public class TrackController {
         x = findNearestGrid(x);
         note.start = setNoteStart(x);
         notes.add(note);
-        if (channel == 9) {
+        if (drum) {
             // 1/32 note
             note.duration = pageController.getTicksPerMeasure() / 32;
         }
@@ -738,11 +732,6 @@ public class TrackController {
         }
     }
 
-    public long getNoteMeasure(Note note) {
-        int ticksPerMeasure = pageController.getTicksPerMeasure();
-        return 1 + note.start / ticksPerMeasure;
-    }
-
     public void insertBars(int numberToAdd, int addBefore) {
         int ticksPerMeasure = pageController.getTicksPerMeasure();
         long noteStartDelta = numberToAdd * ticksPerMeasure;
@@ -772,7 +761,6 @@ public class TrackController {
             }
         }
         view.drawNew();
-
     }
 
     public void setScrollPosition(int value) {
@@ -855,8 +843,8 @@ public class TrackController {
         if (Instrument.isDrumSet(instrument)) {
             setChannel(9);
         } else {
-            //don't do this --but need to get from drum to other inst
-            //setChannel(1);
+            //TODO: multiple tracks with same channel. is this ok?
+            setChannel(1);
         }
         setInstrument(instrument.number);
     }

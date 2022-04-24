@@ -34,13 +34,14 @@ public class FileChooser extends JFileChooser {
     public String showOpenChooser(String filter, String path) {
         setup(filter, path);
         setDialogTitle("Open File");
+        setSelectedFile(new File(""));
         int result = showOpenDialog(null);
         return evaluate(result);
     }
 
     public String showSaveChooser(String filter, String path, String name) {
         setup(filter, path);
-        setDialogTitle("Save File");
+        setDialogTitle("Save File As");
         setSelectedFile(new File(name));
         int result = showSaveDialog(null);
         return evaluate(result);

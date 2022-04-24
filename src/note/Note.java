@@ -25,11 +25,7 @@ public class Note {
     public Note clone() {
         Note clone = new Note();
         clone.isSelected = false;
-        clone.rectangle = new Rectangle();
-        clone.rectangle.x = this.rectangle.x;
-        clone.rectangle.y = this.rectangle.y;
-        clone.rectangle.width = this.rectangle.width;
-        clone.rectangle.height = this.rectangle.height;
+        clone.rectangle = new Rectangle(this.rectangle);
         clone.velocity = this.velocity;
         clone.start = this.start;
         clone.duration = this.duration;

@@ -8,7 +8,6 @@ public class TrackTypeDrums extends TrackType {
     public TrackTypeDrums() {
         name = "drums";
         numOfStrings = 8;
-        noteDrawWidth = 30;
     }
 
     @Override

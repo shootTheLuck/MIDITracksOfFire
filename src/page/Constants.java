@@ -4,6 +4,7 @@ public enum Constants {
 
     BUTTON_PLAY,
     BUTTON_PLAYSELECTION,
+    BUTTON_LOOP,
     BUTTON_STOP,
 
     FIELD_PLAYSTART,

@@ -184,6 +184,7 @@ public class Midi {
     }
 
     public void playSelection(TrackController tController, int BPM, int resolution) {
+        unMuteAllTracks();
         try {
             Sequence sequence = new Sequence(Sequence.PPQ, resolution);
             Track track = makeMidiTrack(tController, BPM, sequence);
@@ -196,7 +197,7 @@ public class Midi {
             long startTime = getStartTime(trackNotes);
             sequencer.setSequence(sequence);
 
-            /* hack? to play chord selection */
+            /* hack? subtract 1 tick to play selection starting with simultaneus notes */
             sequencer.setTickPosition(startTime - 1);
             sequencer.start();
 
@@ -206,6 +207,7 @@ public class Midi {
     }
 
     public void play(List<TrackController> trackControllers, int BPM, int resolution, long startTime) {
+        unMuteAllTracks();
         try {
             playSequence = new Sequence(Sequence.PPQ, resolution);
             for (TrackController tController : trackControllers) {
@@ -227,7 +229,12 @@ public class Midi {
         }
     }
 
+    public void setPlayPosition(long tick) {
+        sequencer.setTickPosition(tick);
+    }
+
     public void writeToFile(File file, List<TrackController> trackControllers, int BPM, int resolution) {
+        this.stop();
         try {
             Sequence sequence = new Sequence(Sequence.PPQ, resolution);
             for (TrackController tController : trackControllers) {
@@ -244,10 +251,9 @@ public class Midi {
             int[] allowedTypes = MidiSystem.getMidiFileTypes(sequence);
 
             if (allowedTypes.length == 0) {
-                System.err.println("No supported MIDI file types available on this system.");
+                console.log("No supported MIDI file types available on this system.");
             } else {
                 MidiSystem.write(sequence, allowedTypes[0], file);
-                //console.log("Wrote sequence to file", file.getName());
             }
 
         } catch(Exception ex) {

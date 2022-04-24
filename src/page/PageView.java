@@ -1,5 +1,6 @@
 package page;
 
+import java.awt.event.ActionEvent;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -13,6 +14,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
+import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -25,6 +27,7 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 import themes.ThemeReader;
 import track.TrackView;
@@ -54,8 +57,9 @@ public class PageView {
     private VelocitySlider velocitySlider;
     private JDialog openDialog;
 
+    private Component scrollButtonPressed;
+    private int scrollButtonDirection = 0;
     private int scrollPosition = 0;
-    private int scrollIncrement = 160;
     private int numberBarHeight = 30;
     private Dimension numberBarSize;
     private FileChooser fileChooser;
@@ -82,7 +86,6 @@ public class PageView {
         frame.setSize(new Dimension(width, height));
         frame.setPreferredSize(new Dimension(width, height));
         frame.setLocationRelativeTo(null);
-        //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
         frame.addComponentListener(new ComponentAdapter() {
@@ -146,23 +149,42 @@ public class PageView {
         JScrollPane scrollPane = new JScrollPane(mainPanel);
         hScrollBar = scrollPane.getHorizontalScrollBar();
         vScrollBar = scrollPane.getVerticalScrollBar();
-
-        hScrollBar.setUnitIncrement(scrollIncrement);
-        vScrollBar.setUnitIncrement(scrollIncrement);
+        vScrollBar.setUnitIncrement(10);
 
         Component lScrollButton = hScrollBar.getComponent(1);
         Component rScrollButton = hScrollBar.getComponent(0);
 
+        Timer hScrollTimer = new Timer(200, (ActionEvent evt) -> {
+            if (scrollButtonPressed == rScrollButton) {
+                setHorizontalScroll(scrollPosition + PageView.measureSize);
+            } else {
+                setHorizontalScroll(Math.max(0, scrollPosition - PageView.measureSize));
+            }
+        });
+        hScrollTimer.setInitialDelay(200);
+
         lScrollButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                setHorizontalScroll(Math.max(0, scrollPosition - scrollIncrement));
+                scrollButtonPressed = lScrollButton;
+                setHorizontalScroll(Math.max(0, scrollPosition - PageView.measureSize));
+                hScrollTimer.start();
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                hScrollTimer.stop();
             }
         });
         rScrollButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                setHorizontalScroll(scrollPosition + scrollIncrement);
+                scrollButtonPressed = rScrollButton;
+                setHorizontalScroll(scrollPosition + PageView.measureSize);
+                hScrollTimer.start();
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                hScrollTimer.stop();
             }
         });
 
@@ -199,7 +221,6 @@ public class PageView {
         base.add(scrollPane);
 
         velocitySlider = new VelocitySlider();
-        //velocitySlider.setUI(new VelocitySliderUI(velocitySlider, Color.red));
         velocitySlider.setMaximum(127);
         velocitySlider.setBounds(0, 0, 31, 127);
 
@@ -251,7 +272,7 @@ public class PageView {
     }
 
     protected void setProgress(double progress) {
-        numberBar.setProgress(progress);
+        numberBar.showProgress(progress);
 
         int currentMeasure = (int)progress;
         int currentPosition = currentMeasure * PageView.measureSize - scrollPosition;
@@ -260,10 +281,6 @@ public class PageView {
             scrollPosition += currentPosition;
             setHorizontalScroll(scrollPosition);
         }
-    }
-
-    protected void cancelProgress() {
-        numberBar.cancelProgress();
     }
 
     private void handleHorizontalScrollBar(int value) {
@@ -317,7 +334,7 @@ public class PageView {
         int minimumMeasureSize = 50;
         double maximumMeasureSize = getCurrentWidth() * 0.8;
         PageView.measureSize = (int)Math.min(Math.max(minimumMeasureSize, sliderValue), maximumMeasureSize);
-        PageView.width = numOfMeasures * PageView.measureSize + PageView.measureSize;
+        PageView.width = leftMargin + numOfMeasures * PageView.measureSize + PageView.measureSize;
 
         Component[] components = mainPanel.getComponents();
         for (int i = 0; i < components.length; i++) {
@@ -364,7 +381,7 @@ public class PageView {
             }
         }
         Dimension size = mainPanel.getSize();
-        Dimension newSize = new Dimension((int) size.getWidth(), Math.max((int) size.getHeight(), newHeight));
+        Dimension newSize = new Dimension(size.width, Math.max(size.height, newHeight));
 
         mainPanel.setSize(newSize);
         mainPanel.setMinimumSize(newSize);
@@ -409,13 +426,23 @@ public class PageView {
         return playControls.playStartField.getValue();
     }
 
+    protected int getLoopStartField() {
+        return playControls.loopStartField.getValue();
+    }
+
+    protected int getLoopStopField() {
+        return playControls.loopStopField.getValue();
+    }
+
     protected void showPlaying() {
-        playControls.togglePlayButton(Constants.BUTTON_STOP);
+        playControls.showPlaying();
         menuBar.toggleMusicPlay(Constants.BUTTON_STOP);
     }
 
     protected void showStopped() {
-        playControls.togglePlayButton(Constants.BUTTON_PLAY);
+        playControls.showStopped();
+        numberBar.showStopped();
+        //playControls.togglePlayButton(Constants.BUTTON_PLAY);
         menuBar.toggleMusicPlay(Constants.BUTTON_PLAY);
     }
 
@@ -448,23 +475,22 @@ public class PageView {
     protected String showUnsavedDialog() {
         int a = JOptionPane.showConfirmDialog(frame,"Unsaved Changes. Would you like to save?");
         if (a == JOptionPane.YES_OPTION) {
-            //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             return "save";
         } else if (a == JOptionPane.CANCEL_OPTION) {
-            //frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
             return "cancel";
         } else {
-            //frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             return "exit";
         }
+    }
+
+    protected void showPlayLoopProblem() {
+        JOptionPane.showMessageDialog(frame,"Loop stop must be greater than or equal to loop start");
     }
 
     protected void  showInsertBarsDialog(int x, int y) {
         InsertBarsDialog insertBarsDialog = new InsertBarsDialog((JFrame)frame, x, y);
         insertBarsDialog.addWindowListener(new WindowAdapter() {
             @Override public void windowClosed(WindowEvent e) {
-                //int[] value = insertBarsDialog.getValue();
-                //page.handleInsertBarsDialog(value[0], value[1]);
                 page.handleInsertBarsDialog(
                     insertBarsDialog.numberToAdd,
                     insertBarsDialog.addBefore,
@@ -499,6 +525,7 @@ public class PageView {
         menuBar.disableMenuItem(c);
     }
 
+    // not using
     protected void close() {
         if (openDialog != null) {
             openDialog.dispose();

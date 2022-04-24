@@ -141,7 +141,7 @@ class PageNumberBar extends JPanel {
         playingMeasure.width = measureSize;
     }
 
-    public void setProgress(double progress) {
+    public void showProgress(double progress) {
         drawRectangle(playingMeasure);
         playingMeasure.x = (int)Math.floor(progress) * PageView.measureSize;
         drawRectangle(playingMeasure);
@@ -151,7 +151,7 @@ class PageNumberBar extends JPanel {
         drawRectangle(playingPosition);
     }
 
-    public void cancelProgress() {
+    public void showStopped() {
         drawRectangle(playingMeasure);
         playingMeasure.x = -10000;
         //drawRectangle(playingMeasure);
