@@ -85,8 +85,8 @@ public class Midi {
                 e.printStackTrace();
             }
 
-        } catch(MidiUnavailableException e) {
-            System.out.println("midi unavailable: " + e);
+        } catch(MidiUnavailableException ex) {
+            console.error("midi unavailable:", ex);
         }
     }
 
@@ -153,10 +153,9 @@ public class Midi {
             return track;
 
         } catch (Exception ex) {
-            console.log("Midi: an error happened making midi track", ex);
+            console.error("Midi: an error happened making midi track", ex);
             return null;
         }
-
     }
 
     private void loadMidiNote(Note note, int channel, Track track) {
@@ -179,7 +178,7 @@ public class Midi {
             track.add(new MidiEvent(noteOff, noteEnd));
 
         } catch (Exception ex) {
-            console.log("Midi: an error happened making midi note", ex);
+            console.error("Midi: an error happened making midi note", ex);
         }
     }
 
@@ -251,7 +250,7 @@ public class Midi {
             int[] allowedTypes = MidiSystem.getMidiFileTypes(sequence);
 
             if (allowedTypes.length == 0) {
-                console.log("No supported MIDI file types available on this system.");
+                console.error("No supported MIDI file types available on this system.");
             } else {
                 MidiSystem.write(sequence, allowedTypes[0], file);
             }
@@ -259,7 +258,6 @@ public class Midi {
         } catch(Exception ex) {
             ex.printStackTrace();
         }
-
     }
 
     private byte[] getTempoData(int BPM) {
@@ -306,7 +304,7 @@ public class Midi {
                     ShortMessage msg = new ShortMessage(ShortMessage.CONTROL_CHANGE, channel, 7, value);
                     track.add(new MidiEvent(msg, sequencer.getTickPosition()));
                 } catch (Exception ex) {
-                    console.log("Midi: an error happened trying to set track volume", ex);
+                    console.error("Midi: an error happened trying to set track volume", ex);
                 }
             }
         }
