@@ -167,8 +167,8 @@ public class Midi {
             ShortMessage noteOn =
                     new ShortMessage(ShortMessage.NOTE_ON, channel, note.pitch, note.velocity);
             ShortMessage noteOff =
-                    new ShortMessage(ShortMessage.NOTE_ON, channel, note.pitch, 0);
-                    //new ShortMessage(ShortMessage.NOTE_OFF, channel, note.pitch, 0);
+                    //new ShortMessage(ShortMessage.NOTE_ON, channel, note.pitch, 0);
+                    new ShortMessage(ShortMessage.NOTE_OFF, channel, note.pitch, 0);
 
             long noteStart = note.start - startTime; // 0 if just one note
             long noteEnd = noteStart + note.duration;
@@ -180,6 +180,27 @@ public class Midi {
         } catch (Exception ex) {
             console.error("Midi: an error happened making midi note", ex);
         }
+    }
+
+    public void playNote(Note note, TrackController tController, int BPM, int resolution) {
+        unMuteAllTracks();
+        try {
+            Sequence sequence = new Sequence(Sequence.PPQ, resolution);
+            Track track = makeMidiTrack(tController, BPM, sequence);
+            //Collections.sort(trackNotes, new SortbyStart());
+            int channel = tController.getChannel();
+            loadMidiNote(note, channel, track);
+            long startTime = note.start;
+            sequencer.setSequence(sequence);
+
+            /* hack? subtract 1 tick to play selection starting with simultaneus notes */
+            sequencer.setTickPosition(startTime - 1);
+            sequencer.start();
+
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
+
     }
 
     public void playSelection(TrackController tController, int BPM, int resolution) {

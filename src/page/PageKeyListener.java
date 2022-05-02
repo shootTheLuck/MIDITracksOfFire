@@ -10,6 +10,8 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 
+import utils.console;
+
 class PageKeyListener {
 
     JPanel panel;
@@ -23,48 +25,38 @@ class PageKeyListener {
         this.panel = panel;
         actionMap = panel.getActionMap();
         inputMap  = panel.getInputMap(JComponent.WHEN_FOCUSED);
-        globalInputMap  = panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        globalInputMap = panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
 
-        KeyActionGlobal enterAction = new KeyActionGlobal("enter", KeyEvent.VK_ENTER);
-        //KeyActionGlobal tabAction = new KeyActionGlobal("tab", KeyEvent.VK_TAB);
+        // panel requests focus when enter key is pressed in (focused) subcomponents
+        new KeyActionGlobal("regainFocus", KeyEvent.VK_ENTER);
 
-        KeyAction leftAction = new KeyAction("left", KeyEvent.VK_LEFT);
-        KeyAction rightAction = new KeyAction("right", KeyEvent.VK_RIGHT);
-        KeyAction upAction = new KeyAction("up", KeyEvent.VK_UP);
-        KeyAction downAction = new KeyAction("down", KeyEvent.VK_DOWN);
-        KeyAction deleteAction = new KeyAction("delete", KeyEvent.VK_DELETE);
-        KeyAction deleteAction2 = new KeyAction("delete2", KeyEvent.VK_BACK_SPACE);
-        KeyAction enterAction2 = new KeyAction("enter", KeyEvent.VK_ENTER);
-        KeyAction tabAction2 = new KeyAction("tab", KeyEvent.VK_TAB);
+        new KeyAction("left", KeyEvent.VK_LEFT);
+        new KeyAction("right", KeyEvent.VK_RIGHT);
+        new KeyAction("up", KeyEvent.VK_UP);
+        new KeyAction("down", KeyEvent.VK_DOWN);
+        new KeyAction("delete", KeyEvent.VK_DELETE);
+        new KeyAction("delete2", KeyEvent.VK_BACK_SPACE);
+        new KeyAction("enter", KeyEvent.VK_ENTER);
+        new KeyAction("tab", KeyEvent.VK_TAB);
+        new KeyAction("undo", KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK);
+        new KeyAction("redo", KeyEvent.VK_Y, KeyEvent.CTRL_DOWN_MASK);
 
+        // listen for number keys
         for (int i = 0; i < 10; i++) {
-            String text = String.valueOf(i);
-            new KeyAction(text, i + 48);
-            new KeyAction(text, i + 96);
+            String name = String.valueOf(i);
+            new KeyAction(name, i + 48);
+            new KeyAction(name, i + 96);
         }
-
-        //inputMap.put(KeyStroke.getKeyStroke("LEFT"), "left");
-        //actionMap.put("left", leftAction);
-
-        //KeyAction rightAction = new KeyAction(KeyStroke.getKeyStroke("RIGHT"));
-        //inputMap.put(KeyStroke.getKeyStroke("RIGHT"), "right");
-        //actionMap.put("right", rightAction);
 
     }
 
     public void setFocus() {
         this.panel.requestFocusInWindow();
-        //this.panel.grabFocus();
     }
 
     class KeyActionGlobal extends AbstractAction {
-        private int keyCode;
-        private String name;
 
         public KeyActionGlobal(String name, int keyCode) {
-            this.name = name;
-            this.keyCode = keyCode;
-
             globalInputMap.put(KeyStroke.getKeyStroke(keyCode, 0), name);
             actionMap.put(name, this);
         }
@@ -77,14 +69,15 @@ class PageKeyListener {
 
     class KeyAction extends AbstractAction {
         private int keyCode;
-        private String name;
+
+        public KeyAction(String name, int keyCode, int modifier) {
+            this.keyCode = keyCode;
+            inputMap.put(KeyStroke.getKeyStroke(keyCode, modifier), name);
+            actionMap.put(name, this);
+        }
 
         public KeyAction(String name, int keyCode) {
-            this.name = name;
-            this.keyCode = keyCode;
-
-            inputMap.put(KeyStroke.getKeyStroke(keyCode, 0), name);
-            actionMap.put(name, this);
+            this(name, keyCode, 0);
         }
 
         @Override

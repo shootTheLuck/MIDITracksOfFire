@@ -3,6 +3,7 @@ package page;
 import java.awt.event.ActionEvent;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.AdjustmentEvent;
@@ -13,6 +14,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 
 import javax.swing.AbstractButton;
 import javax.swing.BorderFactory;
@@ -58,7 +60,6 @@ public class PageView {
     private JDialog openDialog;
 
     private Component scrollButtonPressed;
-    private int scrollButtonDirection = 0;
     private int scrollPosition = 0;
     private int numberBarHeight = 30;
     private Dimension numberBarSize;
@@ -221,11 +222,7 @@ public class PageView {
         base.add(scrollPane);
 
         velocitySlider = new VelocitySlider();
-        velocitySlider.setMaximum(127);
-        velocitySlider.setBounds(0, 0, 31, 127);
-
         velocitySlider.setVisible(false);
-        velocitySlider.setBorder(BorderFactory.createLineBorder(Color.gray));
         JLayeredPane layers = frame.getLayeredPane();
         layers.add(velocitySlider, 10);
 
@@ -446,7 +443,7 @@ public class PageView {
         menuBar.toggleMusicPlay(Constants.BUTTON_PLAY);
     }
 
-    protected VelocitySlider showVelocitySlider(MouseEvent evt, int velocity) {
+    protected VelocitySlider showVelocitySlider(MouseEvent evt, int averageVelocity) {
 
         Component c = (Component)evt.getSource();
         Point point = SwingUtilities.convertPoint(c, evt.getX(), evt.getY(), frame);
@@ -459,12 +456,11 @@ public class PageView {
         //sub track topbar height
         y -= ThemeReader.getMeasure("track.topPanel.height");
         //center slider on velocity
-        y -= 127 - velocity;
+        y -= velocitySlider.getHeight() - averageVelocity;
 
         velocitySlider.setLocation(x, y);
-        velocitySlider.setDisplay(velocity);
-        velocitySlider.setValue(velocity);
         velocitySlider.setVisible(true);
+
         return velocitySlider;
     }
 

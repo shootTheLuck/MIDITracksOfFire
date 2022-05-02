@@ -32,7 +32,7 @@ public class ThemeReader {
         try (FileInputStream fis = new FileInputStream("src/themes/default.theme")) {
                 defaults.load(fis);
         } catch (FileNotFoundException ex) {
-            console.log("an error occured trying to load default theme file:", ex);
+            console.error("an error occured trying to load default theme file:", ex);
         } catch (IOException ex) {
             //
         }
@@ -44,7 +44,7 @@ public class ThemeReader {
             themeFile = new File(fileName);
             settings.load(fis);
         } catch (FileNotFoundException ex) {
-            console.log("an error occured trying to load theme file", fileName, ":", ex);
+            console.error("an error occured trying to load theme file", fileName, ":", ex);
         } catch (IOException ex) {
             //
         }

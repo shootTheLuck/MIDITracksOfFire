@@ -22,7 +22,7 @@ public class Checksum {
             }
             dis.close();
         } catch (Exception ex) {
-            console.log("An error occurred trying to generated checksum", ex);
+            console.error("An error occurred trying to generated checksum", ex);
         }
 
         return result.toString();

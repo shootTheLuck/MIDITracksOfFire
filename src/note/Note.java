@@ -1,9 +1,45 @@
 package note;
 
 import java.awt.Rectangle;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import utils.console;
 
+
+class SortbyStart implements Comparator<Note> {
+    // sort in ascending order
+    public int compare(Note a, Note b) {
+        return (int) (a.start - b.start);
+    }
+}
+
 public class Note {
+
+    public static class List extends ArrayList<Note> {
+        public boolean sorted = false;
+
+        public List() {
+            this.sorted = sorted;
+        }
+        public List sortByStart() {
+            if (!this.sorted) {
+                Collections.sort(this, new SortbyStart());
+                this.sorted = true;
+            }
+            return this;
+        }
+
+        public List sortByStart(boolean force) {
+            if (force) {
+                Collections.sort(this, new SortbyStart());
+                this.sorted = true;
+            } else {
+                this.sortByStart();
+            }
+            return this;
+        }
+    }
 
     private static int number = 0;
 
@@ -14,6 +50,7 @@ public class Note {
     public int fret = 0;
     public int pitch = 65;
     public boolean isSelected = false;
+    public boolean isNew = true;
     public Rectangle rectangle = new Rectangle();
     public final int serialNumber;
 
@@ -25,6 +62,7 @@ public class Note {
     public Note clone() {
         Note clone = new Note();
         clone.isSelected = false;
+        clone.isNew = true;
         clone.rectangle = new Rectangle(this.rectangle);
         clone.velocity = this.velocity;
         clone.start = this.start;

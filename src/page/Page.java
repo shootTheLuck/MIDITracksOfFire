@@ -42,8 +42,8 @@ public class Page {
 
     private PageView view;
     private Midi midi;
-    private List<Note> clipboard;
-    private TrackController selectedTrack;
+    private Note.List clipboard;
+    protected TrackController selectedTrack;
     private List<TrackController> tracks;
     private Timer progressTimer;
     private File file ;
@@ -53,11 +53,10 @@ public class Page {
     private Properties preferences = new Properties();
     private int minWidth = 3003;
     private int BPM = 120;
-    private int numOfMeasures = 50;
-    private int minNumOfMeasures = 50;
+    private int numOfMeasures = 100;
+    private int minNumOfMeasures = 100;
     private int resolution = 960;
 
-    private int playStart = 1;
     private int loopStart = 0;
     private int loopStop = 1;
     private boolean isPlaying = false;
@@ -71,7 +70,7 @@ public class Page {
         view = new PageView(this);
         midi = new Midi(this);
         tracks = new ArrayList<>();
-        clipboard = new ArrayList<>();
+        clipboard = new Note.List();
         progressTimer = new Timer(20, (ActionEvent evt) -> {
             long currentTick = midi.getTickPosition();
             handleProgressTimer(currentTick);
@@ -116,7 +115,7 @@ public class Page {
                 ThemeReader.loadTheme("themes/" + themeFile);
             }
         } catch (FileNotFoundException ex) {
-            console.log("an error occured trying to load preferences file", prefFile, ":", ex);
+            console.error("an error occured trying to load preferences file", prefFile, ":", ex);
         } catch (IOException ex) {
             //
         }
@@ -130,7 +129,7 @@ public class Page {
         try (FileOutputStream out = new FileOutputStream(prefFile)) {
             preferences.store(out, "---Preferences File---");
         } catch (FileNotFoundException ex) {
-            console.log("an error occured trying to save preferences to file", prefFile, ":", ex);
+            console.error("an error occured trying to save preferences to file", prefFile, ":", ex);
         } catch (IOException ex) {
             //
         }
@@ -175,11 +174,11 @@ public class Page {
 
         } catch (Exception e) {
             if (e instanceof MidiUnavailableException) {
-                console.log("midi unavailable on this system: " + e);
+                console.error("midi unavailable on this system: " + e);
             } else if (e instanceof InvalidMidiDataException) {
-                console.log("file", filename, "does not appear to be valid midi file: " + e);
+                console.error("file", filename, "does not appear to be valid midi file: " + e);
             } else {
-                console.log("an error occured trying to load file", filename, ":", e);
+                console.error("an error occured trying to load file", filename, ":", e);
             }
             addNewTrack();
         }
@@ -306,12 +305,10 @@ public class Page {
         }
     }
 
-    private void selectTrack(TrackController track) {
-        if (selectedTrack != null && selectedTrack != track) {
-            selectedTrack.setAsNotSelectedTrack();
+    public void selectTrack(TrackController track) {
+        if (selectedTrack == null || (selectedTrack != null && selectedTrack != track)) {
+            addAction(new SelectTrackCommand(track));
         }
-        selectedTrack = track;
-        track.setAsSelectedTrack();
     }
 
     private void addTrack(TrackController track) {
@@ -393,7 +390,6 @@ public class Page {
     private void playAll() {
         midi.stop();
 
-        boolean ready = true;
         if (isLooping && !setLoop()) {
             stopAll();
             return;
@@ -407,6 +403,12 @@ public class Page {
         isPlaying = true;
         view.showPlaying();
         progressTimer.start();
+    }
+
+    public void playNote(Note note, TrackController track) {
+        midi.stop();
+        midi.playNote(note, track, BPM, resolution);
+        isPlaying = true;
     }
 
     public void playSelection(TrackController track) {
@@ -444,7 +446,7 @@ public class Page {
             midi.writeToFile(tempFile, tracks, BPM, resolution);
             result = Checksum.generate(tempFile.getAbsolutePath());
         } catch (Exception ex) {
-            console.log("an error occured trying to save temp file", ex);
+            console.error("an error occured trying to save temp file", ex);
         }
         return result;
     }
@@ -599,6 +601,12 @@ public class Page {
                 case KeyEvent.VK_SPACE:
                     selectedTrack.tabThroughNotes();
                     break;
+                case KeyEvent.VK_Z:
+                    Actions.undo();
+                    break;
+                case KeyEvent.VK_Y:
+                    Actions.redo();
+                    break;
             }
         }
     }
@@ -637,13 +645,13 @@ public class Page {
                 chooseTheme();
                 break;
             case MENU_MUSIC_PLAY:
-                handlePlayControls(Constants.BUTTON_PLAY);
+                handlePlayControls(Constants.MENU_MUSIC_PLAY);
                 break;
             case MENU_MUSIC_PLAYSELECTION:
-                handlePlayControls(Constants.BUTTON_PLAYSELECTION);
+                handlePlayControls(Constants.MENU_MUSIC_PLAYSELECTION);
                 break;
             case MENU_MUSIC_STOP:
-                handlePlayControls(Constants.BUTTON_PLAY);
+                handlePlayControls(Constants.MENU_MUSIC_PLAY);
                 break;
             case MENU_MUSIC_FIND:
                 //TODO;
@@ -683,6 +691,7 @@ public class Page {
         switch(c) {
 
             case BUTTON_PLAY:
+            case MENU_MUSIC_PLAY:
                 if (isPlaying == false) {
                     playAll();
                 } else {
@@ -691,6 +700,7 @@ public class Page {
                 break;
 
             case BUTTON_PLAYSELECTION:
+            case MENU_MUSIC_PLAYSELECTION:
                 if (isPlaying == false) {
                     playSelection(selectedTrack);
                     //check again to see if there was an actual selection
@@ -699,7 +709,6 @@ public class Page {
                     }
                 } else {
                     stopAll();
-                    view.showStopped();
                 }
                 break;
 
@@ -738,7 +747,6 @@ public class Page {
 
     public void handleSoundComplete() {
         stopAll();
-        view.showStopped();
     }
 
     private boolean setLoop() {
@@ -775,8 +783,8 @@ public class Page {
         }
     }
 
-    public VelocitySlider showVelocitySlider(MouseEvent evt, int velocity) {
-        return view.showVelocitySlider(evt, velocity);
+    public VelocitySlider showVelocitySlider(MouseEvent evt, int averageVelocity) {
+        return view.showVelocitySlider(evt, averageVelocity);
     }
 
     public void hideVelocitySlider() {
@@ -786,5 +794,42 @@ public class Page {
     @Override
     public String toString() {
         return "Page";
+    }
+
+    class SelectTrackCommand extends Actions.Item {
+
+        TrackController newSelected;
+        TrackController oldSelected;
+
+        public SelectTrackCommand(TrackController track) {
+            this.name = "selectTrack";
+            TrackController oldSelected = null;
+            if (selectedTrack != null && selectedTrack != track) {
+                oldSelected = selectedTrack;
+            }
+            this.newSelected = track;
+            this.oldSelected = oldSelected;
+        }
+
+        public void execute() {
+            if (oldSelected != null) {
+                oldSelected.setAsNotSelectedTrack();
+            }
+            selectedTrack = newSelected;
+            newSelected.setAsSelectedTrack();
+        }
+
+        public void redo() {
+            execute();
+        }
+
+        public void undo() {
+            if (oldSelected != null) {
+                oldSelected.setAsSelectedTrack();
+                selectedTrack = oldSelected;
+            }
+            newSelected.setAsNotSelectedTrack();
+        }
+
     }
 }

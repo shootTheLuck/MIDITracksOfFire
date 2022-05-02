@@ -31,6 +31,7 @@ class PageNumberBar extends JPanel {
     private Rectangle measureSizeDragger;
     private Rectangle playingMeasure;
     private Rectangle playingPosition;
+    private boolean showingIndicators = false;
 
     public PageNumberBar(Page page, int height, int lMargin) {
         this.page = page;
@@ -42,10 +43,10 @@ class PageNumberBar extends JPanel {
         indicatorHeight = height/10;
 
         playingMeasure = new Rectangle(new Dimension(PageView.measureSize, indicatorHeight));
-        playingMeasure.setLocation(-1000, height - indicatorHeight);
+        playingMeasure.setLocation(-0, height - indicatorHeight);
 
         playingPosition = new Rectangle(new Dimension(2, indicatorHeight));
-        playingPosition.setLocation(-1000, height - indicatorHeight);
+        playingPosition.setLocation(-0, height - indicatorHeight);
 
         setFocusable(true);
 
@@ -83,7 +84,9 @@ class PageNumberBar extends JPanel {
             // draw measure numbers (starting with 1) centered by their width
             String string = String.valueOf(j + 1);
             int width = fontMetrics.stringWidth(string);
-            g2.drawString(string, lMargin + j * PageView.measureSize - width/2, height * 2/3);
+            int x = lMargin + j * PageView.measureSize - width/2;
+
+            g2.drawString(string, x, height * 2/3);
 
             // draw vertical tick marks at each measure
             g2.drawLine(
@@ -124,9 +127,11 @@ class PageNumberBar extends JPanel {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D)g;
         drawNumbersAndLines(g2);
-        drawPlayingIndicators(g2);
-        g2.dispose();
-        getToolkit().sync();
+        if (showingIndicators == true) {
+            drawPlayingIndicators(g2);
+        }
+        //g2.dispose();
+        //getToolkit().sync();
     }
 
     public void setScrollPosition(int value) {
@@ -142,6 +147,7 @@ class PageNumberBar extends JPanel {
     }
 
     public void showProgress(double progress) {
+        showingIndicators = true;
         drawRectangle(playingMeasure);
         playingMeasure.x = (int)Math.floor(progress) * PageView.measureSize;
         drawRectangle(playingMeasure);
@@ -152,12 +158,13 @@ class PageNumberBar extends JPanel {
     }
 
     public void showStopped() {
+        showingIndicators = false;
         drawRectangle(playingMeasure);
-        playingMeasure.x = -10000;
+        //playingMeasure.x = -10000;
         //drawRectangle(playingMeasure);
 
         drawRectangle(playingPosition);
-        playingPosition.x = -10000;
+        //playingPosition.x = -10000;
         //drawRectangle(playingPosition);
     }
 
