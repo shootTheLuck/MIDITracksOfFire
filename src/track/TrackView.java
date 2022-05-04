@@ -217,7 +217,7 @@ public class TrackView extends JPanel {
         topBar.add(gridSizePicker);
 
         topBar.add(new JLabel("  Volume "));
-        volumeField = new NumberInputField(0, 3);
+        volumeField = new NumberInputField(0, 3, 0, 100);
         volumeField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent evt) {
@@ -225,9 +225,6 @@ public class TrackView extends JPanel {
                     // don't start playing music on first enter after volume change
                     evt.consume();
                     int value = getVolumeField();
-                    if (value > 100) {
-                        value = 100;
-                    }
                     controller.handleVolumeField(value);
                 }
             }

@@ -85,14 +85,13 @@ class PagePlayControls extends JPanel {
         loopStopField = new NumberInputField(2);
         loopStopField.setPreferredSize(numberFieldSize);
         loopStopField.setMaximumSize(numberFieldSize);
-        loopStopField.setMinimum(2);
+        loopStopField.setMinimum(1);
         loopStopField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 pageController.handlePlayControls(Constants.FIELD_LOOPSTOP);
             }
         });
         add(loopStopField);
-
 
         add(Box.createHorizontalGlue());
 
@@ -101,8 +100,8 @@ class PagePlayControls extends JPanel {
         add(BPMlabel);
 
         BPMField = new NumberInputField(120);
-        BPMField.setPreferredSize(new Dimension(150, 30));
-        BPMField.setMaximumSize(new Dimension(150, 30));
+        BPMField.setPreferredSize(numberFieldSize);
+        BPMField.setMaximumSize(numberFieldSize);
         BPMField.setMinimum(1);
         BPMField.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
@@ -111,9 +110,13 @@ class PagePlayControls extends JPanel {
         });
         add(BPMField);
 
+        add(Box.createHorizontalStrut(15));
+        JLabel infoLabel = new JLabel(" INFO ");
+        //BPMlabel.setFocusable(true);
+        add(infoLabel);
         infoField = new InputField();
-        infoField.setPreferredSize(new Dimension(150, 30));
-        infoField.setMaximumSize(new Dimension(150, 30));
+        infoField.setPreferredSize(new Dimension(350, 30));
+        infoField.setMaximumSize(new Dimension(350, 30));
         infoField.setText("info");
 
         add(infoField);

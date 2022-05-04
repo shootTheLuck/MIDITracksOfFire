@@ -78,16 +78,16 @@ public class NumberInputField extends InputField {
         return this.value;
     }
 
-    public void setMinimum(int value) {
-        this.minimum = value;
+    public void setMinimum(int min) {
+        this.minimum = min;
     }
 
     public int getMinimum() {
         return this.minimum;
     }
 
-    public void setMaximum(int value) {
-        this.minimum = value;
+    public void setMaximum(int max) {
+        this.maximum = max;
     }
 
     public int getMaximum() {

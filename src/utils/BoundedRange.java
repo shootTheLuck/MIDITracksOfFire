@@ -34,8 +34,7 @@ public class BoundedRange extends Range {
         } else if (max > this.upperBound) {
             throw new ArithmeticException("high value is less than range upperBound");
         }
-        this.minimum = min;
-        this.maximum = max;
+        super.setValues(min, max);
     }
 
     @Override

@@ -17,7 +17,7 @@ To rebuild and run with your awesome and needed improvements run the `startDev.s
 ## Contribute:
 **I would love and appreciate any advice, contributions, feedback, issues etc that anyone might have!**
 
-This is a work in progess. So far, it's just me and I'm a total amateur who is trying to improve. Please hit the dang issues button!
+This is a work in progess. So far, it's just me and I'm a total amateur who is trying to improve. Hit the dang issues button!
 
 GOALS/TODO's:
 - architecture improvement. too much spaghetti here. Plus lasagna!

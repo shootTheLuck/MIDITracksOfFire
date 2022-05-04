@@ -36,11 +36,11 @@ public class TrackController {
     private boolean collapsingVelocityRange;
     private TrackType trackType;
 
-    private MouseStrategy dragSelectorRect = new DragSelectorRect();
-    private MouseStrategy moveNote = new MoveNote();
-    private MouseStrategy lengthenNote = new LengthenNote();
-    private MouseStrategy lengthenNoteTentative = new LengthenNoteTentative();
-    private MouseStrategy setNoteVelocity = new SetNoteVelocity();
+    private MouseStrategy dragSelectorRect = new SelectorRectStrategy();
+    private MouseStrategy moveNote = new NoteMoveStrategy();
+    private MouseStrategy lengthenNote = new NoteLengthStrategy();
+    private MouseStrategy lengthenNoteTentative = new NoteLengthTentativeStrategy();
+    private MouseStrategy setNoteVelocity = new NoteVelocityStrategy();
     private MouseStrategy nullStrategy = new NullStrategy();
     private MouseStrategy mouseStrategy;
 
@@ -76,7 +76,7 @@ public class TrackController {
         public void doIt(MouseEvent evt) {}
     }
 
-    class DragSelectorRect implements MouseStrategy {
+    class SelectorRectStrategy implements MouseStrategy {
         @Override
         public void doIt(MouseEvent evt) {
             int x = evt.getX();
@@ -94,7 +94,7 @@ public class TrackController {
         }
     }
 
-    class MoveNote implements MouseStrategy {
+    class NoteMoveStrategy implements MouseStrategy {
         @Override
         public void doIt(MouseEvent evt) {
             int x = evt.getX();
@@ -110,11 +110,11 @@ public class TrackController {
 
             int xAmount = diffX / calcGridSize();
             int seriesId = dragStart.x + dragStart.y;
-            pageController.addAction(new MoveNotesCommand(TrackController.this, selection, xAmount, diffY, seriesId));
+            pageController.addAction(new NoteMoveAction(TrackController.this, selection, xAmount, diffY, seriesId));
         }
     }
 
-    class LengthenNoteTentative implements MouseStrategy {
+    class NoteLengthTentativeStrategy implements MouseStrategy {
         @Override
         public void doIt(MouseEvent evt) {
 
@@ -139,7 +139,7 @@ public class TrackController {
         }
     }
 
-    class LengthenNote implements MouseStrategy {
+    class NoteLengthStrategy implements MouseStrategy {
         @Override
         public void doIt(MouseEvent evt) {
             int x = evt.getX();
@@ -149,12 +149,12 @@ public class TrackController {
             dragStartGrid.x = x2;
             if (diffX != 0) {
                 int seriesId = dragStart.x + dragStart.y;
-                pageController.addAction(new LengthenNotesCommand(TrackController.this, selection, diffX, seriesId));
+                pageController.addAction(new NoteLengthAction(TrackController.this, selection, diffX, seriesId));
             }
         }
     }
 
-    class SetNoteVelocity implements MouseStrategy {
+    class NoteVelocityStrategy implements MouseStrategy {
         @Override
         public void doIt(MouseEvent evt) {
             if (vSlider.isVisible()) {
@@ -171,16 +171,16 @@ public class TrackController {
 
     //////////////////   end MouseStrategy classes  //////////////////
 
-    //////////////////   Command Classes  //////////////////
+    //////////////////   Action Classes  //////////////////
 
-    class MoveNotesCommand extends Actions.Item {
+    class NoteMoveAction extends Actions.Item {
 
         TrackController track;
         ArrayList<Note> notes;
         int x;
         int y;
 
-        public MoveNotesCommand(TrackController track, ArrayList<Note> notes, int x, int y, int series) {
+        public NoteMoveAction(TrackController track, ArrayList<Note> notes, int x, int y, int series) {
             this.name = "moveNote(s)";
             this.track = track;
             this.notes = new ArrayList<Note>(notes);
@@ -210,7 +210,7 @@ public class TrackController {
         }
     }
 
-    class AddNoteCommand extends Actions.Item {
+    class NoteAddAction extends Actions.Item {
 
         TrackController track;
         int x;
@@ -218,7 +218,7 @@ public class TrackController {
         boolean drum;
         Note note;
 
-        public AddNoteCommand(TrackController track, Note note) {
+        public NoteAddAction(TrackController track, Note note) {
             this.name = "addNote";
             this.track = track;
             this.note = note;
@@ -242,11 +242,11 @@ public class TrackController {
         }
     }
 
-    class LoadNotesCommand extends Actions.Item {
+    class NoteLoadAction extends Actions.Item {
         TrackController track;
         Note.List notesToLoad;
 
-        public LoadNotesCommand(TrackController track, Note.List notes) {
+        public NoteLoadAction(TrackController track, Note.List notes) {
             this.name = "loadNote(s)";
             this.track = track;
             notesToLoad = new Note.List();
@@ -279,12 +279,12 @@ public class TrackController {
         }
     }
 
-    class LengthenNotesCommand extends Actions.Item {
+    class NoteLengthAction extends Actions.Item {
 
         int diffX;
         ArrayList<Note> notes;
 
-        public LengthenNotesCommand(TrackController track, ArrayList<Note> notes, int diffX, int series) {
+        public NoteLengthAction(TrackController track, ArrayList<Note> notes, int diffX, int series) {
             this.name = "lengthenNote(s)";
             this.notes = new ArrayList<Note>(notes);
             this.diffX = diffX;
@@ -313,12 +313,12 @@ public class TrackController {
 
     }
 
-    class SetNoteVelocitiesCommand extends Actions.Item {
+    class NoteVelocityAction extends Actions.Item {
 
         int diffV;
         ArrayList<Note> notes;
 
-        public SetNoteVelocitiesCommand(ArrayList<Note> notes, int diffV) {
+        public NoteVelocityAction(ArrayList<Note> notes, int diffV) {
             this.name = "setNoteVelocities";
             this.notes = new ArrayList<Note>(notes);
             this.diffV = diffV;
@@ -346,7 +346,7 @@ public class TrackController {
 
     }
 
-    //////////////////   end Command Classes  //////////////////
+    //////////////////   end Action Classes  //////////////////
 
     protected void handleMouseDownDrawArea(MouseEvent evt) {
 
@@ -445,7 +445,7 @@ public class TrackController {
             selectedNote = null;
         }
 
-        if (mouseStrategy instanceof SetNoteVelocity) {
+        if (mouseStrategy instanceof NoteVelocityStrategy) {
             pageController.hideVelocitySlider();
             int medianVelocity = vSlider.getMedianValue();
             if (collapsingVelocityRange) {
@@ -456,20 +456,20 @@ public class TrackController {
             }
             pageController.playNote(selectedNote, this);
 
-        } else if (mouseStrategy instanceof DragSelectorRect) {
+        } else if (mouseStrategy instanceof SelectorRectStrategy) {
             boolean shift = evt.isShiftDown();
             hideSelectorRect(shift);
 
-        } else if (mouseStrategy instanceof LengthenNote) {
+        } else if (mouseStrategy instanceof NoteLengthStrategy) {
             pageController.playNote(selectedNote, this);
 
-        } else if (mouseStrategy instanceof LengthenNoteTentative) {
+        } else if (mouseStrategy instanceof NoteLengthTentativeStrategy) {
             if (selectedNote != null) {
-                pageController.addAction(new AddNoteCommand(this, selectedNote));
+                pageController.addAction(new NoteAddAction(this, selectedNote));
                 pageController.playNote(selectedNote, this);
             }
 
-        } else if (mouseStrategy instanceof MoveNote) {
+        } else if (mouseStrategy instanceof NoteMoveStrategy) {
             pageController.playNote(selectedNote, this);
         }
 
@@ -590,7 +590,7 @@ public class TrackController {
     private void selectNote(Note note) {
         selectedNote = note;
         selectedNote.isSelected = true;
-        //ensure note is drawn last (on top of others)
+        /* ensure note is drawn last (on top of others) */
         if (notes.contains(note)) {
             notes.remove(note);
         }
@@ -671,7 +671,7 @@ public class TrackController {
     }
 
     public void pasteSelectedNotes(Note.List clipboard) {
-        pageController.addAction(new LoadNotesCommand(this, clipboard));
+        pageController.addAction(new NoteLoadAction(this, clipboard));
     }
 
     private void setVelocities(ArrayList<Note> notes, int velocity) {
@@ -727,7 +727,7 @@ public class TrackController {
     }
 
     public void moveSelectionArrowKeys(int dirX, int dirY) {
-        pageController.addAction(new MoveNotesCommand(this, selection, dirX, dirY, -1));
+        pageController.addAction(new NoteMoveAction(this, selection, dirX, dirY, -1));
     }
 
     public void tabThroughNotes() {
@@ -765,8 +765,6 @@ public class TrackController {
         int topMargin = ThemeReader.getMeasure("track.strings.margin.top");
         int stringSpacing = ThemeReader.getMeasure("track.strings.spacing");
         int stringNum = (int)Math.round((double)(y - topMargin) / stringSpacing);
-        //not this for some reason...
-        //int stringNum = Math.round((y - topMargin) / stringSpacing);
         return stringNum;
     }
 
