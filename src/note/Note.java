@@ -22,6 +22,7 @@ public class Note {
         public List() {
             this.sorted = sorted;
         }
+
         public List sortByStart() {
             if (!this.sorted) {
                 Collections.sort(this, new SortbyStart());
@@ -50,7 +51,6 @@ public class Note {
     public int fret = 0;
     public int pitch = 65;
     public boolean isSelected = false;
-    public boolean isNew = true;
     public Rectangle rectangle = new Rectangle();
     public final int serialNumber;
 
@@ -62,7 +62,6 @@ public class Note {
     public Note clone() {
         Note clone = new Note();
         clone.isSelected = false;
-        clone.isNew = true;
         clone.rectangle = new Rectangle(this.rectangle);
         clone.velocity = this.velocity;
         clone.start = this.start;
@@ -71,23 +70,6 @@ public class Note {
         clone.fret = this.fret;
         clone.pitch = this.pitch;
         return clone;
-    }
-
-    //https://www.geeksforgeeks.org/overriding-equals-method-in-java/
-    // not using this? should also override hashCode method?
-    @Override
-    public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
-
-        if (!(o instanceof Note)) {
-            return false;
-        }
-
-        // typecast o to Note so that we can compare data members
-        Note note = (Note) o;
-        return note.serialNumber == this.serialNumber;
     }
 
     @Override

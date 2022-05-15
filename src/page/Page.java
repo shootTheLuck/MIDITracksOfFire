@@ -51,14 +51,12 @@ public class Page {
 
     private String prefFile = "config/preferences.txt";
     private Properties preferences = new Properties();
-    private int minWidth = 3003;
+    private int minWidth = 15150;
     private int BPM = 120;
     private int numOfMeasures = 100;
     private int minNumOfMeasures = 100;
     private int resolution = 960;
 
-    private int loopStart = 0;
-    private int loopStop = 1;
     private boolean isPlaying = false;
     private boolean isLooping = false;
 
@@ -147,6 +145,10 @@ public class Page {
         addNewTrack();
         fileChecksum = generateChecksum();
         view.setTitle(filename);
+        BPM = 120;
+        isLooping = false;
+
+        view.setBPMField(BPM);
     }
 
     public void loadFile(String filename) {
@@ -165,10 +167,15 @@ public class Page {
             numOfMeasures = (int)l/(sequence.getResolution() * 4);
             numOfMeasures = Math.max(numOfMeasures, minNumOfMeasures);
             PageView.width = Math.max(minWidth, numOfMeasures * PageView.measureSize + PageView.measureSize);
+
             view.reset();
+            int index = 0;
+
             for (Track track : sequence.getTracks()) {
-                loadTrack(track);
+                loadTrack(track, index);
+                index += 1;
             }
+
             selectTrack(tracks.get(0));
             fileChecksum = generateChecksum();
 
@@ -184,8 +191,8 @@ public class Page {
         }
     }
 
-    private void loadTrack(Track track) {
-        TrackController trackController = new TrackController(this);
+    private void loadTrack(Track track, int index) {
+        TrackController trackController = new TrackController(this, index);
         TrackType trackType = null;
         ArrayList<Note> notes = new ArrayList<Note>();
 
@@ -198,12 +205,16 @@ public class Page {
                 MetaMessage metaMessage = (MetaMessage)message;
                 int messageType = metaMessage.getType();
 
-                if (messageType == 3) {
+                if (messageType == 1) {
+                    // text
+                    String text = new String(metaMessage.getData());
+                    //console.log("found text in midi file:", text);
+                } else if (messageType == 3) {
                     String trackName = new String(metaMessage.getData());
                     trackController.setName(trackName);
                 } else if (messageType == 81) {
-                    // BPM
-                    /* https://stackoverflow.com/questions/22798345/
+                    /* BPM
+                     * https://stackoverflow.com/questions/22798345/
                      * how-to-get-integer-value-from-byte-array-returned-by-metamessage-getdata
                      */
                     byte[] data = metaMessage.getData();
@@ -222,19 +233,23 @@ public class Page {
 
                 if (command == ShortMessage.PROGRAM_CHANGE) {
 
+                    /*  get channel info from file, but use index if channel != 9 */
                     int channel = shortMessage.getChannel();
                     int instrumentNum = shortMessage.getData1();
 
                     if (channel == 9) {
                         trackType = new TrackTypeDrums();
+                        trackController.setChannel(channel);
                     } else if (instrumentNum >= 32 && instrumentNum <= 39) {
                         trackType = new TrackTypeBass();
+                        trackController.setChannel(index);
                     } else {
                         trackType = new TrackTypeGuitar();
+                        trackController.setChannel(index);
                     }
 
                     trackController.setTrackType(trackType);
-                    trackController.setChannel(channel);
+                    //trackController.setChannel(channel);
                     trackController.setInstrument(instrumentNum);
 
                 } else if (command == ShortMessage.CONTROL_CHANGE) {
@@ -317,9 +332,10 @@ public class Page {
     }
 
     private void addNewTrack() {
-        TrackController track = new TrackController(this);
+        int numOfTracks = tracks.size();
+        TrackController track = new TrackController(this, numOfTracks);
         track.setTrackType(new TrackTypeGuitar());
-        track.setChannel(tracks.size());
+        track.setChannel(numOfTracks);
 
         //TODO template pattern?
         track.setInstrument(0);
@@ -354,7 +370,7 @@ public class Page {
     }
 
     public void pasteSelection() {
-        selectedTrack.pasteSelectedNotes(clipboard);
+        selectedTrack.pasteSelectedNotes(clipboard, true);
     }
 
     protected void handleInsertBarsDialog(int numberToAdd, int addBefore, boolean allTracks) {
@@ -399,7 +415,7 @@ public class Page {
         long startTime = measureStart * getTicksPerMeasure();
 
         view.setScrollPositionToMeasure(measureStart);
-        midi.play(tracks, BPM, resolution, startTime);
+        midi.play(tracks, BPM, resolution, startTime, isLooping);
         isPlaying = true;
         view.showPlaying();
         progressTimer.start();
@@ -750,34 +766,23 @@ public class Page {
     }
 
     private boolean setLoop() {
-        loopStart = view.getLoopStartField() - 1;
-        loopStop = view.getLoopStopField() - 1;
+        int loopStart = view.getLoopStartField() - 1;
+        int loopStop = view.getLoopStopField() - 1;
         if (loopStart > loopStop) {
             stopAll();
             view.showPlayLoopProblem();
             return false;
         }
+        midi.loopStart = loopStart * getTicksPerMeasure();
+        midi.loopStop = (loopStop + 1) * getTicksPerMeasure();
+
         return true;
-    }
-
-    private void handleLoop(double progress) {
-
-        /* loopStop += 1 because loop will play through the whole loopStop measure */
-        // TODO: use non-hack method to not play past the loop
-        if (progress >= loopStop + 0.99) {
-            long starTime = loopStart * getTicksPerMeasure();
-            midi.setPlayPosition(starTime);
-        }
     }
 
     private void handleProgressTimer(long tick) {
         double progress = (double)tick / getTicksPerMeasure();
 
-        if (isLooping) {
-            handleLoop(progress);
-        }
-
-        view.setProgress(progress);
+        view.showProgress(progress);
         for (TrackController track : tracks) {
             track.setProgress(progress, tick);
         }

@@ -1,7 +1,7 @@
 package midi;
 
 import java.io.File;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.sound.midi.MetaEventListener;
@@ -23,21 +23,31 @@ import track.TrackController;
 import note.Note;
 import utils.console;
 
-class SortbyStart implements Comparator<Note> {
-    /* sort in ascending order */
-    public int compare(Note a, Note b) {
-        return (int) (a.start - b.start);
-    }
-}
 
 public class Midi {
 
     private Page pageController;
-    private Synthesizer midiSynth;
+    private Synthesizer synthesizer;
     private Sequencer sequencer;
-    private Receiver midiReceiver;
+    private Receiver receiver;
     private Soundbank soundBank;
     private Sequence playSequence;
+
+    public long loopStart;
+    public long loopStop;
+
+    static long MAX_LONG = 9007100000000000l;
+
+    static int TEXT = 0x01;
+    static int TRACKNAME = 0x03;
+    static int END_OF_TRACK = 0x2F;
+    static int TEMPO = 0x51;
+
+    static int VOLUME = 7;
+    static int BALANCE = 8;
+    static int PAN = 10;
+    static int REVERB = 91;
+    static int CHORUS = 93;
 
     public Midi(Page page) {
 
@@ -46,35 +56,35 @@ public class Midi {
 
         try {
 
-            midiSynth = MidiSystem.getSynthesizer();
-            midiReceiver = midiSynth.getReceiver();
+            synthesizer = MidiSystem.getSynthesizer();
+            receiver = synthesizer.getReceiver();
 
-            Soundbank sbDefault = midiSynth.getDefaultSoundbank();
-            midiSynth.unloadAllInstruments(sbDefault);
+            Soundbank sbDefault = synthesizer.getDefaultSoundbank();
+            synthesizer.unloadAllInstruments(sbDefault);
 
             try {
-                midiSynth.open();
+                synthesizer.open();
                 soundBank = MidiSystem.getSoundbank(sf2File);
-                midiSynth.loadAllInstruments(soundBank);
+                synthesizer.loadAllInstruments(soundBank);
 
                 sequencer = MidiSystem.getSequencer();
                 sequencer.open();
 
-                for (Transmitter tm: sequencer.getTransmitters()) {
-                    tm.close();
+                for (Transmitter transmitter: sequencer.getTransmitters()) {
+                    transmitter.close();
                 }
 
-                sequencer.getTransmitter().setReceiver(midiReceiver);
+                sequencer.getTransmitter().setReceiver(receiver);
                 sequencer.addMetaEventListener(new MetaEventListener() {
                     public void meta(MetaMessage msg) {
-                        if (msg.getType() == 47) {
+                        if (msg.getType() == Midi.END_OF_TRACK) {
                             /* end of sequence */
                             pageController.handleSoundComplete();
                         }
                     }
                 });
 
-                midiSynth.getChannels();
+                synthesizer.getChannels();
 
                 /* set reverb to 0 on all channels .. not sure about this one */
                 //for (MidiChannel channel : mChannels) {
@@ -93,16 +103,16 @@ public class Midi {
     public void setSoundfont(String url) {
         File sf2File = new File(url);
         try {
-            midiSynth.unloadAllInstruments(soundBank);
+            synthesizer.unloadAllInstruments(soundBank);
             soundBank = MidiSystem.getSoundbank(sf2File);
-            midiSynth.loadAllInstruments(soundBank);
+            synthesizer.loadAllInstruments(soundBank);
         } catch(Exception ex) {
             ex.printStackTrace();
         }
     }
 
     private long getStartTime(List<Note> notes) {
-        long startTime = 99999999999L;
+        long startTime = MAX_LONG;
         for (Note note : notes) {
             startTime = Math.min(note.start, startTime);
         }
@@ -111,43 +121,45 @@ public class Midi {
 
     private Track makeMidiTrack(TrackController tController, int BPM, Sequence sequence) {
         Track track = sequence.createTrack();
+
         int channel = tController.getChannel();
+        String trackName = tController.getName();
         int instrumentNum = tController.getInstrument().number;
         boolean isMuted = tController.isMuted();
         int volume = isMuted? 0 : tController.getVolume();
         int reverbLevel = 0;
         int panLevel = 64;
+
         try {
-            // 0x51 = tempo message. 3 is number of bytes in databyte array
-            MetaMessage tempo = new MetaMessage();
-            tempo.setMessage(0x51 ,getTempoData(BPM), 3);
-            track.add(new MidiEvent(tempo, 0));
+            // 3 is number of bytes in databyte array
+            MetaMessage setTempo = new MetaMessage();
+            setTempo.setMessage(Midi.TEMPO ,getTempoData(BPM), 3);
+            track.add(new MidiEvent(setTempo, 0));
 
-            MetaMessage trackName = new MetaMessage();
-            trackName.setMessage(0x03, tController.getName().getBytes(), tController.getName().length());
-            track.add(new MidiEvent(trackName, 0));
+            MetaMessage setTrackName = new MetaMessage();
+            setTrackName.setMessage(Midi.TRACKNAME, trackName.getBytes(), trackName.length());
+            track.add(new MidiEvent(setTrackName, 0));
 
-            // eot already provided by java
-            // experiment with adding our own
-            //MetaMessage end = new MetaMessage();
-            //byte[] bet = {};
-            //end.setMessage(47, bet, 0);
-            //track.add(new MidiEvent(end, 10000));
+            MetaMessage setText = new MetaMessage();
+            String text = "Wowo this is cool";
+            setText.setMessage(Midi.TEXT, text.getBytes(), text.length());
+            track.add(new MidiEvent(setText, 0));
 
-            ShortMessage setInstrumentNum = new ShortMessage();
-            setInstrumentNum.setMessage(ShortMessage.PROGRAM_CHANGE, channel, instrumentNum, 0);
-            track.add(new MidiEvent(setInstrumentNum, 0));
+            ShortMessage setInstrument = new ShortMessage();
+            // 0 needed for message that takes up to two data bytes
+            setInstrument.setMessage(ShortMessage.PROGRAM_CHANGE, channel, instrumentNum, 0);
+            track.add(new MidiEvent(setInstrument, 0));
 
             ShortMessage setVolume = new ShortMessage();
-            setVolume.setMessage(ShortMessage.CONTROL_CHANGE, channel, 7, volume);
+            setVolume.setMessage(ShortMessage.CONTROL_CHANGE, channel, Midi.VOLUME, volume);
             track.add(new MidiEvent(setVolume, 0));
 
             ShortMessage setReverb = new ShortMessage();
-            setReverb.setMessage(ShortMessage.CONTROL_CHANGE, channel, 91, reverbLevel);
+            setReverb.setMessage(ShortMessage.CONTROL_CHANGE, channel, Midi.REVERB, reverbLevel);
             track.add(new MidiEvent(setReverb, 0));
 
             ShortMessage setPan = new ShortMessage();
-            setPan.setMessage(ShortMessage.CONTROL_CHANGE, channel, 8, panLevel);
+            setPan.setMessage(ShortMessage.CONTROL_CHANGE, channel, Midi.BALANCE, panLevel);
             track.add(new MidiEvent(setPan, 0));
 
             return track;
@@ -187,7 +199,6 @@ public class Midi {
         try {
             Sequence sequence = new Sequence(Sequence.PPQ, resolution);
             Track track = makeMidiTrack(tController, BPM, sequence);
-            //Collections.sort(trackNotes, new SortbyStart());
             int channel = tController.getChannel();
             loadMidiNote(note, channel, track);
             long startTime = note.start;
@@ -209,7 +220,6 @@ public class Midi {
             Sequence sequence = new Sequence(Sequence.PPQ, resolution);
             Track track = makeMidiTrack(tController, BPM, sequence);
             List<Note>trackNotes = tController.getSelection();
-            //Collections.sort(trackNotes, new SortbyStart());
             int channel = tController.getChannel();
             for (Note note : trackNotes) {
                 loadMidiNote(note, channel, track);
@@ -226,28 +236,56 @@ public class Midi {
         }
     }
 
-    public void play(List<TrackController> trackControllers, int BPM, int resolution, long startTime) {
+    /* push end of track off so loopEndPoint falls within sequence limits */
+    private void addDummyEndOfTrack(Track track) {
+        try {
+            MetaMessage endOfSequence = new MetaMessage();
+            endOfSequence.setMessage(Midi.END_OF_TRACK, null, 0);
+            track.add(new MidiEvent(endOfSequence, MAX_LONG));
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public void play(List<TrackController> trackControllers, int BPM, int resolution, long startTime, boolean looping) {
         unMuteAllTracks();
         try {
             playSequence = new Sequence(Sequence.PPQ, resolution);
             for (TrackController tController : trackControllers) {
                 Track track = makeMidiTrack(tController, BPM, playSequence);
                 List<Note>trackNotes = tController.getNotes();
-                //Collections.sort(trackNotes, new SortbyStart());
                 int channel = tController.getChannel();
                 for (Note note : trackNotes) {
                     loadMidiNote(note, channel, track);
+                }
+                if (looping) {
+                    addDummyEndOfTrack(track);
                 }
             }
 
             sequencer.setSequence(playSequence);
             sequencer.setTickPosition(startTime);
+
+            if (looping) {
+                sequencer.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+                sequencer.setLoopStartPoint(loopStart);
+                sequencer.setLoopEndPoint(loopStop);
+            } else {
+                sequencer.setLoopCount(0);
+            }
             sequencer.start();
 
         } catch(Exception ex) {
             ex.printStackTrace();
         }
     }
+
+    //public void setLoop(long loopStart, long loopStop) {
+        //console.log("start", loopStart, loopStop);
+        //sequencer.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+        //sequencer.setLoopStartPoint(loopStart);
+        //sequencer.setLoopEndPoint(loopStop);
+    //}
 
     public void setPlayPosition(long tick) {
         sequencer.setTickPosition(tick);
@@ -260,7 +298,6 @@ public class Midi {
             for (TrackController tController : trackControllers) {
                 Track track = makeMidiTrack(tController, BPM, sequence);
                 List<Note>trackNotes = tController.getNotes();
-                //Collections.sort(trackNotes, new SortbyStart());
                 int channel = tController.getChannel();
                 for (Note note : trackNotes) {
                     loadMidiNote(note, channel, track);
@@ -322,8 +359,9 @@ public class Midi {
             for (int i = 0; i < tracks.length; i++) {
                 Track track = tracks[i];
                 try {
-                    ShortMessage msg = new ShortMessage(ShortMessage.CONTROL_CHANGE, channel, 7, value);
-                    track.add(new MidiEvent(msg, sequencer.getTickPosition()));
+                    ShortMessage setVolume = new ShortMessage();
+                    setVolume.setMessage(ShortMessage.CONTROL_CHANGE, channel, Midi.VOLUME, value);
+                    track.add(new MidiEvent(setVolume, sequencer.getTickPosition()));
                 } catch (Exception ex) {
                     console.error("Midi: an error happened trying to set track volume", ex);
                 }
@@ -341,7 +379,7 @@ public class Midi {
 
     public void close() {
         sequencer.close();
-        midiSynth.close();
+        synthesizer.close();
     }
 
 }

@@ -43,7 +43,7 @@ import widgets.VelocitySlider;
 public class PageView {
 
     public static int measureSize = 150;
-    public static int width = 3003;
+    public static int width = 15150;
     protected PagePlayControls playControls;
     protected PageMenu menuBar;
     private PageKeyListener keyListener;
@@ -268,7 +268,7 @@ public class PageView {
         playControls.infoField.setText(o.toString());
     }
 
-    protected void setProgress(double progress) {
+    protected void showProgress(double progress) {
         numberBar.showProgress(progress);
 
         int currentMeasure = (int)progress;
@@ -484,7 +484,7 @@ public class PageView {
     }
 
     protected void  showInsertBarsDialog(int x, int y) {
-        InsertBarsDialog insertBarsDialog = new InsertBarsDialog((JFrame)frame, x, y);
+        InsertBarsDialog insertBarsDialog = new InsertBarsDialog(frame, x, y);
         insertBarsDialog.addWindowListener(new WindowAdapter() {
             @Override public void windowClosed(WindowEvent e) {
                 page.handleInsertBarsDialog(
@@ -497,7 +497,7 @@ public class PageView {
     }
 
     protected void showRemoveBarsDialog(int x, int y) {
-        RemoveBarsDialog removeBarsDialog = new RemoveBarsDialog((JFrame) frame, x, y);
+        RemoveBarsDialog removeBarsDialog = new RemoveBarsDialog(frame, x, y);
         removeBarsDialog.addWindowListener(new WindowAdapter() {
             @Override public void windowClosed(WindowEvent e) {
                 page.handleRemoveBarsDialog(

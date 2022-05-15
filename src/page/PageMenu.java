@@ -1,5 +1,6 @@
 package page;
 
+import java.awt.Component;
 import java.awt.event.*;
 import javax.swing.*;
 import java.util.ArrayList;
@@ -11,6 +12,8 @@ class PageMenu extends JMenuBar {
 
     private Page pageController;
     private List<MenuItem> menuItems;
+    private Timer flashTimer;
+    private JMenu activeMenu;
 
     public PageMenu(Page pageController) {
         this.pageController = pageController;
@@ -20,6 +23,11 @@ class PageMenu extends JMenuBar {
         add(new TrackMenu());
         add(new ViewMenu());
         add(new MusicMenu());
+
+        flashTimer = new Timer(100, (ActionEvent evt) -> {
+            activeMenu.setSelected(false);
+            flashTimer.stop();
+        });
     }
 
     public void toggleMusicPlay(Constants c) {
@@ -32,6 +40,19 @@ class PageMenu extends JMenuBar {
             enableMenuItem(Constants.MENU_MUSIC_PLAYSELECTION);
             disableMenuItem(Constants.MENU_MUSIC_STOP);
         }
+    }
+
+    public void flashMenu(Constants c) {
+        MenuItem found;
+        for (MenuItem m : menuItems) {
+            if (m.actionConstant == c) {
+                found = m;
+                break;
+            }
+        }
+        //if (found) {
+
+        //}
     }
 
     public void disableMenuItem(Constants c) {
@@ -76,11 +97,24 @@ class PageMenu extends JMenuBar {
 
         private void setActionConstant(Constants c) {
             this.actionConstant = c;
+            Component menuItem = this;
+
             addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent ae) {
+                public void actionPerformed(ActionEvent evt) {
                     pageController.handleMenuItem(c);
                 }
             });
+        }
+
+        @Override
+        protected void fireActionPerformed(ActionEvent evt) {
+            JPopupMenu popup = (JPopupMenu)getParent();
+            activeMenu = (JMenu)popup.getInvoker();
+            if (!flashTimer.isRunning()) {
+                activeMenu.setSelected(true);
+                flashTimer.start();
+            }
+            super.fireActionPerformed(evt);
         }
     }
 
@@ -179,16 +213,22 @@ class PageMenu extends JMenuBar {
             addSeparator();
 
             MenuItem editInsertBars = new MenuItem("Insert Bars...");
-            editInsertBars.setAccessible("Add Chosen Number of Measures to All Tracks");
+            editInsertBars.setAccessible("Add Chosen Number of Measures");
             //editAddBars.setCommandKey("A");
             editInsertBars.setActionConstant(Constants.MENU_EDIT_INSERTBARS);
             add(editInsertBars);
 
             MenuItem editRemoveBars = new MenuItem("Remove Bars...");
-            editRemoveBars.setAccessible("Remove Chosen Number of Measures from All Tracks");
+            editRemoveBars.setAccessible("Remove Chosen Number of Measures");
             //editAddBars.setCommandKey("A");
             editRemoveBars.setActionConstant(Constants.MENU_EDIT_REMOVEBARS);
             add(editRemoveBars);
+
+            MenuItem editDuplicateBars = new MenuItem("Duplicate Bars...");
+            editDuplicateBars.setAccessible("Duplicate Chosen Number of Measures");
+            //editAddBars.setCommandKey("A");
+            editDuplicateBars.setActionConstant(Constants.MENU_EDIT_DUPLICATEBARS);
+            add(editDuplicateBars);
         }
     }
 
@@ -227,7 +267,6 @@ class PageMenu extends JMenuBar {
             //MenuItem menuItem = new MenuItem("An item in the submenu");
             //setTheme.add(menuItem);
             add(setTheme);
-
         }
     }
 

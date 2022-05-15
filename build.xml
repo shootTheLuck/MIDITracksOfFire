@@ -16,6 +16,7 @@
         <javac srcdir="${src.dir}" destdir="${classes.dir}" includeantruntime="false">
 <!--
         <compilerarg value="-Xlint" />
+        <compilerarg value="-Xlint:-serial" />
 -->
       </javac>
     </target>

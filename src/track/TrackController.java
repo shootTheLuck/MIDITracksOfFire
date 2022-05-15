@@ -8,6 +8,7 @@ import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.swing.SwingUtilities;
@@ -18,6 +19,7 @@ import note.Note;
 import page.Page;
 import page.PageView;
 import themes.ThemeReader;
+import utils.BiMap;
 import utils.console;
 import utils.BoundedRange;
 import widgets.VelocitySlider;
@@ -54,15 +56,18 @@ public class TrackController {
     private Note.List tabbedNotes = new Note.List();
     private Note.List selection = new Note.List();
     private String name = "untitled track";
+    private int index;
     private int channel;
     private int volume;
     private Instrument instrument;
     protected Rectangle selectorRect = new Rectangle(0, 0);
 
-    public TrackController(Page page) {
+    public TrackController(Page page, int index) {
+        this.index = index;
         pageController = page;
         trackType = new TrackType();
         view = new TrackView(this, name);
+        view.showGridSize("1/8");
     }
 
     private int calcGridSize() {
@@ -81,7 +86,7 @@ public class TrackController {
         public void doIt(MouseEvent evt) {
             int x = evt.getX();
             int y = evt.getY();
-
+            x = Math.max(view.currentScroll, x);
             //view.changeCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));
             view.drawRectangle(selectorRect);
             //https://stackoverflow.com/questions/30941766
@@ -89,7 +94,6 @@ public class TrackController {
             selectorRect.y = Math.min(dragStart.y, y);
             selectorRect.width = Math.abs(dragStart.x - x);
             selectorRect.height = Math.abs(dragStart.y - y);
-
             view.drawRectangle(selectorRect);
         }
     }
@@ -121,7 +125,6 @@ public class TrackController {
             int x = evt.getX();
             int y = evt.getY();
 
-            //if (selectedNote.duration < 0 ||
             if (x <= dragStart.x ||
                     Math.abs(y - dragStart.y) > ThemeReader.getMeasure("track.strings.spacing")) {
                 mouseStrategy = dragSelectorRect;
@@ -242,25 +245,35 @@ public class TrackController {
         }
     }
 
-    class NoteLoadAction extends Actions.Item {
+    class NotePasteAction extends Actions.Item {
         TrackController track;
         Note.List notesToLoad;
+        boolean fromClipboard;
 
-        public NoteLoadAction(TrackController track, Note.List notes) {
+        public NotePasteAction(TrackController track, Note.List notes, boolean fromClipboard) {
             this.name = "loadNote(s)";
             this.track = track;
+            this.fromClipboard = fromClipboard;
             notesToLoad = new Note.List();
                 for (Note note : notes) {
                 Note clone = note.clone();
                 notesToLoad.add(clone);
             }
-            //this.notesToLoad = notes;
         }
 
         public void execute() {
             pageController.selectTrack(track);
             clearSelection();
+            this.notesToLoad.sortByStart();
+            long diff = 0;
+            if (fromClipboard) {
+                Note firstNote = this.notesToLoad.get(0);
+                int scrolledMeasure = view.currentScroll / PageView.measureSize;
+                long ticksScrolled = scrolledMeasure * pageController.getTicksPerMeasure();
+                diff = firstNote.start - ticksScrolled;
+            }
             for (Note note : this.notesToLoad) {
+                note.start -= diff;
                 loadNote(note);
                 selectNote(note);
             }
@@ -409,8 +422,10 @@ public class TrackController {
                 mouseStrategy = lengthenNote;
 
             } else if (evt.isAltDown()) {
-                pageController.copySelection();
-                pageController.pasteSelection();
+                Note.List notes = copySelectedNotes();
+                //pageController.copySelection();
+                //pageController.pasteSelection();
+                pasteSelectedNotes(notes, false);
                 mouseStrategy = moveNote;
 
             } else {
@@ -509,7 +524,8 @@ public class TrackController {
         // zero-based double of measure position ie 1.25
         double measure = (double)x/PageView.measureSize;
         double corrected = Math.ceil(measure / gridFraction) * gridFraction;
-        return (long)(corrected * pageController.getTicksPerMeasure());
+        long startValue = Math.round(corrected * pageController.getTicksPerMeasure());
+        return startValue;
     }
 
     public void setProgress(double progress, long tick) {
@@ -590,12 +606,14 @@ public class TrackController {
     private void selectNote(Note note) {
         selectedNote = note;
         selectedNote.isSelected = true;
+
         /* ensure note is drawn last (on top of others) */
         if (notes.contains(note)) {
             notes.remove(note);
         }
         notes.add(note);
         notes.sorted = false;
+
         if (!selection.contains(selectedNote)) {
             selection.add(selectedNote);
             selection.sorted = false;
@@ -670,8 +688,8 @@ public class TrackController {
         return temp;
     }
 
-    public void pasteSelectedNotes(Note.List clipboard) {
-        pageController.addAction(new NoteLoadAction(this, clipboard));
+    public void pasteSelectedNotes(Note.List notes, boolean fromClipboard) {
+        pageController.addAction(new NotePasteAction(this, notes, fromClipboard));
     }
 
     private void setVelocities(ArrayList<Note> notes, int velocity) {
@@ -691,7 +709,8 @@ public class TrackController {
     private void lengthenSelectedNote(Note note, int deltaX) {
         if (deltaX == 0) return;
         view.drawNote(note);
-        note.duration += Integer.signum(deltaX) * pageController.getTicksPerMeasure() * gridFraction;
+        long delta = Math.round(gridFraction * pageController.getTicksPerMeasure());
+        note.duration += Integer.signum(deltaX) * delta;
     }
 
     private void lengthenSelectedNotes(ArrayList<Note> notes, int deltaX) {
@@ -720,7 +739,7 @@ public class TrackController {
 
         for (Note note : notes) {
             view.drawNote(note);
-            note.start += deltaX * pageController.getTicksPerMeasure() * gridFraction;
+            note.start += deltaX * Math.round(gridFraction * pageController.getTicksPerMeasure());
             note.stringNum += deltaY;
             note.pitch = trackType.findNotePitch(note.stringNum, note.fret);
         }
@@ -733,9 +752,9 @@ public class TrackController {
     public void tabThroughNotes() {
         if (selectedNote != null) {
             notes.sortByStart();
-            for (Note note : selection) {
-                tabbedNotes.add(note);
-            }
+            //for (Note note : selection) {
+                tabbedNotes.add(selectedNote);
+            //}
             long currentSelectionStart = selectedNote.start;
             clearSelection();
             for (Note note : notes) {
@@ -752,6 +771,7 @@ public class TrackController {
 
         double dist = x / (gridFraction * PageView.measureSize);
         double decimalPart = dist - Math.floor(dist);
+
         // snap to left side of cursor unless very close to next grid
         if (decimalPart > 0.7) {
             dist = Math.round(dist);
@@ -772,7 +792,6 @@ public class TrackController {
         return instrument;
     }
 
-    //TODO template pattern?
     public void setInstrument(int number) {
         if (channel == 9) {
             for (Instrument drum : Instrument.drumList) {
@@ -791,6 +810,29 @@ public class TrackController {
                 }
             }
         }
+    }
+
+    public double getGridSize() {
+        BiMap<String, Double> map = new BiMap<>();
+
+        map.put( "1/1", 1.0 );
+        map.put( "1/2", 0.5 );
+        map.put( "1/4", 0.25 );
+        map.put( "1/8", 0.125 );
+        map.put( "1/16", 0.0625 );
+        map.put( "1/32", 0.03125 );
+
+        map.put( "1/1T", 1.0 );
+        map.put( "1/2T", 0.5 );
+        map.put( "1/4T", 0.25 );
+        map.put( "1/8T", 0.125 );
+        map.put( "1/16T", 0.625 );
+        //map.put( "1/32T", 0.0208333333333 );
+        //map.put( "1/32T", (double)(1.0/32.0 * 2.0/3.0) );
+        //map.put( "1/32T", (double)(map.get("1/32") * 2.0/3.0) );
+        map.put( "1/32T", map.get("1/32") * 2.0/3.0);
+        return 2.0;
+
     }
 
     public void setTrackType(TrackType type) {
@@ -812,6 +854,10 @@ public class TrackController {
                 note.start += noteStartDelta;
             }
         }
+    }
+
+    public void duplicateBars(int numberToAdd, int measureStart, int measureEnd, int addBefore) {
+        // TODO
     }
 
     public void removeBars(int measureStart, int measureEnd) {
@@ -901,12 +947,11 @@ public class TrackController {
 
     protected void handleMuteButton() {
         if (isMuted == true) {
-            isMuted = false;
             view.showUnMuted();
         } else {
-            isMuted = true;
             view.showMuted();
         }
+        isMuted = !isMuted;
         pageController.handleMuteButton(this, isMuted);
     }
 
@@ -914,8 +959,7 @@ public class TrackController {
         if (Instrument.isDrumSet(instrument)) {
             setChannel(9);
         } else {
-            //TODO: multiple tracks with same channel. is this ok?
-            setChannel(1);
+            setChannel(this.index);
         }
         setInstrument(instrument.number);
     }

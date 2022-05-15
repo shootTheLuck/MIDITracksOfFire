@@ -39,6 +39,7 @@ import note.Note;
 import page.PageView;
 import themes.ThemeReader;
 import utils.console;
+import widgets.GridSizePicker;
 import widgets.InputField;
 import widgets.NumberInputField;
 import widgets.ObjectMenuItem;
@@ -63,7 +64,7 @@ public class TrackView extends JPanel {
     private InputField trackNameField;
     private Border trackNameBorder;
     private TrackInstrumentPicker instrumentPicker;
-    private JComboBox<String>gridSizePicker;
+    private GridSizePicker gridSizePicker;
     private JComboBox<String> trackTypePicker;
     private NumberInputField volumeField;
     private boolean isCollapsed = false;
@@ -82,6 +83,8 @@ public class TrackView extends JPanel {
 
     private Icon collapseIcon = new ImageIcon("assets/pan-down-symbolic.symbolic.png");
     private Icon expandIcon = new ImageIcon("assets/pan-end-symbolic.symbolic.png");
+
+    public int currentScroll;
 
     public TrackView(TrackController controller, String name) {
         this.controller = controller;
@@ -201,18 +204,17 @@ public class TrackView extends JPanel {
         topBar.add(trackTypePicker);
 
         topBar.add(new JLabel("  GridSize "));
-        String sizes[] = {"1/1", "1/2", "1/4", "1/8", "1/16" , "1/32" , "1/64"};
-        gridSizePicker = new JComboBox<>(sizes);
-        gridSizePicker.setSelectedIndex(3);
+        gridSizePicker = new GridSizePicker();
+
+        gridSizePicker.setMaximumRowCount(gridSizePicker.getModel().getSize());
+
         gridSizePicker.setFocusable(false);
         gridSizePicker.addActionListener((ActionEvent ae) -> {
-            String fraction = (String)gridSizePicker.getSelectedItem();
-
-            //https://stackoverflow.com/questions/13249858s
-            String[] ratio = fraction.split("/");
-            double gridFraction = Double.parseDouble(ratio[0]) / Double.parseDouble(ratio[1]);
-            controller.handleGridSizePicker(gridFraction);
+            String selectedItem = (String)gridSizePicker.getSelectedItem();
+            double value = GridSizePicker.SIZES.get(selectedItem);
+            controller.handleGridSizePicker(value);
         });
+
         setComponentSize(gridSizePicker, 60, topBarHeight);
         topBar.add(gridSizePicker);
 
@@ -323,6 +325,7 @@ public class TrackView extends JPanel {
 
     // page scrollbars only move drawArea
     public void setScrollPosition(int value) {
+        currentScroll = value;
         drawArea.setLocation(-value + leftMargin, 0);
     }
 
@@ -351,7 +354,8 @@ public class TrackView extends JPanel {
 
     protected void setTrackType(TrackType type) {
         String s = type.toString();
-        Point currentScroll = drawArea.getLocation();
+        //Point location = drawArea.getLocation();
+        //int currentScroll = location.x;
 
         if (!drawArea.type.equals(s)) {
             drawContainer.remove(drawArea);
@@ -375,7 +379,7 @@ public class TrackView extends JPanel {
         trackTypePicker.setSelectedItem(s);
         addNotifier(drawArea);
         drawContainer.add(drawArea);
-        drawArea.setLocation(currentScroll);
+        drawArea.setLocation(-currentScroll, 0);
         adjustMeasureSize(PageView.measureSize);
     }
 
@@ -462,6 +466,20 @@ public class TrackView extends JPanel {
     protected void drawNote(Note note) {
         drawArea.overwriteNote(note);
     }
+
+    protected void showGridSize(String gridSize) {
+        gridSizePicker.setSelectedItem(gridSize);
+    }
+
+    //protected void showGridSizes(boolean triplet) {
+        //if (triplet) {
+            //console.log("setting view to triplet", gridSizePicker.previousSelection +  "T");
+            //gridSizePicker.setAsTriplet();
+            //gridSizePicker.setSelectedItem(gridSizePicker.previousSelection +  "T");
+        //} else {
+            //gridSizePicker.setAsStraight();
+        //}
+    //}
 
     private void showVolume(int soundAmount) {
         if (soundAmount > 80) {

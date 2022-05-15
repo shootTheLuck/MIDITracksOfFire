@@ -153,7 +153,7 @@ class PageNumberBar extends JPanel {
         drawRectangle(playingMeasure);
 
         drawRectangle(playingPosition);
-        playingPosition.x = (int)(progress* PageView.measureSize);
+        playingPosition.x = (int)(progress * PageView.measureSize);
         drawRectangle(playingPosition);
     }
 
