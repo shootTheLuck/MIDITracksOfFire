@@ -1,9 +1,6 @@
 package track;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
+import java.awt.*;
 
 import note.Note;
 import themes.ThemeReader;

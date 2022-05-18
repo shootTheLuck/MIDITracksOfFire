@@ -1,35 +1,10 @@
 package page;
 
-import java.awt.event.ActionEvent;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 
-import javax.swing.AbstractButton;
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JLayeredPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollBar;
-import javax.swing.JScrollPane;
-import javax.swing.JViewport;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
+import javax.swing.*;
 
 import themes.ThemeReader;
 import track.TrackView;
@@ -155,7 +130,7 @@ public class PageView {
         Component lScrollButton = hScrollBar.getComponent(1);
         Component rScrollButton = hScrollBar.getComponent(0);
 
-        Timer hScrollTimer = new Timer(200, (ActionEvent evt) -> {
+        Timer hScrollTimer = new javax.swing.Timer(200, (ActionEvent evt) -> {
             if (scrollButtonPressed == rScrollButton) {
                 setHorizontalScroll(scrollPosition + PageView.measureSize);
             } else {
