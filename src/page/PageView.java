@@ -296,7 +296,7 @@ public class PageView {
             }
         }
         //handleScrollChange();
-        numberBar.adjustMeasureSize(measureSize);
+        //numberBar.adjustMeasureSize(measureSize);
         frame.revalidate();
         frame.repaint();
         reset();
@@ -315,7 +315,7 @@ public class PageView {
             }
         }
         //handleScrollChange();
-        numberBar.adjustMeasureSize(measureSize);
+        //numberBar.adjustMeasureSize(measureSize);
         reset();
     }
 

@@ -3,6 +3,7 @@ package instruments;
 
 import java.util.ArrayList;
 import java.util.List;
+import utils.console;
 
 
 public class Instrument {
@@ -26,6 +27,24 @@ public class Instrument {
     public static String[] categories = {"Piano", "Chromatic", "Organ", "Guitar", "Bass",
             "Strings", "Ensemble", "Brass", "Reed", "Pipe", "Synth Lead", "Synth Pad",
             "Synth Effects", "Ethnic", "Percussive", "Sound Effects", "Drum Sets"};
+
+    public static Instrument getInstrument(int number) {
+        for (Instrument instrument : Instrument.list) {
+            if (instrument.number == number) {
+                return instrument;
+            }
+        }
+        return Instrument.list.get(0);
+    }
+
+    public static Instrument getDrum(int number) {
+        for (Instrument drum : Instrument.drumList) {
+            if (drum.number == number) {
+                return drum;
+            }
+        }
+        return Instrument.drumList.get(0);
+    }
 
     static {
 

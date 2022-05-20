@@ -1,33 +1,31 @@
 package page;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.*;
+import java.awt.event.*;
 
-import javax.swing.JPanel;
+import javax.swing.*;
 
 import themes.ThemeReader;
 import utils.console;
 
 class PageNumberBar extends JPanel {
 
+    private Point dragStart = new Point();
     private boolean dragging = false;
     private Page page;
 
     private Font font = new Font("Dialog", Font.PLAIN, 11);
     private FontMetrics fontMetrics = getFontMetrics(font);
 
+    private int measureStart;
+    private int measureSize = 150;
+    private int MIN_MEASURESIZE = 30;
     private int scrollPosition;
     private int indicatorHeight;
     private int lMargin;
     private int height;
 
+    private Component rootFrame;
     private Rectangle measureSizeDragger;
     private Rectangle playingMeasure;
     private Rectangle playingPosition;
@@ -50,11 +48,35 @@ class PageNumberBar extends JPanel {
 
         setFocusable(true);
 
+        //addMouseListener(new MouseAdapter() {
+            //public void mousePressed(MouseEvent evt) {
+                //int x = evt.getX();
+                //int y = evt.getY();
+                //if (measureSizeDragger.contains(x, y)) {
+                    //dragging = true;
+                //}
+            //}
+            //public void mouseReleased(MouseEvent evt) {
+                //dragging = false;
+            //}
+        //});
+
+        //addMouseMotionListener(new MouseAdapter() {
+            //public void mouseDragged(MouseEvent evt) {
+                //if (dragging) {
+                    //int newValue = evt.getX() + getX() - lMargin;
+                    //page.handleMeasureSizeSlider(newValue);
+                //}
+            //}
+        //});
+
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent evt) {
                 int x = evt.getX();
                 int y = evt.getY();
+
                 if (measureSizeDragger.contains(x, y)) {
+                    dragStart.x = evt.getLocationOnScreen().x;;
                     dragging = true;
                 }
             }
@@ -66,11 +88,34 @@ class PageNumberBar extends JPanel {
         addMouseMotionListener(new MouseAdapter() {
             public void mouseDragged(MouseEvent evt) {
                 if (dragging) {
-                    int newValue = evt.getX() + getX() - lMargin;
-                    page.handleMeasureSizeSlider(newValue);
+                    int dragX = evt.getLocationOnScreen().x;
+                    int delta = dragX - dragStart.x;
+                    dragStart.x = dragX;
+
+                    /* keep from getting smaller than minimum */
+                    if (delta < 0) {
+                        int maxNegativeDelta = MIN_MEASURESIZE - measureSize;
+                        delta = Math.max(maxNegativeDelta, delta);
+                    }
+                    measureSize += delta;
+
+                    /* keep from getting larger than frame */
+                    int maxWidth = rootFrame.getBounds().width - lMargin;
+                    int maxDraggerX = maxWidth - measureSizeDragger.width;
+                    measureSize = Math.min(maxDraggerX, measureSize);
+        measureSizeDragger.x = measureSize - measureSizeDragger.width/2 + lMargin;
+        playingMeasure.width = measureSize;
+                    setMeasureSize(measureSize);
+                    page.handleMeasureSizeSlider(measureSize);
                 }
             }
         });
+    }
+
+    /* save reference to rootFrame */
+    @Override public void addNotify() {
+        super.addNotify();
+        rootFrame = SwingUtilities.getRoot(this);
     }
 
     private void drawNumbersAndLines(Graphics2D g2) {
@@ -141,9 +186,26 @@ class PageNumberBar extends JPanel {
         drawRectangle(measureSizeDragger);
     }
 
-    public void adjustMeasureSize(int measureSize) {
-        measureSizeDragger.x = measureSize - measureSizeDragger.width/2 + lMargin;
-        playingMeasure.width = measureSize;
+    //public void adjustMeasureSize(int measureSize) {
+        //measureSizeDragger.x = measureSize - measureSizeDragger.width/2 + lMargin;
+        //playingMeasure.width = measureSize;
+    //}
+
+    public int getMeasureSize() {
+        return measureSize;
+    }
+
+    public void setMeasureSize(int value) {
+        measureSize = value;
+
+        int draggerMeasure = measureStart + 1;
+        measureSizeDragger.x = draggerMeasure * measureSize - measureSizeDragger.width/2 + lMargin;
+
+        int newX = -measureStart * measureSize;
+        Rectangle bounds = getBounds();
+        setBounds(newX, 0, Integer.MAX_VALUE, bounds.height);
+        //setLocation(-measureStart * measureSize, 0);
+        repaint();
     }
 
     public void showProgress(double progress) {

@@ -2,12 +2,7 @@ package track;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-import javax.swing.JButton;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import javax.swing.MenuElement;
+import javax.swing.*;
 
 import instruments.Instrument;
 import widgets.ObjectMenuItem;
@@ -20,7 +15,7 @@ class TrackInstrumentPicker extends JButton {
         setFocusPainted(false);
         JPopupMenu popUp = new JPopupMenu();
 
-        for (int i = 0; i < Instrument.categories.length; i ++) {
+        for (int i = 0; i < Instrument.categories.length; i++) {
             JMenu category = new JMenu(Instrument.categories[i]);
             popUp.add(category);
         }
@@ -37,7 +32,6 @@ class TrackInstrumentPicker extends JButton {
         MenuElement[] categories = popUp.getSubElements();
 
         for (int i = 0; i < categories.length - 1; i++) {
-            //console.log(categories[i]);
             for (int j = i * Instrument.NUM_PER_CATEGORY;
                      j < i * Instrument.NUM_PER_CATEGORY + Instrument.NUM_PER_CATEGORY; j++) {
                 JMenuItem instNameItem = new ObjectMenuItem(Instrument.list.get(j));

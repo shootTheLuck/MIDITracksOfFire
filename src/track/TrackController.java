@@ -794,21 +794,11 @@ public class TrackController {
 
     public void setInstrument(int number) {
         if (channel == 9) {
-            for (Instrument drum : Instrument.drumList) {
-                if (drum.number == number) {
-                    instrument = drum;
-                    view.setInstrumentName(drum.name);
-                    break;
-                }
-            }
+            instrument = Instrument.getDrum(number);
+            view.setInstrumentName(instrument.name);
         } else {
-            for (Instrument inst : Instrument.list) {
-                if (inst.number == number) {
-                    instrument = inst;
-                    view.setInstrumentName(inst.name);
-                    break;
-                }
-            }
+            instrument = Instrument.getInstrument(number);
+            view.setInstrumentName(instrument.name);
         }
     }
 

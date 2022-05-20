@@ -13,6 +13,7 @@ import javax.swing.plaf.basic.*;
  *  keys will cause the combo box selection to skip over the separator.
  *  If you attempt to select the separator with the mouse, the selection
  *  will be ignored and the drop down will remain open.
+ *  author Rob Camick https://tips4java.wordpress.com/2009/02/15/combo-box-with-separators/
  */
 public class SeparatorComboBox extends JComboBox implements KeyListener
 {
