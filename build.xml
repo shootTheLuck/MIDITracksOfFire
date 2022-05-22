@@ -13,7 +13,7 @@
 
     <target name="compile">
         <mkdir dir="${classes.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${classes.dir}" includeantruntime="false">
+        <javac srcdir="${src.dir}" destdir="${classes.dir}" debug="true" includeantruntime="false">
 <!--
         <compilerarg value="-Xlint" />
         <compilerarg value="-Xlint:-serial" />
